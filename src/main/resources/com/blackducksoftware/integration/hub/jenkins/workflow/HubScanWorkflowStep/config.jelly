@@ -4,10 +4,10 @@
 
 	<st:once>
 		<script type="text/javascript"
-			src="${rootURL}/plugin/hub-jenkins/js/HubJenkinsScan.js" />
+			src="${rootURL}/plugin/blackduck-hub/js/HubJenkinsScan.js" />
 		<script type="text/javascript"
-			src="${rootURL}/plugin/hub-jenkins/js/HubJenkinsShared.js" />
-		<link href="${rootURL}/plugin/hub-jenkins/css/BdHubCustom.css"  rel="stylesheet" type="text/css"  />
+			src="${rootURL}/plugin/blackduck-hub/js/HubJenkinsShared.js" />
+		<link href="${rootURL}/plugin/blackduck-hub/css/BdHubCustom.css"  rel="stylesheet" type="text/css"  />
 	</st:once>
 
 <f:entry field="hubProjectName" title="${%ProjectNameTitle}">
@@ -55,7 +55,7 @@
 <f:block>
 	<f:repeatable field="scans" add="${%AddScan}" minimum="1">
 		<table style="width:100%" id="hubBlackDuckTable">
-				<f:entry title="${%ScanTarget}" field="scanTarget" help="/plugin/hub-jenkins/help/PostBuildHubScan/help-scanTarget.html">
+				<f:entry title="${%ScanTarget}" field="scanTarget" help="/plugin/blackduck-hub/help/PostBuildHubScan/help-scanTarget.html">
               		<f:textbox/>
             	</f:entry>
       	</table>

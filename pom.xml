@@ -10,13 +10,13 @@
   </parent>
 
   <groupId>com.blackducksoftware.integration</groupId>
-  <artifactId>hub-jenkins</artifactId>
+  <artifactId>blackduck-hub</artifactId>
   <version>1.5.5-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <name>Black Duck Hub Plug-In for Jenkins</name>
   <description>Runs the Black Duck Hub scan in Jenkins builds</description>
-  <url>https://github.com/blackducksoftware/hub-jenkins</url>
+  <url>https://wiki.jenkins-ci.org/display/JENKINS/BlackDuck+Hub+Plugin</url>
   <inceptionYear>2014</inceptionYear>
   <organization>
     <name>Black Duck Software, Inc.</name>
@@ -30,9 +30,9 @@
   </licenses>
 
   <scm>
-    <connection>scm:git:git://github.com/blackducksoftware/hub-jenkins.git/</connection>
-    <developerConnection>scm:git:git@github.com:blackducksoftware/hub-jenkins.git</developerConnection>
-    <url>https://www.github.com/blackducksoftware/hub-jenkins</url>
+    <connection>scm:git:git://github.com/jenkinsci/blackduck-hub-plugin.git/</connection>
+    <developerConnection>scm:git:git@github.com:jenkinsci/blackduck-hub-plugin.git</developerConnection>
+    <url>https://www.github.com/jenkinsci/blackduck-hub-plugin</url>
   </scm>
   <distributionManagement>
     <repository>

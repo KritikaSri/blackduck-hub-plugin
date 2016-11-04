@@ -8,19 +8,19 @@
                     
         <l:main-panel>
 	        <div class="riskReportBackgroundColor">
-	        	<link href="${rootURL}/plugin/hub-jenkins/css/HubBomReport.css"  rel="stylesheet" type="text/css"  />
-	        	<link href="${rootURL}/plugin/hub-jenkins/font-awesome-4.5.0/css/font-awesome.min.css"  rel="stylesheet" type="text/css"  />
+	        	<link href="${rootURL}/plugin/blackduck-hub/css/HubBomReport.css"  rel="stylesheet" type="text/css"  />
+	        	<link href="${rootURL}/plugin/blackduck-hub/font-awesome-4.5.0/css/font-awesome.min.css"  rel="stylesheet" type="text/css"  />
 				<script type="text/javascript"
-						src="${rootURL}/plugin/hub-jenkins/js/Sortable.js" />
+						src="${rootURL}/plugin/blackduck-hub/js/Sortable.js" />
 				<script type="text/javascript"
-						src="${rootURL}/plugin/hub-jenkins/js/HubBomReportFunctions.js" />
+						src="${rootURL}/plugin/blackduck-hub/js/HubBomReportFunctions.js" />
 				
 				<div class="reportHeader">
 					<div class="h1 reportHeaderTitle">${%Title}</div>
 					
 					<div style="float: right;">
 						<img class="reportHeaderIcon"
-							src="${rootURL}/plugin/hub-jenkins/images/Hub_BD_logo.png" />
+							src="${rootURL}/plugin/blackduck-hub/images/Hub_BD_logo.png" />
 					</div>
 				</div>
 				
@@ -296,7 +296,7 @@
 				<!-- load this script after the tables otherwise the tables wont exist 
 						yet when this script runs -->
 				<script type="text/javascript"
-					src="${rootURL}/plugin/hub-jenkins/js/HubReportStartup.js" />
+					src="${rootURL}/plugin/blackduck-hub/js/HubReportStartup.js" />
 			</div>
         </l:main-panel>
     </l:layout>

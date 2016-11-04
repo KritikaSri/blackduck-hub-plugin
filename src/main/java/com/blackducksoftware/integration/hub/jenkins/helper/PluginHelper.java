@@ -34,7 +34,7 @@ public class PluginHelper {
         Jenkins jenkins = Jenkins.getInstance();
         if (jenkins != null) {
             // Jenkins still active
-            Plugin p = jenkins.getPlugin("hub-jenkins");
+            Plugin p = jenkins.getPlugin("blackduck-hub");
             if (p != null) {
                 // plugin found
                 PluginWrapper pw = p.getWrapper();

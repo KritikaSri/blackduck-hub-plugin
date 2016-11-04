@@ -140,7 +140,7 @@ public class HubReportAction implements Action {
 
     @Override
     public String getIconFileName() {
-        return "/plugin/hub-jenkins/images/Ducky-200.png";
+        return "/plugin/blackduck-hub/images/Ducky-200.png";
     }
 
     @Override
