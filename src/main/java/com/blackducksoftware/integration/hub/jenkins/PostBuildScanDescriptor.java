@@ -62,7 +62,6 @@ import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPlug
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.jenkins.scan.BDCommonDescriptorUtil;
-import com.blackducksoftware.integration.hub.rest.RestConnection;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
@@ -466,20 +465,11 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
-            final RestConnection restConnection = BuildHelper.getRestConnection(null, serverUrl, credentialUserName,
+            BuildHelper.getRestConnection(null, serverUrl, credentialUserName,
                     credentialPassword, Integer.valueOf(hubTimeout));
 
-            final int responseCode = restConnection.setCookies(credentialUserName, credentialPassword);
+            return FormValidation.ok(Messages.HubBuildScan_getCredentialsValidFor_0_(serverUrl));
 
-            if (restConnection.isSuccess(responseCode)) {
-                return FormValidation.ok(Messages.HubBuildScan_getCredentialsValidFor_0_(serverUrl));
-            } else if (responseCode == 401) {
-                // If User is Not Authorized, 401 error, an exception should be
-                // thrown by the ClientResource
-                return FormValidation.error(Messages.HubBuildScan_getCredentialsInValidFor_0_(serverUrl));
-            } else {
-                return FormValidation.error(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
-            }
         } catch (final BDRestException e) {
             String message;
             if (e.getCause() != null) {

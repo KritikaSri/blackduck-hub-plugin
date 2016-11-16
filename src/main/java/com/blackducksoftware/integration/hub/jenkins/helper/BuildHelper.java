@@ -28,9 +28,12 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.blackducksoftware.integration.exception.EncryptionException;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.builder.HubServerConfigBuilder;
+import com.blackducksoftware.integration.hub.dataservices.DataServicesFactory;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.global.HubServerConfig;
@@ -54,14 +57,29 @@ public class BuildHelper {
         return build.getResult() == null;
     }
 
+    public static DataServicesFactory getDataServiceFactory(final String serverUrl, final String username, final String password,
+            final int hubTimeout) throws BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException,
+            MalformedURLException, BDRestException, IllegalArgumentException, EncryptionException {
+
+        return getDataServiceFactory(null, serverUrl, username, password, hubTimeout);
+    }
+
+    public static DataServicesFactory getDataServiceFactory(final IntLogger logger, final String serverUrl,
+            final String username, final String password, final int hubTimeout)
+            throws BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException, MalformedURLException,
+            BDRestException, IllegalArgumentException, EncryptionException {
+
+        final DataServicesFactory service = new DataServicesFactory(
+                getRestConnection(logger, serverUrl, username, password, hubTimeout));
+
+        return service;
+    }
+
     public static HubIntRestService getRestService(final String serverUrl, final String username, final String password,
             final int hubTimeout) throws BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException,
             MalformedURLException, BDRestException, IllegalArgumentException, EncryptionException {
 
-        final HubIntRestService service = new HubIntRestService(
-                getRestConnection(null, serverUrl, username, password, hubTimeout));
-
-        return service;
+        return getRestService(null, serverUrl, username, password, hubTimeout);
     }
 
     public static HubIntRestService getRestService(final IntLogger logger, final String serverUrl,
@@ -100,6 +118,32 @@ public class BuildHelper {
                     hubServerConfigBuilder.setProxyUsername(jenkins.proxy.getUserName());
                     hubServerConfigBuilder.setProxyPassword(jenkins.proxy.getPassword());
                 }
+            }
+        }
+
+        HubServerConfig hubServerConfig = hubServerConfigBuilder.build();
+        RestConnection restConnection = new CredentialsRestConnection(hubServerConfig);
+        restConnection.setLogger(logger);
+        return restConnection;
+    }
+
+    public static RestConnection getRestConnection(final IntLogger logger, final String serverUrl,
+            final String username, final String password, final int hubTimeout, String proxyHost, Integer proxyPort, String proxyUser, String proxyPassword)
+            throws BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException, MalformedURLException,
+            BDRestException, IllegalArgumentException, EncryptionException {
+        final HubServerConfigBuilder hubServerConfigBuilder = new HubServerConfigBuilder();
+        hubServerConfigBuilder.setHubUrl(serverUrl);
+        hubServerConfigBuilder.setUsername(username);
+        hubServerConfigBuilder.setPassword(password);
+        hubServerConfigBuilder.setTimeout(hubTimeout);
+
+        if (StringUtils.isNotBlank(proxyHost) && proxyPort != null) {
+            hubServerConfigBuilder.setProxyHost(proxyHost);
+            hubServerConfigBuilder.setProxyPort(proxyPort);
+
+            if (StringUtils.isNotBlank(proxyUser) && StringUtils.isNotBlank(proxyPassword)) {
+                hubServerConfigBuilder.setProxyUsername(proxyUser);
+                hubServerConfigBuilder.setProxyPassword(proxyPassword);
             }
         }
 

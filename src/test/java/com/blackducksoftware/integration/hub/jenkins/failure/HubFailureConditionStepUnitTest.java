@@ -38,11 +38,12 @@ import org.mockito.Mockito;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
+import com.blackducksoftware.integration.hub.api.HubVersionRestService;
 import com.blackducksoftware.integration.hub.api.policy.ComponentVersionStatusCount;
 import com.blackducksoftware.integration.hub.api.policy.PolicyStatusEnum;
 import com.blackducksoftware.integration.hub.api.policy.PolicyStatusItem;
-import com.blackducksoftware.integration.hub.api.project.ProjectItem;
-import com.blackducksoftware.integration.hub.api.project.version.ProjectVersionItem;
+import com.blackducksoftware.integration.hub.api.policy.PolicyStatusRestService;
+import com.blackducksoftware.integration.hub.dataservices.DataServicesFactory;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
@@ -63,13 +64,25 @@ public class HubFailureConditionStepUnitTest {
     @Rule
     public static JenkinsRule j = new JenkinsRule();
 
-    private HubIntRestService getMockedService(final String returnVersion, final PolicyStatusItem status)
+    private DataServicesFactory getMockedService(final String returnVersion, final PolicyStatusItem status)
             throws Exception {
-        final HubIntRestService service = Mockito.mock(HubIntRestService.class);
-        Mockito.doReturn(returnVersion).when(service).getHubVersion();
-        Mockito.doReturn(status).when(service).getPolicyStatus(Mockito.anyString());
+        final DataServicesFactory service = Mockito.mock(DataServicesFactory.class);
+
+        HubVersionRestService versionService = Mockito.mock(HubVersionRestService.class);
+        PolicyStatusRestService policyService = Mockito.mock(PolicyStatusRestService.class);
+
+        Mockito.doReturn(returnVersion).when(versionService).getHubVersion();
+        Mockito.doReturn(status).when(policyService).getItem(Mockito.anyString());
+
+        Mockito.doReturn(versionService).when(service).getHubVersionRestService();
+        Mockito.doReturn(policyService).when(service).getPolicyStatusRestService();
 
         return service;
+    }
+
+    private HubIntRestService getMockedIntRestService() throws Exception {
+
+        return Mockito.mock(HubIntRestService.class);
     }
 
     @WithoutJenkins
@@ -278,60 +291,6 @@ public class HubFailureConditionStepUnitTest {
     }
 
     @Test
-    public void testPerformPoliciesNotSupported() throws Exception {
-        final Boolean failBuildForPolicyViolations = true;
-        HubCommonFailureStep commonFailureStep = new HubCommonFailureStep(failBuildForPolicyViolations);
-        commonFailureStep = Mockito.spy(commonFailureStep);
-
-        HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
-        HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
-        failureStep = Mockito.spy(failureStep);
-        final HubIntRestService service = getMockedService("1.0.0", null);
-        final ProjectItem projectItem = new ProjectItem(null, null, null, false, 0, null);
-        Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
-        final ProjectVersionItem releaseItem = new ProjectVersionItem(null, null, null, null, null, null, null, null,
-                null);
-        Mockito.doReturn(releaseItem).when(service).getVersion(Mockito.any(ProjectItem.class), Mockito.anyString());
-
-        final HubServerInfo serverInfo = new HubServerInfo("Fake Server", "Fake Creds", 499);
-        HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
-
-        final HubSupportHelper hubSupport = new HubSupportHelper();
-        hubSupport.checkHubSupport(service, null);
-
-        descriptor = Mockito.spy(descriptor);
-
-        Mockito.doReturn(hubSupport).when(commonFailureStep).getCheckedHubSupportHelper();
-        Mockito.doReturn(service).when(commonFailureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
-                Mockito.any(HubServerInfo.class));
-        Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
-        Mockito.doReturn(commonFailureStep).when(failureStep).createCommonFailureStep(Mockito.anyBoolean());
-
-        final TestProject project = new TestProject(j.getInstance(), "Test Project");
-        final TestBuild build = new TestBuild(project);
-        build.setResult(Result.SUCCESS);
-        final List<Publisher> publishers = new ArrayList<Publisher>();
-        final PostBuildHubScan hubScanStep = new PostBuildHubScan(null, null, "VerisonName", null, null, null, false,
-                null, false);
-        publishers.add(hubScanStep);
-        project.setPublishersList(publishers);
-        build.setScanFinishedAction(new HubScanFinishedAction());
-        final BomUpToDateAction bomUpdatedAction = new BomUpToDateAction();
-        bomUpdatedAction.setHasBomBeenUdpated(true);
-        build.setBomUpdatedAction(bomUpdatedAction);
-
-        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        final PrintStream stream = new PrintStream(baos);
-        final TestBuildListener listener = new TestBuildListener(stream);
-
-        failureStep.perform(build, null, listener);
-
-        final String output = baos.toString();
-        assertTrue(output, output.contains("This version of the Hub does not have support for Policies."));
-        assertEquals(Result.UNSTABLE, build.getResult());
-    }
-
-    @Test
     public void testPerformValidUnknownCountsNoPolicyLink() throws Exception {
         final Boolean failBuildForPolicyViolations = true;
         HubCommonFailureStep commonFailureStep = new HubCommonFailureStep(failBuildForPolicyViolations);
@@ -346,23 +305,19 @@ public class HubFailureConditionStepUnitTest {
 
         final PolicyStatusItem policyStatus = new PolicyStatusItem(PolicyStatusEnum.NOT_IN_VIOLATION, null, counts,
                 null);
-        final HubIntRestService service = getMockedService("3.0.0", policyStatus);
-        final ProjectItem projectItem = new ProjectItem(null, null, null, false, 0, null);
-        Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
-        final ProjectVersionItem releaseItem = new ProjectVersionItem(null, null, null, null, null, null, null, null,
-                null);
-        Mockito.doReturn(releaseItem).when(service).getVersion(Mockito.any(ProjectItem.class), Mockito.anyString());
+        final DataServicesFactory service = getMockedService("3.0.0", policyStatus);
 
         final HubServerInfo serverInfo = new HubServerInfo("Fake Server", "Fake Creds", 499);
         HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
         final HubSupportHelper hubSupport = new HubSupportHelper();
-        hubSupport.checkHubSupport(service, null);
+        hubSupport.checkHubSupport(service.getHubVersionRestService(), null);
+        Mockito.doReturn(service).when(commonFailureStep).getDataServices(Mockito.any(HubJenkinsLogger.class), Mockito.any(HubServerInfo.class));
 
         descriptor = Mockito.spy(descriptor);
 
         Mockito.doReturn(hubSupport).when(commonFailureStep).getCheckedHubSupportHelper();
-        Mockito.doReturn(service).when(commonFailureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
+        Mockito.doReturn(getMockedIntRestService()).when(commonFailureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
                 Mockito.any(HubServerInfo.class));
         Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
         Mockito.doReturn(commonFailureStep).when(failureStep).createCommonFailureStep(Mockito.anyBoolean());
@@ -407,23 +362,19 @@ public class HubFailureConditionStepUnitTest {
 
         final PolicyStatusItem policyStatus = new PolicyStatusItem(PolicyStatusEnum.NOT_IN_VIOLATION, null, counts,
                 null);
-        final HubIntRestService service = getMockedService("3.0.0", policyStatus);
-        final ProjectItem projectItem = new ProjectItem(null, null, null, false, 0, null);
-        Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
-        final ProjectVersionItem releaseItem = new ProjectVersionItem(null, null, null, null, null, null, null, null,
-                null);
-        Mockito.doReturn(releaseItem).when(service).getVersion(Mockito.any(ProjectItem.class), Mockito.anyString());
+        final DataServicesFactory service = getMockedService("3.0.0", policyStatus);
 
         final HubServerInfo serverInfo = new HubServerInfo("Fake Server", "Fake Creds", 499);
         HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
         final HubSupportHelper hubSupport = new HubSupportHelper();
-        hubSupport.checkHubSupport(service, null);
+        hubSupport.checkHubSupport(service.getHubVersionRestService(), null);
+        Mockito.doReturn(service).when(commonFailureStep).getDataServices(Mockito.any(HubJenkinsLogger.class), Mockito.any(HubServerInfo.class));
 
         descriptor = Mockito.spy(descriptor);
 
         Mockito.doReturn(hubSupport).when(commonFailureStep).getCheckedHubSupportHelper();
-        Mockito.doReturn(service).when(commonFailureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
+        Mockito.doReturn(getMockedIntRestService()).when(commonFailureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
                 Mockito.any(HubServerInfo.class));
         Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
         Mockito.doReturn(commonFailureStep).when(failureStep).createCommonFailureStep(Mockito.anyBoolean());
@@ -478,22 +429,18 @@ public class HubFailureConditionStepUnitTest {
 
         final PolicyStatusItem policyStatus = new PolicyStatusItem(PolicyStatusEnum.NOT_IN_VIOLATION, null, counts,
                 null);
-        final HubIntRestService service = getMockedService("3.0.0", policyStatus);
-        final ProjectItem projectItem = new ProjectItem(null, null, null, false, 0, null);
-        Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
-        final ProjectVersionItem releaseItem = new ProjectVersionItem(null, null, null, null, null, null, null, null,
-                null);
-        Mockito.doReturn(releaseItem).when(service).getVersion(Mockito.any(ProjectItem.class), Mockito.anyString());
+        final DataServicesFactory service = getMockedService("3.0.0", policyStatus);
         final HubServerInfo serverInfo = new HubServerInfo("Fake Server", "Fake Creds", 499);
         HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
         final HubSupportHelper hubSupport = new HubSupportHelper();
-        hubSupport.checkHubSupport(service, null);
+        hubSupport.checkHubSupport(service.getHubVersionRestService(), null);
+        Mockito.doReturn(service).when(commonFailureStep).getDataServices(Mockito.any(HubJenkinsLogger.class), Mockito.any(HubServerInfo.class));
 
         descriptor = Mockito.spy(descriptor);
 
         Mockito.doReturn(hubSupport).when(commonFailureStep).getCheckedHubSupportHelper();
-        Mockito.doReturn(service).when(commonFailureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
+        Mockito.doReturn(getMockedIntRestService()).when(commonFailureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
                 Mockito.any(HubServerInfo.class));
         Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
         Mockito.doReturn(commonFailureStep).when(failureStep).createCommonFailureStep(Mockito.anyBoolean());
@@ -549,23 +496,19 @@ public class HubFailureConditionStepUnitTest {
         counts.add(countsInViolation);
         counts.add(countsNotInViolation);
         final PolicyStatusItem policyStatus = new PolicyStatusItem(PolicyStatusEnum.IN_VIOLATION, null, counts, null);
-        final HubIntRestService service = getMockedService("3.0.0", policyStatus);
-        final ProjectItem projectItem = new ProjectItem(null, null, null, false, 0, null);
-        Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
-        final ProjectVersionItem releaseItem = new ProjectVersionItem(null, null, null, null, null, null, null, null,
-                null);
-        Mockito.doReturn(releaseItem).when(service).getVersion(Mockito.any(ProjectItem.class), Mockito.anyString());
+        final DataServicesFactory service = getMockedService("3.0.0", policyStatus);
 
         final HubServerInfo serverInfo = new HubServerInfo("Fake Server", "Fake Creds", 499);
         HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
         final HubSupportHelper hubSupport = new HubSupportHelper();
-        hubSupport.checkHubSupport(service, null);
+        hubSupport.checkHubSupport(service.getHubVersionRestService(), null);
+        Mockito.doReturn(service).when(commonFailureStep).getDataServices(Mockito.any(HubJenkinsLogger.class), Mockito.any(HubServerInfo.class));
 
         descriptor = Mockito.spy(descriptor);
 
         Mockito.doReturn(hubSupport).when(commonFailureStep).getCheckedHubSupportHelper();
-        Mockito.doReturn(service).when(commonFailureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
+        Mockito.doReturn(getMockedIntRestService()).when(commonFailureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
                 Mockito.any(HubServerInfo.class));
         Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
         Mockito.doReturn(commonFailureStep).when(failureStep).createCommonFailureStep(Mockito.anyBoolean());
@@ -610,23 +553,19 @@ public class HubFailureConditionStepUnitTest {
         HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
         failureStep = Mockito.spy(failureStep);
 
-        final HubIntRestService service = getMockedService("3.0.0", null);
-        final ProjectItem projectItem = new ProjectItem(null, null, null, false, 0, null);
-        Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
-        final ProjectVersionItem releaseItem = new ProjectVersionItem(null, null, null, null, null, null, null, null,
-                null);
-        Mockito.doReturn(releaseItem).when(service).getVersion(Mockito.any(ProjectItem.class), Mockito.anyString());
+        final DataServicesFactory service = getMockedService("3.0.0", null);
 
         final HubServerInfo serverInfo = new HubServerInfo("Fake Server", "Fake Creds", 499);
         HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
         final HubSupportHelper hubSupport = new HubSupportHelper();
-        hubSupport.checkHubSupport(service, null);
+        hubSupport.checkHubSupport(service.getHubVersionRestService(), null);
+        Mockito.doReturn(service).when(commonFailureStep).getDataServices(Mockito.any(HubJenkinsLogger.class), Mockito.any(HubServerInfo.class));
 
         descriptor = Mockito.spy(descriptor);
 
         Mockito.doReturn(hubSupport).when(commonFailureStep).getCheckedHubSupportHelper();
-        Mockito.doReturn(service).when(commonFailureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
+        Mockito.doReturn(getMockedIntRestService()).when(commonFailureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
                 Mockito.any(HubServerInfo.class));
         Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
         Mockito.doReturn(commonFailureStep).when(failureStep).createCommonFailureStep(Mockito.anyBoolean());

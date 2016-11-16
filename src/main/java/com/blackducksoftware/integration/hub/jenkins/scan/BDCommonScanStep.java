@@ -43,17 +43,18 @@ import com.blackducksoftware.integration.builder.ValidationResultEnum;
 import com.blackducksoftware.integration.builder.ValidationResults;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
+import com.blackducksoftware.integration.hub.api.codelocation.CodeLocationItem;
 import com.blackducksoftware.integration.hub.api.project.ProjectItem;
 import com.blackducksoftware.integration.hub.api.project.version.ProjectVersionItem;
 import com.blackducksoftware.integration.hub.api.report.HubReportGenerationInfo;
 import com.blackducksoftware.integration.hub.api.report.ReportCategoriesEnum;
+import com.blackducksoftware.integration.hub.api.scan.ScanSummaryItem;
 import com.blackducksoftware.integration.hub.api.version.ReleaseItem;
 import com.blackducksoftware.integration.hub.builder.HubScanJobConfigBuilder;
-import com.blackducksoftware.integration.hub.capabilities.HubCapabilitiesEnum;
+import com.blackducksoftware.integration.hub.dataservices.DataServicesFactory;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
-import com.blackducksoftware.integration.hub.exception.ProjectNotAccessibleException;
 import com.blackducksoftware.integration.hub.exception.UnexpectedHubResponseException;
 import com.blackducksoftware.integration.hub.exception.VersionDoesNotExistException;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
@@ -90,6 +91,8 @@ import com.blackducksoftware.integration.phone.home.enums.ThirdPartyName;
 import com.blackducksoftware.integration.phone.home.exception.PhoneHomeException;
 import com.blackducksoftware.integration.phone.home.exception.PropertiesLoaderException;
 import com.blackducksoftware.integration.util.CIEnvironmentVariables;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -276,30 +279,36 @@ public class BDCommonScanStep {
 
                     final String oneJarPath = getOneJarFile(builtOn, toolsDirectory);
 
-                    final HubIntRestService service = BuildHelper.getRestService(logger,
+                    final DataServicesFactory service = BuildHelper.getDataServiceFactory(logger,
                             getHubServerInfo().getServerUrl(), getHubServerInfo().getUsername(),
                             getHubServerInfo().getPassword(), getHubServerInfo().getTimeout());
-                    ProjectItem project = null;
-                    ProjectVersionItem version = null;
-                    if (!isDryRun() && StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion)) {
-                        project = ensureProjectExists(service, logger, projectName);
-                        if (!project.getMeta().isAccessible()) {
-                            throw new ProjectNotAccessibleException(Messages.HubBuildScan_getProjectNotAccessible());
-                        }
-                        version = ensureVersionExists(service, logger, projectVersion, project);
-                        logger.debug("Found Project : " + projectName);
-                        logger.debug("Found Version : " + projectVersion);
-                    }
+
+                    final HubIntRestService intRestService = BuildHelper.getRestService(logger,
+                            getHubServerInfo().getServerUrl(), getHubServerInfo().getUsername(),
+                            getHubServerInfo().getPassword(), getHubServerInfo().getTimeout());
+                    // ProjectItem project = null;
+                    // ProjectVersionItem version = null;
+                    // if (!isDryRun() && StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion))
+                    // {
+                    // project = ensureProjectExists(service, logger, projectName);
+                    // if (!project.getMeta().isAccessible()) {
+                    // throw new ProjectNotAccessibleException(Messages.HubBuildScan_getProjectNotAccessible());
+                    // }
+                    // version = ensureVersionExists(service, logger, projectVersion, project);
+                    // logger.debug("Found Project : " + projectName);
+                    // logger.debug("Found Version : " + projectVersion);
+                    // }
                     final HubSupportHelper hubSupport = new HubSupportHelper();
-                    hubSupport.checkHubSupport(service, logger);
+
+                    hubSupport.checkHubSupport(service.getHubVersionRestService(), logger);
 
                     // Phone-Home
                     try {
-                        final String hubVersion = hubSupport.getHubVersion(service);
+                        final String hubVersion = service.getHubVersionRestService().getHubVersion();
                         String regId = null;
                         String hubHostName = null;
                         try {
-                            regId = service.getRegistrationId();
+                            regId = intRestService.getRegistrationId();
                         } catch (final Exception e) {
                             logger.debug("Could not get the Hub registration Id.");
                         }
@@ -319,15 +328,18 @@ public class BDCommonScanStep {
                     scan.setVariables(variables);
 
                     final DateTime beforeScanTime = new DateTime();
-                    run.setResult(runScan(service, builtOn, scan, logger, scanExec, jrePath, oneJarPath, jobConfig));
+                    run.setResult(runScan(builtOn, scan, logger, scanExec, jrePath, oneJarPath, jobConfig));
                     final DateTime afterScanTime = new DateTime();
 
+                    ProjectVersionItem version = getProjectVersionFromScanStatus(builtOn.getChannel(), scan.getScanStatusDirectoryPath(), service);
+
+                    ProjectItem project = getProjectFromVersion(version, service);
+
                     bomUpToDateAction.setDryRun(isDryRun());
-                    if (run.getResult().equals(Result.SUCCESS) && !isDryRun() && isShouldGenerateHubReport()
-                            && version != null) {
+                    if (run.getResult().equals(Result.SUCCESS) && !isDryRun() && isShouldGenerateHubReport()) {
 
                         final HubReportGenerationInfo reportGenInfo = new HubReportGenerationInfo();
-                        reportGenInfo.setService(service);
+                        reportGenInfo.setService(intRestService);
                         reportGenInfo.setHostname(localHostName);
                         reportGenInfo.setProject(project);
                         reportGenInfo.setVersion(version);
@@ -351,7 +363,7 @@ public class BDCommonScanStep {
                         bomUpToDateAction.setScanStatusDirectory(scan.getScanStatusDirectoryPath());
                         bomUpToDateAction.setScanTargets(jobConfig.getScanTargetPaths());
                     }
-                    if (version != null && hubSupport.hasCapability(HubCapabilitiesEnum.POLICY_API)) {
+                    if (version != null) {
                         String policyStatusLink = null;
                         try {
                             // not all HUb users have the policy module enabled
@@ -397,6 +409,34 @@ public class BDCommonScanStep {
             logger.alwaysLog("Build was not successful. Will not run Black Duck Scans.");
         }
         logger.alwaysLog("Finished running Black Duck Scans.");
+    }
+
+    private ProjectVersionItem getProjectVersionFromScanStatus(VirtualChannel channel, String statusDirectory, DataServicesFactory services)
+            throws IOException, InterruptedException, HubIntegrationException, BDRestException, URISyntaxException, UnexpectedHubResponseException {
+        final FilePath statusDirectoryFilePath = new FilePath(channel, statusDirectory);
+        if (!statusDirectoryFilePath.exists()) {
+            throw new HubIntegrationException("The scan status directory does not exist.");
+        }
+        if (!statusDirectoryFilePath.isDirectory()) {
+            throw new HubIntegrationException("The scan status directory provided is not a directory.");
+        }
+        final List<FilePath> statusFiles = statusDirectoryFilePath.list();
+        if (statusFiles == null || statusFiles.size() == 0) {
+            throw new HubIntegrationException("Can not find the scan status files in the directory provided.");
+        }
+        final String fileContent = statusFiles.get(0).readToString();
+        final Gson gson = new GsonBuilder().create();
+        final ScanSummaryItem scanSummaryItem = gson.fromJson(fileContent, ScanSummaryItem.class);
+        CodeLocationItem codeLocationItem = services.getCodeLocationRestService().getItem(scanSummaryItem.getLink(ScanSummaryItem.CODE_LOCATION_LINK));
+        String projectVersionUrl = codeLocationItem.getMappedProjectVersion();
+        ProjectVersionItem projectVersion = services.getProjectVersionRestService().getItem(projectVersionUrl);
+        return projectVersion;
+    }
+
+    private ProjectItem getProjectFromVersion(ProjectVersionItem version, DataServicesFactory services)
+            throws IOException, BDRestException, URISyntaxException, UnexpectedHubResponseException {
+        ProjectItem project = services.getProjectRestService().getItem(version.getLink(ProjectVersionItem.PROJECT_LINK));
+        return project;
     }
 
     public String getLocalHostName(final IntLogger logger, final Node builtOn) throws InterruptedException {
@@ -568,7 +608,7 @@ public class BDCommonScanStep {
      * the process and prints out all stderr and stdout to the Console Output.
      *
      */
-    private Result runScan(final HubIntRestService service, final Node builtOn, final JenkinsScanExecutor scan,
+    private Result runScan(final Node builtOn, final JenkinsScanExecutor scan,
             final HubJenkinsLogger logger, final String scanExec, final String javaExec, final String oneJarPath,
             final HubScanJobConfig jobConfig) throws IOException, HubConfigurationException, InterruptedException,
             BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException {

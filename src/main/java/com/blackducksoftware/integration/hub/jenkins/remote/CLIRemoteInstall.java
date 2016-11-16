@@ -26,13 +26,11 @@ import java.io.File;
 import org.jenkinsci.remoting.Role;
 import org.jenkinsci.remoting.RoleChecker;
 
-import com.blackducksoftware.integration.hub.HubIntRestService;
-import com.blackducksoftware.integration.hub.builder.HubServerConfigBuilder;
 import com.blackducksoftware.integration.hub.cli.CLIInstaller;
 import com.blackducksoftware.integration.hub.cli.CLILocation;
-import com.blackducksoftware.integration.hub.global.HubServerConfig;
+import com.blackducksoftware.integration.hub.dataservices.DataServicesFactory;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
-import com.blackducksoftware.integration.hub.rest.CredentialsRestConnection;
+import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.rest.RestConnection;
 import com.blackducksoftware.integration.util.CIEnvironmentVariables;
 
@@ -56,7 +54,7 @@ public class CLIRemoteInstall implements Callable<Void, Exception> {
 
     private String proxyHost;
 
-    private int proxyPort;
+    private Integer proxyPort;
 
     private String proxyUserName;
 
@@ -103,25 +101,11 @@ public class CLIRemoteInstall implements Callable<Void, Exception> {
         ciEnvironmentVariables.putAll(variables);
         final CLIInstaller installer = new CLIInstaller(cliLocation, ciEnvironmentVariables);
 
-        final HubServerConfigBuilder hubServerConfigBuilder = new HubServerConfigBuilder();
-        hubServerConfigBuilder.setHubUrl(hubUrl);
-        hubServerConfigBuilder.setUsername(hubUser);
-        hubServerConfigBuilder.setPassword(hubPassword);
-        hubServerConfigBuilder.setProxyHost(proxyHost);
-        hubServerConfigBuilder.setProxyUsername(proxyUserName);
-        hubServerConfigBuilder.setProxyPassword(proxyPassword);
-        if (proxyPort > 0) {
-            hubServerConfigBuilder.setProxyPort(proxyPort);
-        }
-        hubServerConfigBuilder.setTimeout(hubTimeout);
-        final HubServerConfig hubServerConfig = hubServerConfigBuilder.build();
-
-        final RestConnection restConnection = new CredentialsRestConnection(hubServerConfig);
-        restConnection.setLogger(logger);
-
-        final HubIntRestService service = new HubIntRestService(restConnection);
-
-        installer.performInstallation(logger, service, localHost);
+        RestConnection restConnection = BuildHelper.getRestConnection(logger, hubUrl, hubUser, hubPassword, hubTimeout, proxyHost, proxyPort, proxyUserName,
+                proxyPassword);
+        DataServicesFactory service = new DataServicesFactory(restConnection);
+        String hubVersion = service.getHubVersionRestService().getHubVersion();
+        installer.performInstallation(logger, hubUrl, hubVersion, localHost);
         return null;
     }
 

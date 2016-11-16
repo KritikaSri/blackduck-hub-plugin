@@ -30,7 +30,7 @@ import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.api.policy.PolicyStatusEnum;
 import com.blackducksoftware.integration.hub.api.policy.PolicyStatusItem;
 import com.blackducksoftware.integration.hub.api.report.HubReportGenerationInfo;
-import com.blackducksoftware.integration.hub.capabilities.HubCapabilitiesEnum;
+import com.blackducksoftware.integration.hub.dataservices.DataServicesFactory;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.MissingUUIDException;
@@ -81,27 +81,24 @@ public class HubCommonFailureStep {
 
         final HubServerInfo serverInfo = HubServerInfoSingleton.getInstance().getServerInfo();
         try {
-            final HubIntRestService restService = getHubIntRestService(logger, serverInfo);
-
-            final HubSupportHelper hubSupport = getCheckedHubSupportHelper();
-
-            waitForBomToBeUpdated(builtOn, logger, bomUpToDateAction, restService, hubSupport);
-
-            if (!hubSupport.hasCapability(HubCapabilitiesEnum.POLICY_API)) {
-                logger.error("This version of the Hub does not have support for Policies.");
-                run.setResult(Result.UNSTABLE);
-                return true;
-            } else if (getFailBuildForPolicyViolations()) {
+            if (getFailBuildForPolicyViolations()) {
                 if (bomUpToDateAction.getPolicyStatusUrl() == null) {
                     logger.error(
                             "Can not check policy violations, could not find the policy status URL for this Version.");
                     run.setResult(Result.UNSTABLE);
                     return true;
                 }
+                final HubIntRestService restService = getHubIntRestService(logger, serverInfo);
+                final DataServicesFactory dataServicesFactory = getDataServices(logger, serverInfo);
+
+                final HubSupportHelper hubSupport = getCheckedHubSupportHelper();
+
+                waitForBomToBeUpdated(builtOn, logger, bomUpToDateAction, restService, hubSupport);
+
                 // We use this conditional in case there are other failure
                 // conditions in the future
-                final PolicyStatusItem policyStatus = restService
-                        .getPolicyStatus(bomUpToDateAction.getPolicyStatusUrl());
+                final PolicyStatusItem policyStatus = dataServicesFactory.getPolicyStatusRestService()
+                        .getItem(bomUpToDateAction.getPolicyStatusUrl());
                 if (policyStatus == null) {
                     logger.error("Could not find any information about the Policy status of the bom.");
                     run.setResult(Result.UNSTABLE);
@@ -164,13 +161,20 @@ public class HubCommonFailureStep {
         final HubSupportHelper hubSupport = new HubSupportHelper();
         final HubServerInfo serverInfo = HubServerInfoSingleton.getInstance().getServerInfo();
         try {
-            final HubIntRestService service = BuildHelper.getRestService(null, serverInfo.getServerUrl(),
+            final DataServicesFactory service = BuildHelper.getDataServiceFactory(serverInfo.getServerUrl(),
                     serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
-            hubSupport.checkHubSupport(service, null);
+            hubSupport.checkHubSupport(service.getHubVersionRestService(), null);
         } catch (final Exception e) {
             return null;
         }
         return hubSupport;
+    }
+
+    public DataServicesFactory getDataServices(final HubJenkinsLogger logger, final HubServerInfo serverInfo)
+            throws IOException, BDRestException, URISyntaxException, BDJenkinsHubPluginException,
+            HubIntegrationException, IllegalArgumentException, EncryptionException {
+        return BuildHelper.getDataServiceFactory(logger, serverInfo.getServerUrl(), serverInfo.getUsername(),
+                serverInfo.getPassword(), serverInfo.getTimeout());
     }
 
     public HubIntRestService getHubIntRestService(final HubJenkinsLogger logger, final HubServerInfo serverInfo)
@@ -187,7 +191,6 @@ public class HubCommonFailureStep {
         if (action.isHasBomBeenUdpated()) {
             return;
         }
-
         final HubReportGenerationInfo reportGenInfo = new HubReportGenerationInfo();
         reportGenInfo.setService(service);
         reportGenInfo.setHostname(action.getLocalHostName());
@@ -202,11 +205,6 @@ public class HubCommonFailureStep {
 
         final RemoteHubEventPolling hubEventPolling = new RemoteHubEventPolling(service, builtOn.getChannel());
 
-        if (supportHelper.hasCapability(HubCapabilitiesEnum.CLI_STATUS_DIRECTORY_OPTION)) {
-            hubEventPolling.assertBomUpToDate(reportGenInfo, logger);
-        } else {
-            hubEventPolling.assertBomUpToDate(reportGenInfo);
-        }
-
+        hubEventPolling.assertBomUpToDate(reportGenInfo, logger);
     }
 }
