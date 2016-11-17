@@ -97,11 +97,16 @@ public class HubCommonFailureStep {
 
                 // We use this conditional in case there are other failure
                 // conditions in the future
-                final PolicyStatusItem policyStatus = dataServicesFactory.getPolicyStatusRestService()
-                        .getItem(bomUpToDateAction.getPolicyStatusUrl());
+                PolicyStatusItem policyStatus = null;
+                try {
+                    policyStatus = dataServicesFactory.getPolicyStatusRestService()
+                            .getItem(bomUpToDateAction.getPolicyStatusUrl());
+                } catch (BDRestException e) {
+                    // ignore exception, could not find policy information
+                }
                 if (policyStatus == null) {
                     logger.error("Could not find any information about the Policy status of the bom.");
-                    run.setResult(Result.UNSTABLE);
+                    return true;
                 }
                 if (policyStatus.getOverallStatus() == PolicyStatusEnum.IN_VIOLATION) {
                     run.setResult(Result.FAILURE);

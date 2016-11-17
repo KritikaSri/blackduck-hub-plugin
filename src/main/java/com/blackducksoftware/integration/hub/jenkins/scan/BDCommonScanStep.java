@@ -331,9 +331,13 @@ public class BDCommonScanStep {
                     run.setResult(runScan(builtOn, scan, logger, scanExec, jrePath, oneJarPath, jobConfig));
                     final DateTime afterScanTime = new DateTime();
 
-                    ProjectVersionItem version = getProjectVersionFromScanStatus(builtOn.getChannel(), scan.getScanStatusDirectoryPath(), service);
+                    ProjectVersionItem version = null;
+                    ProjectItem project = null;
+                    if (!isDryRun() && StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion)) {
+                        version = getProjectVersionFromScanStatus(builtOn.getChannel(), scan.getScanStatusDirectoryPath(), service);
 
-                    ProjectItem project = getProjectFromVersion(version, service);
+                        project = getProjectFromVersion(version, service);
+                    }
 
                     bomUpToDateAction.setDryRun(isDryRun());
                     if (run.getResult().equals(Result.SUCCESS) && !isDryRun() && isShouldGenerateHubReport()) {
