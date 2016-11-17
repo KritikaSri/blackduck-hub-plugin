@@ -21,6 +21,8 @@
  *******************************************************************************/
 package com.blackducksoftware.integration.hub.jenkins.helper;
 
+import java.net.URL;
+
 import hudson.Plugin;
 import hudson.PluginWrapper;
 import jenkins.model.Jenkins;
@@ -44,5 +46,24 @@ public class PluginHelper {
             }
         }
         return pluginVersion;
+    }
+
+    public static URL getPluginRootPathURL() {
+        URL rootPath = null;
+        Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins != null) {
+            // Jenkins still active
+            Plugin p = jenkins.getPlugin("blackduck-hub");
+
+            if (p != null) {
+                // plugin found
+                PluginWrapper pw = p.getWrapper();
+                if (pw != null) {
+                    URL url = pw.baseResourceURL;
+                    rootPath = url;
+                }
+            }
+        }
+        return rootPath;
     }
 }

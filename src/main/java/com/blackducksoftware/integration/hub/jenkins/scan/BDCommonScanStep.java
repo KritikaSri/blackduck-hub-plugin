@@ -48,6 +48,7 @@ import com.blackducksoftware.integration.hub.api.project.ProjectItem;
 import com.blackducksoftware.integration.hub.api.project.version.ProjectVersionItem;
 import com.blackducksoftware.integration.hub.api.report.HubReportGenerationInfo;
 import com.blackducksoftware.integration.hub.api.report.ReportCategoriesEnum;
+import com.blackducksoftware.integration.hub.api.report.RiskReportResourceCopier;
 import com.blackducksoftware.integration.hub.api.scan.ScanSummaryItem;
 import com.blackducksoftware.integration.hub.api.version.ReleaseItem;
 import com.blackducksoftware.integration.hub.builder.HubScanJobConfigBuilder;
@@ -197,7 +198,6 @@ public class BDCommonScanStep {
             final HubJenkinsLogger logger, final Launcher launcher, final TaskListener listener,
             final String buildDisplayName, final String buildIdentifier, final FilePath javaHome)
             throws InterruptedException, IOException {
-
         final CIEnvironmentVariables variables = new CIEnvironmentVariables();
         variables.putAll(envVars);
         logger.setLogLevel(variables);
@@ -491,6 +491,7 @@ public class BDCommonScanStep {
     private void generateHubReport(final Run run, final Node builtOn, final HubJenkinsLogger logger,
             final HubReportGenerationInfo reportGenInfo, final HubServerInfo serverInfo,
             final HubSupportHelper hubSupport, final BomUpToDateAction action) throws Exception {
+        checkAndCopyReportResources(logger);
         final HubReportAction reportAction = new HubReportAction(run);
         final RemoteBomGenerator remoteBomGenerator = new RemoteBomGenerator(reportGenInfo, hubSupport,
                 builtOn.getChannel());
@@ -500,6 +501,29 @@ public class BDCommonScanStep {
         reportAction.setReportData(remoteBomGenerator.generateHubReport(logger, categories));
         run.addAction(reportAction);
         action.setHasBomBeenUdpated(true);
+    }
+
+    private void checkAndCopyReportResources(final HubJenkinsLogger logger) throws IOException {
+        final URL pluginPathUrl = PluginHelper.getPluginRootPathURL();
+
+        if (pluginPathUrl == null) {
+            logger.error("Plugin Directory path not found cannot check the report resources.");
+        } else {
+            try {
+                logger.debug("Checking report resources at the following location: " + pluginPathUrl);
+                File pluginRootDir = new File(pluginPathUrl.toURI());
+                File reportTestFile = new File(pluginRootDir, "js/HubBomReportFunctions.js");
+                if (reportTestFile.exists()) {
+                    logger.info("Risk Report resources found.");
+                } else {
+                    logger.info("Risk Report resources not found. Copying resources...");
+                    RiskReportResourceCopier resourceCopier = new RiskReportResourceCopier(pluginRootDir.toString());
+                    resourceCopier.copy();
+                }
+            } catch (URISyntaxException ex) {
+                logger.error("Error copying the report resources.", ex);
+            }
+        }
     }
 
     protected ProjectItem ensureProjectExists(final HubIntRestService service, final IntLogger logger,
