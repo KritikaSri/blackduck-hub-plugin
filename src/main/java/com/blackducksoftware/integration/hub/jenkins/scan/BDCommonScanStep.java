@@ -286,18 +286,7 @@ public class BDCommonScanStep {
                     final HubIntRestService intRestService = BuildHelper.getRestService(logger,
                             getHubServerInfo().getServerUrl(), getHubServerInfo().getUsername(),
                             getHubServerInfo().getPassword(), getHubServerInfo().getTimeout());
-                    // ProjectItem project = null;
-                    // ProjectVersionItem version = null;
-                    // if (!isDryRun() && StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion))
-                    // {
-                    // project = ensureProjectExists(service, logger, projectName);
-                    // if (!project.getMeta().isAccessible()) {
-                    // throw new ProjectNotAccessibleException(Messages.HubBuildScan_getProjectNotAccessible());
-                    // }
-                    // version = ensureVersionExists(service, logger, projectVersion, project);
-                    // logger.debug("Found Project : " + projectName);
-                    // logger.debug("Found Version : " + projectVersion);
-                    // }
+                    
                     final HubSupportHelper hubSupport = new HubSupportHelper();
 
                     hubSupport.checkHubSupport(service.getHubVersionRestService(), logger);
