@@ -46,9 +46,11 @@
   </distributionManagement>
 
   <properties>
+    <hub.common.version>2.1.1-SNAPSHOT</hub.common.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <project.resources.sourceEncoding>UTF-8</project.resources.sourceEncoding>
+    <risk.report.resources.directory>${project.build.directory}/maven-shared-archive-resources/riskreport/web</risk.report.resources.directory>
   </properties>
 
   <repositories>
@@ -77,7 +79,7 @@
     <dependency>
       <groupId>com.blackducksoftware.integration</groupId>
       <artifactId>hub-common</artifactId>
-      <version>2.1.1-SNAPSHOT</version>
+      <version>${hub.common.version}</version>
       <exclusions>
         <exclusion>
           <groupId>com.thoughtworks.xstream</groupId>
@@ -209,6 +211,7 @@
           <configuration>
             <pluginFirstClassLoader>false</pluginFirstClassLoader>
             <hpiName>${project.artifactId}-${project.version}</hpiName>
+            <warSourceDirectory>${risk.report.resources.directory}</warSourceDirectory>
           </configuration>
         </plugin>
         <plugin>
@@ -364,6 +367,46 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-remote-resources-plugin</artifactId>
+        <version>1.5</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>process</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <resourceBundles>
+            <resourceBundle>com.blackducksoftware.integration:hub-common:${hub.common.version}</resourceBundle>
+          </resourceBundles>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.0.1</version>
+        <executions>
+          <execution>
+            <id>copy-resources</id>
+            <!-- here the phase you need -->
+            <phase>validate</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${risk.report.resources.directory}</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${basedir}/src/main/webapp</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
