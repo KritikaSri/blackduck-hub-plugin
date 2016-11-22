@@ -142,7 +142,6 @@ public class HubReportAction implements Action {
         this.reportData = reportData;
         final Gson gson = new GsonBuilder().create();
         jsonReportData = gson.toJson(reportData);
-        System.out.println("######## JSON DATA STRING: " + jsonReportData.length());
     }
 
     public String getJsonReportData() {

@@ -211,7 +211,7 @@
           <configuration>
             <pluginFirstClassLoader>false</pluginFirstClassLoader>
             <hpiName>${project.artifactId}-${project.version}</hpiName>
-            <warSourceDirectory>${risk.report.resources.directory}</warSourceDirectory>
+            <warSourceDirectory>${project.build.directory}/webapp</warSourceDirectory>
           </configuration>
         </plugin>
         <plugin>
@@ -374,6 +374,7 @@
         <version>1.5</version>
         <executions>
           <execution>
+            <phase>validate</phase>
             <goals>
               <goal>process</goal>
             </goals>
@@ -397,10 +398,14 @@
               <goal>copy-resources</goal>
             </goals>
             <configuration>
-              <outputDirectory>${risk.report.resources.directory}</outputDirectory>
+              <outputDirectory>${project.build.directory}/webapp</outputDirectory>
               <resources>
                 <resource>
                   <directory>${basedir}/src/main/webapp</directory>
+                  <filtering>true</filtering>
+                </resource>
+                <resource>
+                  <directory>${risk.report.resources.directory}</directory>
                   <filtering>true</filtering>
                 </resource>
               </resources>
