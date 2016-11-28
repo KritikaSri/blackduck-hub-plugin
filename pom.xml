@@ -211,7 +211,7 @@
           <configuration>
             <pluginFirstClassLoader>false</pluginFirstClassLoader>
             <hpiName>${project.artifactId}-${project.version}</hpiName>
-            <warSourceDirectory>${project.build.directory}/webapp</warSourceDirectory>
+            <!-- <warSourceDirectory>${project.build.directory}/webapp</warSourceDirectory> -->
           </configuration>
         </plugin>
         <plugin>
@@ -368,7 +368,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
       </plugin>
-      <plugin>
+      <!-- 
+            <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-remote-resources-plugin</artifactId>
         <version>1.5</version>
@@ -392,7 +393,9 @@
         <executions>
           <execution>
             <id>copy-resources</id>
-            <!-- here the phase you need -->
+            -->
+      <!-- here the phase you need -->
+      <!-- 
             <phase>validate</phase>
             <goals>
               <goal>copy-resources</goal>
@@ -403,22 +406,17 @@
                 <resource>
                   <directory>${basedir}/src/main/webapp</directory>
                   <filtering>true</filtering>
-                  <excludes>
-            		<exclude>**/fonts/**</exclude>
-        		  </excludes>
                 </resource>
                 <resource>
                   <directory>${risk.report.resources.directory}</directory>
                   <filtering>true</filtering>
-                  <excludes>
-            		<exclude>**/fonts/**</exclude>
-        		  </excludes>
                 </resource>
               </resources>
             </configuration>
           </execution>
         </executions>
       </plugin>
+      -->
     </plugins>
   </build>
 </project>
