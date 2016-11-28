@@ -403,10 +403,16 @@
                 <resource>
                   <directory>${basedir}/src/main/webapp</directory>
                   <filtering>true</filtering>
+                  <excludes>
+            		<exclude>**/fonts/**</exclude>
+        		  </excludes>
                 </resource>
                 <resource>
                   <directory>${risk.report.resources.directory}</directory>
                   <filtering>true</filtering>
+                  <excludes>
+            		<exclude>**/fonts/**</exclude>
+        		  </excludes>
                 </resource>
               </resources>
             </configuration>
