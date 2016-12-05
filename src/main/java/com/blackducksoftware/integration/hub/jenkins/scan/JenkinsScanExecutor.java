@@ -27,8 +27,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.ScanExecutor;
 import com.blackducksoftware.integration.hub.ScannerSplitStream;
@@ -178,12 +176,6 @@ public class JenkinsScanExecutor extends ScanExecutor {
                 // ///////////////////////
                 final EnvVars envVars = new EnvVars();
                 envVars.put("BD_HUB_PASSWORD", getHubPassword());
-                if (getVariables() != null) {
-                    final String bdioEnvVar = getVariables().getValue("BD_HUB_DECLARED_COMPONENTS");
-                    if (StringUtils.isNotBlank(bdioEnvVar)) {
-                        envVars.put("BD_HUB_DECLARED_COMPONENTS", bdioEnvVar);
-                    }
-                }
                 ps.envs(envVars);
 
                 final ScannerSplitStream splitStream = new ScannerSplitStream(logger, standardOutFile.write());
