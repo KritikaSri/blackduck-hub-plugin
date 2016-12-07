@@ -340,7 +340,8 @@ public class BDCommonScanStep {
                     }
 
                     bomUpToDateAction.setDryRun(isDryRun());
-                    if (run.getResult().equals(Result.SUCCESS) && !isDryRun() && isShouldGenerateHubReport()) {
+                    if (run.getResult().equals(Result.SUCCESS) && !isDryRun() && isShouldGenerateHubReport() && StringUtils.isNotBlank(projectName)
+                            && StringUtils.isNotBlank(projectVersion)) {
 
                         final HubReportGenerationInfo reportGenInfo = new HubReportGenerationInfo();
                         reportGenInfo.setService(intRestService);
