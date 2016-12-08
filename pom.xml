@@ -35,10 +35,6 @@
     <url>https://www.github.com/jenkinsci/blackduck-hub-plugin</url>
   </scm>
   <distributionManagement>
-    <repository>
-      <id>bds-int-public</id>
-      <url>https://updates.suite.blackducksoftware.com/bdhubjenkins</url>
-    </repository>
     <snapshotRepository>
       <id>bds-int-public</id>
       <url>https://updates.suite.blackducksoftware.com/bdhubjenkins</url>
