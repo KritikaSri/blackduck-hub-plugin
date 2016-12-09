@@ -26,7 +26,6 @@ import java.io.IOException;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
@@ -39,8 +38,6 @@ import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
-import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
-import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
 import com.blackducksoftware.integration.hub.jenkins.scan.BDCommonDescriptorUtil;
 import com.blackducksoftware.integration.hub.jenkins.scan.BDCommonScanStep;
 
@@ -50,7 +47,6 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.Computer;
-import hudson.model.JDK;
 import hudson.model.Node;
 import hudson.model.Result;
 import hudson.model.Run;
@@ -66,10 +62,6 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
     private final String hubProjectVersion;
 
-    private final String hubVersionPhase;
-
-    private final String hubVersionDist;
-
     private final String scanMemory;
 
     private final boolean shouldGenerateHubReport;
@@ -82,12 +74,10 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
     @DataBoundConstructor
     public HubScanWorkflowStep(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
-            final String hubVersionPhase, final String hubVersionDist, final String scanMemory,
+            final String scanMemory,
             final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun) {
         this.scans = scans;
         this.hubProjectName = hubProjectName;
-        this.hubVersionPhase = hubVersionPhase;
-        this.hubVersionDist = hubVersionDist;
         this.hubProjectVersion = hubProjectVersion;
         this.scanMemory = scanMemory;
         this.shouldGenerateHubReport = shouldGenerateHubReport;
@@ -116,14 +106,6 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
     public String getHubProjectVersion() {
         return hubProjectVersion;
-    }
-
-    public String getHubVersionPhase() {
-        return hubVersionPhase;
-    }
-
-    public String getHubVersionDist() {
-        return hubVersionDist;
     }
 
     public String getScanMemory() {
@@ -287,73 +269,19 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
                 final Node node = computer.getNode();
                 final BDCommonScanStep scanStep = new BDCommonScanStep(hubScanStep.getScans(),
                         hubScanStep.getHubProjectName(), hubScanStep.getHubProjectVersion(),
-                        hubScanStep.getHubVersionPhase(), hubScanStep.getHubVersionDist(), hubScanStep.getScanMemory(),
+                        hubScanStep.getScanMemory(),
                         hubScanStep.getShouldGenerateHubReport(), hubScanStep.getBomUpdateMaxiumWaitTime(),
                         hubScanStep.isDryRun(), hubScanStep.isVerbose());
 
-                final JDK jdk = determineJava(logger, node, envVars);
-                final FilePath javaHome = new FilePath(node.getChannel(), jdk.getHome());
                 scanStep.runScan(run, node, envVars, workspace, logger, launcher, listener,
                         run.getFullDisplayName(),
-                        String.valueOf(run.getNumber()), javaHome);
+                        String.valueOf(run.getNumber()));
 
             } catch (final Exception e) {
                 logger.error(e);
                 run.setResult(Result.UNSTABLE);
             }
             return null;
-        }
-
-        /**
-         * Sets the Java Home that is to be used for running the Shell script
-         *
-         */
-        private JDK determineJava(final HubJenkinsLogger logger, final Node builtOn, final EnvVars envVars)
-                throws IOException, InterruptedException, HubConfigurationException {
-            JDK javaHomeTemp = null;
-
-            if (StringUtils.isEmpty(builtOn.getNodeName())) {
-                logger.info("Getting Jdk on master  : " + builtOn.getNodeName());
-                // Empty node name indicates master
-                final String byteCodeVersion = System.getProperty("java.class.version");
-                final Double majorVersion = Double.valueOf(byteCodeVersion);
-                if (majorVersion >= 51.0) {
-                    // Java 7 bytecode
-                    final String javaHome = System.getProperty("java.home");
-                    javaHomeTemp = new JDK("Java running master agent", javaHome);
-                }
-            } else {
-                logger.info("Getting Jdk on node  : " + builtOn.getNodeName());
-
-                final String byteCodeVersion = builtOn.getChannel().call(new GetSystemProperty("java.class.version"));
-                final Double majorVersion = Double.valueOf(byteCodeVersion);
-                if (majorVersion >= 51.0) {
-                    // Java 7 bytecode
-                    final String javaHome = builtOn.getChannel().call(new GetSystemProperty("java.home"));
-                    javaHomeTemp = new JDK("Java running slave agent", javaHome);
-                }
-            }
-            if (javaHomeTemp != null && javaHomeTemp.getHome() != null) {
-                logger.info("JDK home : " + javaHomeTemp.getHome());
-            }
-
-            if (javaHomeTemp == null || StringUtils.isEmpty(javaHomeTemp.getHome())) {
-                logger.info("Could not find the specified Java installation, checking the JAVA_HOME variable.");
-                if (envVars.get("JAVA_HOME") == null || envVars.get("JAVA_HOME") == "") {
-                    throw new HubConfigurationException("Need to define a JAVA_HOME or select an installed JDK.");
-                }
-                // In case the user did not select a java installation, set to
-                // the
-                // environment variable JAVA_HOME
-                javaHomeTemp = new JDK("Default Java", envVars.get("JAVA_HOME"));
-            }
-            final FilePath javaHome = new FilePath(builtOn.getChannel(), javaHomeTemp.getHome());
-            if (!javaHome.exists()) {
-                throw new HubConfigurationException(
-                        "Could not find the specified Java installation at: " + javaHome.getRemote());
-            }
-
-            return javaHomeTemp;
         }
 
     }

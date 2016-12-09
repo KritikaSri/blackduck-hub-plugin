@@ -58,6 +58,7 @@ public class HubJenkinsLogger extends IntLogger implements Serializable {
     /**
      * Prints the message regardless of the log level
      */
+    @Override
     public void alwaysLog(final String txt) {
         printLog(txt, null);
     }

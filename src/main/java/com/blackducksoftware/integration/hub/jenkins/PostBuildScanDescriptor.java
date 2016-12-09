@@ -51,17 +51,13 @@ import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import com.blackducksoftware.integration.builder.ValidationResultEnum;
-import com.blackducksoftware.integration.builder.ValidationResults;
-import com.blackducksoftware.integration.hub.builder.HubServerConfigBuilder;
-import com.blackducksoftware.integration.hub.exception.BDRestException;
-import com.blackducksoftware.integration.hub.global.GlobalFieldKey;
-import com.blackducksoftware.integration.hub.global.HubServerConfig;
-import com.blackducksoftware.integration.hub.global.HubServerConfigFieldEnum;
+import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.jenkins.scan.BDCommonDescriptorUtil;
+import com.blackducksoftware.integration.hub.validator.HubServerConfigValidator;
+import com.blackducksoftware.integration.validator.ValidationResults;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
@@ -338,19 +334,14 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         if (StringUtils.isBlank(hubTimeout)) {
             return FormValidation.error(Messages.HubBuildScan_getPleaseSetTimeout());
         }
-        final HubServerConfigBuilder builder = new HubServerConfigBuilder(false);
-        builder.setTimeout(hubTimeout);
-        final ValidationResults<GlobalFieldKey, HubServerConfig> results = new ValidationResults<GlobalFieldKey, HubServerConfig>();
-        builder.validateTimeout(results);
+        HubServerConfigValidator validator = new HubServerConfigValidator();
+        validator.setTimeout(hubTimeout);
+
+        final ValidationResults results = new ValidationResults();
+        validator.validateTimeout(results);
 
         if (!results.isSuccess()) {
-            if (results.hasErrors()) {
-                return FormValidation.error(
-                        results.getResultString(HubServerConfigFieldEnum.HUBTIMEOUT, ValidationResultEnum.ERROR));
-            } else if (results.hasWarnings()) {
-                return FormValidation.warning(
-                        results.getResultString(HubServerConfigFieldEnum.HUBTIMEOUT, ValidationResultEnum.WARN));
-            }
+            return FormValidation.error(results.getAllResultString());
         }
         return FormValidation.ok();
     }
@@ -367,24 +358,20 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             proxyConfig = jenkins.proxy;
         }
 
-        final HubServerConfigBuilder builder = new HubServerConfigBuilder(false);
-        builder.setHubUrl(hubServerUrl);
+        HubServerConfigValidator validator = new HubServerConfigValidator();
+        validator.setHubUrl(hubServerUrl);
         if (proxyConfig != null) {
-            builder.setProxyHost(proxyConfig.name);
-            builder.setProxyPort(proxyConfig.port);
-            builder.setProxyUsername(proxyConfig.getUserName());
-            builder.setProxyPassword(proxyConfig.getPassword());
-            builder.setIgnoredProxyHosts(proxyConfig.noProxyHost);
+            validator.setProxyHost(proxyConfig.name);
+            validator.setProxyPort(proxyConfig.port);
+            validator.setProxyUsername(proxyConfig.getUserName());
+            validator.setProxyPassword(proxyConfig.getPassword());
+            validator.setIgnoredProxyHosts(proxyConfig.noProxyHost);
         }
-        final ValidationResults<GlobalFieldKey, HubServerConfig> results = new ValidationResults<GlobalFieldKey, HubServerConfig>();
-        builder.validateHubUrl(results);
+        final ValidationResults results = new ValidationResults();
+        validator.validateHubUrl(results);
 
         if (!results.isSuccess()) {
-            if (results.hasWarnings()) {
-                return FormValidation.error(results.getAllResultString(ValidationResultEnum.WARN));
-            } else if (results.hasErrors()) {
-                return FormValidation.error(results.getAllResultString(ValidationResultEnum.ERROR));
-            }
+            return FormValidation.error(results.getAllResultString());
         }
         return FormValidation.ok();
     }
@@ -470,7 +457,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
             return FormValidation.ok(Messages.HubBuildScan_getCredentialsValidFor_0_(serverUrl));
 
-        } catch (final BDRestException e) {
+        } catch (final HubIntegrationException e) {
             String message;
             if (e.getCause() != null) {
                 message = e.getCause().toString();

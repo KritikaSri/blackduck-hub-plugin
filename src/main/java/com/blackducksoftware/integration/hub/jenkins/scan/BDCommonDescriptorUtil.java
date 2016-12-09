@@ -29,24 +29,22 @@ import javax.servlet.ServletException;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.blackducksoftware.integration.builder.ValidationResultEnum;
-import com.blackducksoftware.integration.builder.ValidationResults;
-import com.blackducksoftware.integration.hub.HubIntRestService;
-import com.blackducksoftware.integration.hub.api.item.HubItemFilterUtil;
+import com.blackducksoftware.integration.hub.api.item.HubItemFilter;
 import com.blackducksoftware.integration.hub.api.project.ProjectItem;
+import com.blackducksoftware.integration.hub.api.project.ProjectRequestService;
 import com.blackducksoftware.integration.hub.api.project.version.ProjectVersionItem;
+import com.blackducksoftware.integration.hub.api.project.version.ProjectVersionRequestService;
 import com.blackducksoftware.integration.hub.api.version.DistributionEnum;
 import com.blackducksoftware.integration.hub.api.version.PhaseEnum;
-import com.blackducksoftware.integration.hub.builder.HubScanJobConfigBuilder;
-import com.blackducksoftware.integration.hub.exception.BDRestException;
-import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
-import com.blackducksoftware.integration.hub.exception.VersionDoesNotExistException;
+import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
-import com.blackducksoftware.integration.hub.job.HubScanJobConfig;
-import com.blackducksoftware.integration.hub.job.HubScanJobFieldEnum;
+import com.blackducksoftware.integration.hub.scan.HubScanConfigFieldEnum;
+import com.blackducksoftware.integration.hub.service.HubServicesFactory;
+import com.blackducksoftware.integration.hub.validator.HubScanConfigValidator;
+import com.blackducksoftware.integration.validator.ValidationResults;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -160,12 +158,14 @@ public class BDCommonDescriptorUtil {
                     return potentialMatches;
                 }
 
-                final HubIntRestService service = BuildHelper.getRestService(serverInfo.getServerUrl(),
+                final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(),
                         serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
 
-                final List<ProjectItem> suggestions = service.getProjectMatches(hubProjectName);
+                ProjectRequestService projectService = service.createProjectRequestService();
 
-                final HubItemFilterUtil<ProjectItem> filter = new HubItemFilterUtil<ProjectItem>();
+                final List<ProjectItem> suggestions = projectService.getAllProjectMatches(hubProjectName);
+
+                final HubItemFilter<ProjectItem> filter = new HubItemFilter<ProjectItem>();
                 final List<ProjectItem> accessibleSuggestions = filter.getAccessibleItems(suggestions);
 
                 if (!accessibleSuggestions.isEmpty()) {
@@ -208,18 +208,19 @@ public class BDCommonDescriptorUtil {
                     return FormValidation.warning(Messages.HubBuildScan_getProjectNameContainsVariable());
                 }
 
-                final HubIntRestService service = BuildHelper.getRestService(serverInfo.getServerUrl(),
+                final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(),
                         serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
 
-                final ProjectItem project = service.getProjectByName(hubProjectName);
+                ProjectRequestService projectService = service.createProjectRequestService();
+                final ProjectItem project = projectService.getProjectByName(hubProjectName);
                 if (!project.getMeta().isAccessible()) {
                     return FormValidation.error(Messages.HubBuildScan_getProjectNotAccessible());
                 }
                 return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(serverInfo.getServerUrl()));
-            } catch (final ProjectDoesNotExistException e) {
-                return FormValidation
-                        .error(Messages.HubBuildScan_getProjectNonExistingIn_0_(serverInfo.getServerUrl()));
-            } catch (final BDRestException e) {
+                // } catch (final ProjectDoesNotExistException e) {
+                // return FormValidation
+                // .error(Messages.HubBuildScan_getProjectNonExistingIn_0_(serverInfo.getServerUrl()));
+            } catch (final HubIntegrationException e) {
                 String message;
                 if (e.getCause() != null) {
                     message = e.getCause().toString();
@@ -284,18 +285,19 @@ public class BDCommonDescriptorUtil {
                     return FormValidation.ok();
                 }
 
-                final HubIntRestService service = BuildHelper.getRestService(serverInfo.getServerUrl(),
+                final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(),
                         serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
-
+                ProjectRequestService projectService = service.createProjectRequestService();
                 ProjectItem project = null;
                 try {
-                    project = service.getProjectByName(hubProjectName);
+                    project = projectService.getProjectByName(hubProjectName);
                 } catch (final Exception e) {
                     // This error will already show up for the project name
                     // field
                     return FormValidation.ok();
                 }
-                final List<ProjectVersionItem> releases = service.getProjectVersionsForProject(project);
+                ProjectVersionRequestService projectVersionService = service.createProjectVersionRequestService();
+                final List<ProjectVersionItem> releases = projectVersionService.getAllProjectVersions(project);
 
                 final StringBuilder projectVersions = new StringBuilder();
                 for (final ProjectVersionItem release : releases) {
@@ -311,7 +313,7 @@ public class BDCommonDescriptorUtil {
                 }
                 return FormValidation.error(Messages.HubBuildScan_getVersionNonExistingIn_0_(project.getName(),
                         projectVersions.toString()));
-            } catch (final BDRestException e) {
+            } catch (final HubIntegrationException e) {
                 String message;
                 if (e.getCause() != null) {
                     message = e.getCause().toString();
@@ -383,46 +385,34 @@ public class BDCommonDescriptorUtil {
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
-            final HubIntRestService service = BuildHelper.getRestService(serverInfo.getServerUrl(), credentialUserName,
+            final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(), credentialUserName,
                     credentialPassword, serverInfo.getTimeout());
 
             Boolean projectCreated = false;
-
+            ProjectRequestService projectService = service.createProjectRequestService();
             ProjectItem project = null;
             try {
-                project = service.getProjectByName(hubProjectName);
-            } catch (final ProjectDoesNotExistException e) {
-                final String projectUrl = service.createHubProject(hubProjectName);
-                project = service.getProject(projectUrl);
+                project = projectService.getProjectByName(hubProjectName);
+            } catch (final HubIntegrationException e) {
+                final String projectUrl = projectService.createHubProject(hubProjectName);
+                project = projectService.getItem(projectUrl);
                 projectCreated = true;
             }
-
+            ProjectVersionRequestService projectVersionService = service.createProjectVersionRequestService();
             try {
-                service.getVersion(project, hubProjectVersion);
+                projectVersionService.getProjectVersion(project, hubProjectVersion);
                 return FormValidation.warning(Messages.HubBuildScan_getProjectAndVersionExist());
-            } catch (final VersionDoesNotExistException e) {
-                service.createHubVersion(project, hubProjectVersion, hubVersionPhase, hubVersionDist);
+            } catch (final HubIntegrationException e) {
+                projectVersionService.createHubVersion(project, hubProjectVersion, PhaseEnum.valueOf(hubVersionPhase),
+                        DistributionEnum.valueOf(hubVersionDist));
                 if (projectCreated) {
                     return FormValidation.ok(Messages.HubBuildScan_getProjectAndVersionCreated());
                 } else {
                     return FormValidation.ok(Messages.HubBuildScan_getVersionCreated());
                 }
             }
-        } catch (final BDRestException e) {
-            if (e.getResource().getResponse().getStatus().getCode() == 412) {
-                return FormValidation.error(e, Messages.HubBuildScan_getProjectVersionCreationProblem());
-            } else if (e.getResource().getResponse().getStatus().getCode() == 401) {
-                // If User is Not Authorized, 401 error, an exception should be
-                // thrown by the ClientResource
-                return FormValidation.error(e,
-                        Messages.HubBuildScan_getCredentialsInValidFor_0_(serverInfo.getServerUrl()));
-            } else if (e.getResource().getResponse().getStatus().getCode() == 407) {
-                return FormValidation.error(e, Messages
-                        .HubBuildScan_getErrorConnectingTo_0_(e.getResource().getResponse().getStatus().getCode()));
-            } else {
-                return FormValidation.error(e, Messages
-                        .HubBuildScan_getErrorConnectingTo_0_(e.getResource().getResponse().getStatus().getCode()));
-            }
+        } catch (final HubIntegrationException e) {
+            return FormValidation.error(e, e.getMessage());
         } catch (final Exception e) {
             String message;
             if (e.getCause() != null && e.getCause().getCause() != null) {
@@ -446,18 +436,18 @@ public class BDCommonDescriptorUtil {
     }
 
     public static FormValidation doCheckScanMemory(final String scanMemory) throws IOException, ServletException {
-        final ValidationResults<HubScanJobFieldEnum, HubScanJobConfig> results = new ValidationResults<HubScanJobFieldEnum, HubScanJobConfig>();
-        final HubScanJobConfigBuilder builder = new HubScanJobConfigBuilder(false);
-        builder.setScanMemory(scanMemory);
-        builder.validateScanMemory(results);
+        final ValidationResults results = new ValidationResults();
+        HubScanConfigValidator validator = new HubScanConfigValidator();
+        validator.setScanMemory(scanMemory);
+        validator.validateScanMemory(results);
 
         if (!results.isSuccess()) {
             if (results.hasWarnings()) {
                 return FormValidation
-                        .warning(results.getResultString(HubScanJobFieldEnum.SCANMEMORY, ValidationResultEnum.WARN));
+                        .warning(results.getResultString(HubScanConfigFieldEnum.SCANMEMORY));
             } else if (results.hasErrors()) {
                 return FormValidation
-                        .error(results.getResultString(HubScanJobFieldEnum.SCANMEMORY, ValidationResultEnum.ERROR));
+                        .error(results.getResultString(HubScanConfigFieldEnum.SCANMEMORY));
             }
         }
         return FormValidation.ok();
@@ -465,19 +455,13 @@ public class BDCommonDescriptorUtil {
 
     public static FormValidation doCheckBomUpdateMaxiumWaitTime(final String bomUpdateMaxiumWaitTime)
             throws IOException, ServletException {
-        final ValidationResults<HubScanJobFieldEnum, HubScanJobConfig> results = new ValidationResults<HubScanJobFieldEnum, HubScanJobConfig>();
-        final HubScanJobConfigBuilder builder = new HubScanJobConfigBuilder(false);
-        builder.setMaxWaitTimeForBomUpdate(bomUpdateMaxiumWaitTime);
-        builder.validateMaxWaitTimeForBomUpdate(results);
-
-        if (!results.isSuccess()) {
-            if (results.hasWarnings()) {
-                return FormValidation.warning(results.getResultString(HubScanJobFieldEnum.MAX_WAIT_TIME_FOR_BOM_UPDATE,
-                        ValidationResultEnum.WARN));
-            } else if (results.hasErrors()) {
-                return FormValidation.error(results.getResultString(HubScanJobFieldEnum.MAX_WAIT_TIME_FOR_BOM_UPDATE,
-                        ValidationResultEnum.ERROR));
+        try {
+            Integer waitTime = Integer.valueOf(bomUpdateMaxiumWaitTime);
+            if (waitTime <= 0) {
+                return FormValidation.error("Bom wait time must be greater than 0.");
             }
+        } catch (NumberFormatException e) {
+            return FormValidation.error(e, e.getMessage());
         }
         return FormValidation.ok();
     }

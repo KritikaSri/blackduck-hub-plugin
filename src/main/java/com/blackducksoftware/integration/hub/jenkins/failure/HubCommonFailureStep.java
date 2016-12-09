@@ -25,26 +25,18 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 
 import com.blackducksoftware.integration.exception.EncryptionException;
-import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.api.policy.PolicyStatusEnum;
 import com.blackducksoftware.integration.hub.api.policy.PolicyStatusItem;
-import com.blackducksoftware.integration.hub.api.report.HubReportGenerationInfo;
-import com.blackducksoftware.integration.hub.dataservices.DataServicesFactory;
-import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
-import com.blackducksoftware.integration.hub.exception.MissingUUIDException;
-import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
-import com.blackducksoftware.integration.hub.exception.UnexpectedHubResponseException;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.action.BomUpToDateAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubVariableContributor;
-import com.blackducksoftware.integration.hub.jenkins.bom.RemoteHubEventPolling;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
-import com.blackducksoftware.integration.log.IntLogger;
+import com.blackducksoftware.integration.hub.service.HubServicesFactory;
 import com.blackducksoftware.integration.util.CIEnvironmentVariables;
 
 import hudson.EnvVars;
@@ -88,20 +80,18 @@ public class HubCommonFailureStep {
                     run.setResult(Result.UNSTABLE);
                     return true;
                 }
-                final HubIntRestService restService = getHubIntRestService(logger, serverInfo);
-                final DataServicesFactory dataServicesFactory = getDataServices(logger, serverInfo);
+                final HubServicesFactory service = getHubServicesFactory(logger, serverInfo);
 
-                final HubSupportHelper hubSupport = getCheckedHubSupportHelper();
-
-                waitForBomToBeUpdated(builtOn, logger, bomUpToDateAction, restService, hubSupport);
+                final HubSupportHelper hubSupport = new HubSupportHelper();
+                hubSupport.checkHubSupport(service.createHubVersionRequestService(), null);
 
                 // We use this conditional in case there are other failure
                 // conditions in the future
                 PolicyStatusItem policyStatus = null;
                 try {
-                    policyStatus = dataServicesFactory.getPolicyStatusRestService()
-                            .getItem(bomUpToDateAction.getPolicyStatusUrl());
-                } catch (BDRestException e) {
+                    policyStatus = service.createHubRequestService()
+                            .getItem(bomUpToDateAction.getPolicyStatusUrl(), PolicyStatusItem.class);
+                } catch (HubIntegrationException e) {
                     // ignore exception, could not find policy information
                 }
                 if (policyStatus == null) {
@@ -146,70 +136,15 @@ public class HubCommonFailureStep {
         } catch (final URISyntaxException e) {
             logger.error(e.getMessage(), e);
             run.setResult(Result.UNSTABLE);
-        } catch (final BDRestException e) {
-            logger.error(e.getMessage(), e);
-            run.setResult(Result.UNSTABLE);
-        } catch (final ProjectDoesNotExistException e) {
-            logger.error(e.getMessage(), e);
-            run.setResult(Result.UNSTABLE);
-        } catch (final MissingUUIDException e) {
-            logger.error(e.getMessage(), e);
-            run.setResult(Result.UNSTABLE);
-        } catch (final UnexpectedHubResponseException e) {
-            logger.error(e.getMessage(), e);
-            run.setResult(Result.UNSTABLE);
         }
         return true;
     }
 
-    public HubSupportHelper getCheckedHubSupportHelper() {
-        final HubSupportHelper hubSupport = new HubSupportHelper();
-        final HubServerInfo serverInfo = HubServerInfoSingleton.getInstance().getServerInfo();
-        try {
-            final DataServicesFactory service = BuildHelper.getDataServiceFactory(serverInfo.getServerUrl(),
-                    serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
-            hubSupport.checkHubSupport(service.getHubVersionRestService(), null);
-        } catch (final Exception e) {
-            return null;
-        }
-        return hubSupport;
-    }
-
-    public DataServicesFactory getDataServices(final HubJenkinsLogger logger, final HubServerInfo serverInfo)
-            throws IOException, BDRestException, URISyntaxException, BDJenkinsHubPluginException,
+    public HubServicesFactory getHubServicesFactory(final HubJenkinsLogger logger, final HubServerInfo serverInfo)
+            throws IOException, URISyntaxException, BDJenkinsHubPluginException,
             HubIntegrationException, IllegalArgumentException, EncryptionException {
-        return BuildHelper.getDataServiceFactory(logger, serverInfo.getServerUrl(), serverInfo.getUsername(),
+        return BuildHelper.getHubServicesFactory(logger, serverInfo.getServerUrl(), serverInfo.getUsername(),
                 serverInfo.getPassword(), serverInfo.getTimeout());
     }
 
-    public HubIntRestService getHubIntRestService(final HubJenkinsLogger logger, final HubServerInfo serverInfo)
-            throws IOException, BDRestException, URISyntaxException, BDJenkinsHubPluginException,
-            HubIntegrationException, IllegalArgumentException, EncryptionException {
-        return BuildHelper.getRestService(logger, serverInfo.getServerUrl(), serverInfo.getUsername(),
-                serverInfo.getPassword(), serverInfo.getTimeout());
-    }
-
-    public void waitForBomToBeUpdated(final Node builtOn, final IntLogger logger, final BomUpToDateAction action,
-            final HubIntRestService service, final HubSupportHelper supportHelper) throws BDJenkinsHubPluginException,
-            InterruptedException, BDRestException, HubIntegrationException, URISyntaxException, IOException,
-            ProjectDoesNotExistException, MissingUUIDException, UnexpectedHubResponseException {
-        if (action.isHasBomBeenUdpated()) {
-            return;
-        }
-        final HubReportGenerationInfo reportGenInfo = new HubReportGenerationInfo();
-        reportGenInfo.setService(service);
-        reportGenInfo.setHostname(action.getLocalHostName());
-        reportGenInfo.setScanTargets(action.getScanTargets());
-
-        reportGenInfo.setMaximumWaitTime(action.getMaxWaitTime());
-
-        reportGenInfo.setBeforeScanTime(action.getBeforeScanTime());
-        reportGenInfo.setAfterScanTime(action.getAfterScanTime());
-
-        reportGenInfo.setScanStatusDirectory(action.getScanStatusDirectory());
-
-        final RemoteHubEventPolling hubEventPolling = new RemoteHubEventPolling(service, builtOn.getChannel());
-
-        hubEventPolling.assertBomUpToDate(reportGenInfo, logger);
-    }
 }
