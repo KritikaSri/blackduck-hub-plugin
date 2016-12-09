@@ -18,13 +18,6 @@
 	<f:textbox value="${it.getHubProjectVersion()}" default="${descriptor.getDefaultProjectVersion()}" onchange="clearCreateProjectMessage('projectCreateMessageField')" />
 </f:entry>
 
-<f:entry field="hubVersionPhase" title="${%VersionPhaseTitle}">
-	<f:select />
-</f:entry>
-<f:entry field="hubVersionDist" title="${%VersionDistTitle}">
-	<f:select />
-</f:entry>
-
 <f:entry>
     <div style="float:right">
       <input name="hubCreateButton" type="button" value="${%CreateProject}" class="yui-button validate-button" onclick="customCreateProject('${descriptor.descriptorFullUrl}/createHubProject', 'hubProjectName,hubProjectVersion,hubVersionPhase,hubVersionDist', this);" />

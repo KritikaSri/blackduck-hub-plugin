@@ -82,6 +82,12 @@ public class HubCommonFailureStep {
                 }
                 final HubServicesFactory service = getHubServicesFactory(logger, serverInfo);
 
+                if (!bomUpToDateAction.isHasBomBeenUdpated()) {
+                    logger.debug("Waiting for Bom to be updated.");
+                    service.createScanStatusDataService().assertBomImportScansFinished(bomUpToDateAction.getScanSummaries(),
+                            bomUpToDateAction.getMaxWaitTime());
+                }
+
                 final HubSupportHelper hubSupport = new HubSupportHelper();
                 hubSupport.checkHubSupport(service.createHubVersionRequestService(), null);
 

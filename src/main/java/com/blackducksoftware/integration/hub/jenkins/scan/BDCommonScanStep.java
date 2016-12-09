@@ -231,20 +231,31 @@ public class BDCommonScanStep {
                     }
 
                     bomUpToDateAction.setDryRun(isDryRun());
+
+                    Long bomWait = 300000l;
+                    if (!isDryRun()) {
+                        logger.alwaysLog("--> Bom wait time : " + bomUpdateMaxiumWaitTime);
+                        // User input is in minutes, need to changes to milliseconds
+                        bomWait = Long.valueOf(bomUpdateMaxiumWaitTime) * 60 * 1000;
+                    }
+
                     if (run.getResult().equals(Result.SUCCESS) && !isDryRun() && isShouldGenerateHubReport() && StringUtils.isNotBlank(projectName)
                             && StringUtils.isNotBlank(projectVersion)) {
 
                         final HubReportAction reportAction = new HubReportAction(run);
 
                         RiskReportDataService reportService = services.createRiskReportDataService(logger);
+                        logger.debug("Waiting for Bom to be updated.");
+                        services.createScanStatusDataService().assertBomImportScansFinished(scanSummaries, bomWait);
 
-                        HubRiskReportData reportData = reportService.createRiskReport(projectName, projectVersion, Long.valueOf(bomUpdateMaxiumWaitTime));
+                        logger.debug("Generating the Risk Report.");
+                        HubRiskReportData reportData = reportService.createRiskReport(projectName, projectVersion, bomWait);
                         reportAction.setReportData(reportData);
                         run.addAction(reportAction);
                         bomUpToDateAction.setHasBomBeenUdpated(true);
                     } else {
                         bomUpToDateAction.setHasBomBeenUdpated(false);
-                        bomUpToDateAction.setMaxWaitTime(Long.valueOf(bomUpdateMaxiumWaitTime));
+                        bomUpToDateAction.setMaxWaitTime(bomWait);
                         bomUpToDateAction.setScanSummaries(scanSummaries);
                     }
                     if (version != null) {
