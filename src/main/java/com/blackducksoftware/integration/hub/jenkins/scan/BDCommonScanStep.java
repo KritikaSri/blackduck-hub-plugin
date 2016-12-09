@@ -73,7 +73,6 @@ import hudson.model.Node;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.remoting.VirtualChannel;
 import jenkins.model.Jenkins;
 
 public class BDCommonScanStep {
@@ -371,30 +370,6 @@ public class BDCommonScanStep {
             }
         }
         // No exceptions were thrown so return true
-        return true;
-    }
-
-    /**
-     * Validates that all scan targets exist
-     *
-     */
-    public boolean validateScanTargets(final IntLogger logger, final List<String> scanTargets,
-            final String workingDirectory, final VirtualChannel channel)
-            throws IOException, HubConfigurationException, InterruptedException {
-        for (final String currTarget : scanTargets) {
-
-            if (currTarget.length() < workingDirectory.length() || !currTarget.startsWith(workingDirectory)) {
-                throw new HubConfigurationException("Can not scan targets outside of the workspace.");
-            }
-
-            final FilePath currentTargetPath = new FilePath(channel, currTarget);
-
-            if (!currentTargetPath.exists()) {
-                throw new IOException("Scan target could not be found : " + currTarget);
-            } else {
-                logger.debug("Scan target exists at : " + currTarget);
-            }
-        }
         return true;
     }
 

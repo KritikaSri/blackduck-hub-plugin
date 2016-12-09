@@ -100,7 +100,6 @@ public class RemoteScan implements Callable<List<ScanSummaryItem>, HubIntegratio
             hubScanConfigBuilder.setWorkingDirectory(workingDirectory);
             hubScanConfigBuilder.setScanMemory(scanMemory);
             hubScanConfigBuilder.addAllScanTargetPaths(scanTargetPaths);
-            hubScanConfigBuilder.disableScanTargetPathExistenceCheck();
             hubScanConfigBuilder.setToolsDir(toolsDir);
             hubScanConfigBuilder.setThirdPartyName(ThirdPartyName.JENKINS);
             hubScanConfigBuilder.setThirdPartyVersion(thirdPartyVersion);
