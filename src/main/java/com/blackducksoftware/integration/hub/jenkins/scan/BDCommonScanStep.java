@@ -33,8 +33,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.blackducksoftware.integration.hub.api.codelocation.CodeLocationItem;
 import com.blackducksoftware.integration.hub.api.codelocation.CodeLocationRequestService;
-import com.blackducksoftware.integration.hub.api.project.ProjectItem;
-import com.blackducksoftware.integration.hub.api.project.ProjectRequestService;
 import com.blackducksoftware.integration.hub.api.project.version.ProjectVersionItem;
 import com.blackducksoftware.integration.hub.api.project.version.ProjectVersionRequestService;
 import com.blackducksoftware.integration.hub.api.report.HubRiskReportData;
@@ -221,12 +219,9 @@ public class BDCommonScanStep {
                     final HubServicesFactory services = new HubServicesFactory(restConnection);
 
                     ProjectVersionItem version = null;
-                    ProjectItem project = null;
                     if (!isDryRun() && StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion) && !scanSummaries.isEmpty()) {
                         version = getProjectVersionFromScanStatus(services.createCodeLocationRequestService(), services.createProjectVersionRequestService(),
                                 scanSummaries.get(0));
-
-                        project = getProjectFromVersion(version, services.createProjectRequestService());
                     }
 
                     bomUpToDateAction.setDryRun(isDryRun());
@@ -311,12 +306,6 @@ public class BDCommonScanStep {
         String projectVersionUrl = codeLocationItem.getMappedProjectVersion();
         ProjectVersionItem projectVersion = projectVersionRequestService.getItem(projectVersionUrl);
         return projectVersion;
-    }
-
-    private ProjectItem getProjectFromVersion(ProjectVersionItem version, ProjectRequestService projectRequestService)
-            throws HubIntegrationException {
-        ProjectItem project = projectRequestService.getItem(version.getLink(ProjectVersionItem.PROJECT_LINK));
-        return project;
     }
 
     public List<String> getScanTargets(final IntLogger logger, final Node builtOn, final EnvVars variables,
