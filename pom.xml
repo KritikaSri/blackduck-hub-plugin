@@ -30,7 +30,7 @@
   </licenses>
 
   <scm>
-     <connection>scm:git:git://github.com/jenkinsci/blackduck-hub-plugin.git/</connection>
+  	<connection>scm:git:git://github.com/jenkinsci/blackduck-hub-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/blackduck-hub-plugin.git</developerConnection>
     <url>https://www.github.com/jenkinsci/blackduck-hub-plugin</url>
   </scm>
