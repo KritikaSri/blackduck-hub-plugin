@@ -6,12 +6,12 @@
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
     <version>2.9</version>
-    <relativePath></relativePath>
+    <relativePath />
   </parent>
 
   <groupId>com.blackducksoftware.integration</groupId>
   <artifactId>blackduck-hub</artifactId>
-  <version>2.0.0</version>
+  <version>2.0.1-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <name>Black Duck Hub Plug-In for Jenkins</name>
@@ -32,7 +32,7 @@
   <scm>
     <connection>scm:git:https://github.com/jenkinsci/blackduck-hub-plugin.git</connection>
     <developerConnection>scm:git:https://github.com/jenkinsci/blackduck-hub-plugin.git</developerConnection>
-    <tag>2.0.0</tag>
+    <tag>HEAD</tag>
     <url>https://www.github.com/jenkinsci/blackduck-hub-plugin</url>
   </scm>
   <distributionManagement>
