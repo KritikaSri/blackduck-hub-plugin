@@ -84,7 +84,7 @@ public class HubCommonFailureStep {
 
                 if (!bomUpToDateAction.isHasBomBeenUdpated()) {
                     logger.debug("Waiting for Bom to be updated.");
-                    service.createScanStatusDataService().assertBomImportScansFinished(bomUpToDateAction.getScanSummaries(),
+                    service.createScanStatusDataService(logger).assertBomImportScansFinished(bomUpToDateAction.getScanSummaries(),
                             bomUpToDateAction.getMaxWaitTime());
                 }
 
@@ -97,7 +97,7 @@ public class HubCommonFailureStep {
                 try {
                     policyStatus = service.createHubRequestService()
                             .getItem(bomUpToDateAction.getPolicyStatusUrl(), PolicyStatusItem.class);
-                } catch (HubIntegrationException e) {
+                } catch (final HubIntegrationException e) {
                     // ignore exception, could not find policy information
                 }
                 if (policyStatus == null) {

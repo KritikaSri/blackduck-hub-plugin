@@ -31,6 +31,8 @@ import com.blackducksoftware.integration.hub.api.report.DetailedReleaseSummary;
 import com.blackducksoftware.integration.hub.api.report.HubRiskReportData;
 import com.blackducksoftware.integration.hub.api.report.VersionReport;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import hudson.model.Action;
 import hudson.model.Run;
@@ -40,6 +42,8 @@ public class HubReportAction implements Action {
     private final Run<?, ?> build;
 
     private HubRiskReportData reportData;
+
+    private String jsonReportData;
 
     public HubReportAction(final Run<?, ?> build) {
         this.build = build;
@@ -136,6 +140,12 @@ public class HubReportAction implements Action {
 
     public void setReportData(final HubRiskReportData reportData) {
         this.reportData = reportData;
+        final Gson gson = new GsonBuilder().create();
+        jsonReportData = gson.toJson(reportData);
+    }
+
+    public String getJsonReportData() {
+        return jsonReportData;
     }
 
     @Override

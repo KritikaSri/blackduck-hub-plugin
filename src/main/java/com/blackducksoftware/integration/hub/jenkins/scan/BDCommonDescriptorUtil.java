@@ -22,6 +22,7 @@
 package com.blackducksoftware.integration.hub.jenkins.scan;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,6 +31,7 @@ import javax.servlet.ServletException;
 import org.apache.commons.lang.StringUtils;
 
 import com.blackducksoftware.integration.hub.api.item.HubItemFilter;
+import com.blackducksoftware.integration.hub.api.item.MetaService;
 import com.blackducksoftware.integration.hub.api.project.ProjectItem;
 import com.blackducksoftware.integration.hub.api.project.ProjectRequestService;
 import com.blackducksoftware.integration.hub.api.project.version.ProjectVersionItem;
@@ -160,13 +162,13 @@ public class BDCommonDescriptorUtil {
 
                 final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(),
                         serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
-
-                ProjectRequestService projectService = service.createProjectRequestService();
+                final MetaService metaService = service.createMetaService(null);
+                final ProjectRequestService projectService = service.createProjectRequestService();
 
                 final List<ProjectItem> suggestions = projectService.getAllProjectMatches(hubProjectName);
 
-                final HubItemFilter<ProjectItem> filter = new HubItemFilter<ProjectItem>();
-                final List<ProjectItem> accessibleSuggestions = filter.getAccessibleItems(suggestions);
+                final HubItemFilter<ProjectItem> filter = new HubItemFilter<>();
+                final List<ProjectItem> accessibleSuggestions = filter.getAccessibleItems(metaService, suggestions);
 
                 if (!accessibleSuggestions.isEmpty()) {
                     for (final ProjectItem projectSuggestion : accessibleSuggestions) {
@@ -210,10 +212,14 @@ public class BDCommonDescriptorUtil {
 
                 final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(),
                         serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
-
-                ProjectRequestService projectService = service.createProjectRequestService();
+                final MetaService metaService = service.createMetaService(null);
+                final ProjectRequestService projectService = service.createProjectRequestService();
                 final ProjectItem project = projectService.getProjectByName(hubProjectName);
-                if (!project.getMeta().isAccessible()) {
+                final List<ProjectItem> projectList = new ArrayList<>();
+                projectList.add(project);
+                final HubItemFilter<ProjectItem> filter = new HubItemFilter<>();
+                final List<ProjectItem> filteredList = filter.getAccessibleItems(metaService, projectList);
+                if (filteredList.isEmpty()) {
                     return FormValidation.error(Messages.HubBuildScan_getProjectNotAccessible());
                 }
                 return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(serverInfo.getServerUrl()));
@@ -287,7 +293,7 @@ public class BDCommonDescriptorUtil {
 
                 final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(),
                         serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
-                ProjectRequestService projectService = service.createProjectRequestService();
+                final ProjectRequestService projectService = service.createProjectRequestService();
                 ProjectItem project = null;
                 try {
                     project = projectService.getProjectByName(hubProjectName);
@@ -296,7 +302,7 @@ public class BDCommonDescriptorUtil {
                     // field
                     return FormValidation.ok();
                 }
-                ProjectVersionRequestService projectVersionService = service.createProjectVersionRequestService();
+                final ProjectVersionRequestService projectVersionService = service.createProjectVersionRequestService(null);
                 final List<ProjectVersionItem> releases = projectVersionService.getAllProjectVersions(project);
 
                 final StringBuilder projectVersions = new StringBuilder();
@@ -389,7 +395,7 @@ public class BDCommonDescriptorUtil {
                     credentialPassword, serverInfo.getTimeout());
 
             Boolean projectCreated = false;
-            ProjectRequestService projectService = service.createProjectRequestService();
+            final ProjectRequestService projectService = service.createProjectRequestService();
             ProjectItem project = null;
             try {
                 project = projectService.getProjectByName(hubProjectName);
@@ -398,7 +404,7 @@ public class BDCommonDescriptorUtil {
                 project = projectService.getItem(projectUrl);
                 projectCreated = true;
             }
-            ProjectVersionRequestService projectVersionService = service.createProjectVersionRequestService();
+            final ProjectVersionRequestService projectVersionService = service.createProjectVersionRequestService(null);
             try {
                 projectVersionService.getProjectVersion(project, hubProjectVersion);
                 return FormValidation.warning(Messages.HubBuildScan_getProjectAndVersionExist());
@@ -437,7 +443,7 @@ public class BDCommonDescriptorUtil {
 
     public static FormValidation doCheckScanMemory(final String scanMemory) throws IOException, ServletException {
         final ValidationResults results = new ValidationResults();
-        HubScanConfigValidator validator = new HubScanConfigValidator();
+        final HubScanConfigValidator validator = new HubScanConfigValidator();
         validator.setScanMemory(scanMemory);
         validator.validateScanMemory(results);
 
@@ -456,11 +462,11 @@ public class BDCommonDescriptorUtil {
     public static FormValidation doCheckBomUpdateMaxiumWaitTime(final String bomUpdateMaxiumWaitTime)
             throws IOException, ServletException {
         try {
-            Integer waitTime = Integer.valueOf(bomUpdateMaxiumWaitTime);
+            final Integer waitTime = Integer.valueOf(bomUpdateMaxiumWaitTime);
             if (waitTime <= 0) {
                 return FormValidation.error("Bom wait time must be greater than 0.");
             }
-        } catch (NumberFormatException e) {
+        } catch (final NumberFormatException e) {
             return FormValidation.error(e, e.getMessage());
         }
         return FormValidation.ok();

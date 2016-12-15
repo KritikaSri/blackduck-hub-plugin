@@ -33,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.blackducksoftware.integration.hub.api.codelocation.CodeLocationItem;
 import com.blackducksoftware.integration.hub.api.codelocation.CodeLocationRequestService;
+import com.blackducksoftware.integration.hub.api.item.MetaService;
 import com.blackducksoftware.integration.hub.api.project.version.ProjectVersionItem;
 import com.blackducksoftware.integration.hub.api.project.version.ProjectVersionRequestService;
 import com.blackducksoftware.integration.hub.api.report.HubRiskReportData;
@@ -202,25 +203,27 @@ public class BDCommonScanStep {
                         }
                     }
 
-                    HubServerConfig hubServerConfig = hubServerConfigBuilder.build();
+                    final HubServerConfig hubServerConfig = hubServerConfigBuilder.build();
                     hubServerConfig.print(logger);
 
                     final String thirdPartyVersion = Jenkins.getVersion().toString();
                     final String pluginVersion = PluginHelper.getPluginVersion();
 
-                    RemoteScan scan = new RemoteScan(logger, projectName, projectVersion, scanMemory, workingDirectory, scanTargetPaths, dryRun, toolsDirectory,
+                    final RemoteScan scan = new RemoteScan(logger, projectName, projectVersion, scanMemory, workingDirectory, scanTargetPaths, dryRun,
+                            toolsDirectory,
                             thirdPartyVersion, pluginVersion, hubServerConfig);
 
-                    List<ScanSummaryItem> scanSummaries = builtOn.getChannel().call(scan);
+                    final List<ScanSummaryItem> scanSummaries = builtOn.getChannel().call(scan);
 
-                    RestConnection restConnection = new CredentialsRestConnection(logger, hubServerConfig);
+                    final RestConnection restConnection = new CredentialsRestConnection(logger, hubServerConfig);
                     restConnection.connect();
 
                     final HubServicesFactory services = new HubServicesFactory(restConnection);
-
+                    final MetaService metaService = services.createMetaService(logger);
                     ProjectVersionItem version = null;
                     if (!isDryRun() && StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion) && !scanSummaries.isEmpty()) {
-                        version = getProjectVersionFromScanStatus(services.createCodeLocationRequestService(), services.createProjectVersionRequestService(),
+                        version = getProjectVersionFromScanStatus(services.createCodeLocationRequestService(),
+                                services.createProjectVersionRequestService(logger), metaService,
                                 scanSummaries.get(0));
                     }
 
@@ -238,12 +241,12 @@ public class BDCommonScanStep {
 
                         final HubReportAction reportAction = new HubReportAction(run);
 
-                        RiskReportDataService reportService = services.createRiskReportDataService(logger);
+                        final RiskReportDataService reportService = services.createRiskReportDataService(logger);
                         logger.debug("Waiting for Bom to be updated.");
-                        services.createScanStatusDataService().assertBomImportScansFinished(scanSummaries, bomWait);
+                        services.createScanStatusDataService(logger).assertBomImportScansFinished(scanSummaries, bomWait);
 
                         logger.debug("Generating the Risk Report.");
-                        HubRiskReportData reportData = reportService.createRiskReport(projectName, projectVersion, bomWait);
+                        final HubRiskReportData reportData = reportService.createRiskReport(projectName, projectVersion, bomWait);
                         reportAction.setReportData(reportData);
                         run.addAction(reportAction);
                         bomUpToDateAction.setHasBomBeenUdpated(true);
@@ -257,7 +260,7 @@ public class BDCommonScanStep {
                         try {
                             // not all HUb users have the policy module enabled
                             // so there will be no policy status link
-                            policyStatusLink = version.getLink(ProjectVersionItem.POLICY_STATUS_LINK);
+                            policyStatusLink = metaService.getLink(version, MetaService.POLICY_STATUS_LINK);
                         } catch (final Exception e) {
                             logger.debug("Could not get the policy status link.", e);
                         }
@@ -301,16 +304,17 @@ public class BDCommonScanStep {
     }
 
     private ProjectVersionItem getProjectVersionFromScanStatus(CodeLocationRequestService codeLocationRequestService,
-            ProjectVersionRequestService projectVersionRequestService, ScanSummaryItem scanSummaryItem) throws HubIntegrationException {
-        CodeLocationItem codeLocationItem = codeLocationRequestService.getItem(scanSummaryItem.getLink(ScanSummaryItem.CODE_LOCATION_LINK));
-        String projectVersionUrl = codeLocationItem.getMappedProjectVersion();
-        ProjectVersionItem projectVersion = projectVersionRequestService.getItem(projectVersionUrl);
+            ProjectVersionRequestService projectVersionRequestService, MetaService metaService, ScanSummaryItem scanSummaryItem)
+            throws HubIntegrationException {
+        final CodeLocationItem codeLocationItem = codeLocationRequestService.getItem(metaService.getLink(scanSummaryItem, MetaService.CODE_LOCATION_LINK));
+        final String projectVersionUrl = codeLocationItem.getMappedProjectVersion();
+        final ProjectVersionItem projectVersion = projectVersionRequestService.getItem(projectVersionUrl);
         return projectVersion;
     }
 
     public List<String> getScanTargets(final IntLogger logger, final Node builtOn, final EnvVars variables,
             final String workingDirectory) throws BDJenkinsHubPluginException, InterruptedException {
-        final List<String> scanTargetPaths = new ArrayList<String>();
+        final List<String> scanTargetPaths = new ArrayList<>();
         final ScanJobs[] scans = getScans();
         if (scans == null || scans.length == 0) {
             scanTargetPaths.add(workingDirectory);
