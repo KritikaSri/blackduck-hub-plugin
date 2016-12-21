@@ -34,6 +34,8 @@ import com.blackducksoftware.integration.hub.api.item.HubItemFilter;
 import com.blackducksoftware.integration.hub.api.item.MetaService;
 import com.blackducksoftware.integration.hub.api.project.ProjectItem;
 import com.blackducksoftware.integration.hub.api.project.ProjectRequestService;
+import com.blackducksoftware.integration.hub.api.project.version.ProjectVersionItem;
+import com.blackducksoftware.integration.hub.api.project.version.ProjectVersionRequestService;
 import com.blackducksoftware.integration.hub.api.version.DistributionEnum;
 import com.blackducksoftware.integration.hub.api.version.PhaseEnum;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
@@ -255,6 +257,99 @@ public class BDCommonDescriptorUtil {
         } else {
             if (StringUtils.isNotBlank(hubProjectVersion)) {
                 return FormValidation.error(Messages.HubBuildScan_getProvideProjectName());
+            }
+        }
+        return FormValidation.ok();
+    }
+
+    public static FormValidation doCheckHubProjectVersion(final HubServerInfo serverInfo,
+            final String hubProjectVersion, final String hubProjectName, final boolean dryRun)
+            throws IOException, ServletException {
+        if (dryRun) {
+            return FormValidation.ok();
+        }
+        if (StringUtils.isNotBlank(hubProjectVersion)) {
+            final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
+            final boolean changed = false;
+            try {
+                if (StringUtils.isBlank(serverInfo.getServerUrl())) {
+                    return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
+                }
+                if (StringUtils.isBlank(serverInfo.getCredentialsId())) {
+                    return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
+                }
+                if (StringUtils.isBlank(hubProjectName)) {
+                    // Error will be displayed for the project name field
+                    return FormValidation.ok();
+                }
+                if (hubProjectVersion.contains("$")) {
+                    return FormValidation.warning(Messages.HubBuildScan_getProjectVersionContainsVariable());
+                }
+                if (hubProjectName.contains("$")) {
+                    // Warning will be displayed for the project name field
+                    return FormValidation.ok();
+                }
+
+                final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(),
+                        serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
+                final ProjectRequestService projectService = service.createProjectRequestService();
+                ProjectItem project = null;
+                try {
+                    project = projectService.getProjectByName(hubProjectName);
+                } catch (final Exception e) {
+                    // This error will already show up for the project name
+                    // field
+                    return FormValidation.ok();
+                }
+                final ProjectVersionRequestService projectVersionService = service.createProjectVersionRequestService(null);
+                final List<ProjectVersionItem> releases = projectVersionService.getAllProjectVersions(project);
+
+                final StringBuilder projectVersions = new StringBuilder();
+                for (final ProjectVersionItem release : releases) {
+                    if (release.getVersionName().equals(hubProjectVersion)) {
+                        return FormValidation.ok(Messages.HubBuildScan_getVersionExistsIn_0_(project.getName()));
+                    } else {
+                        if (projectVersions.length() > 0) {
+                            projectVersions.append(", " + release.getVersionName());
+                        } else {
+                            projectVersions.append(release.getVersionName());
+                        }
+                    }
+                }
+                return FormValidation.error(Messages.HubBuildScan_getVersionNonExistingIn_0_(project.getName(),
+                        projectVersions.toString()));
+            } catch (final HubIntegrationException e) {
+                String message;
+                if (e.getCause() != null) {
+                    message = e.getCause().toString();
+                    if (message.contains("(407)")) {
+                        return FormValidation.error(e, message);
+                    }
+                }
+                return FormValidation.error(e, e.getMessage());
+            } catch (final Exception e) {
+                String message;
+                if (e.getCause() != null && e.getCause().getCause() != null) {
+                    message = e.getCause().getCause().toString();
+                } else if (e.getCause() != null) {
+                    message = e.getCause().toString();
+                } else {
+                    message = e.toString();
+                }
+                if (message.toLowerCase().contains("service unavailable")) {
+                    message = Messages.HubBuildScan_getCanNotReachThisServer_0_(serverInfo.getServerUrl());
+                } else if (message.toLowerCase().contains("precondition failed")) {
+                    message = message + ", Check your configuration.";
+                }
+                return FormValidation.error(e, message);
+            } finally {
+                if (changed) {
+                    Thread.currentThread().setContextClassLoader(originalClassLoader);
+                }
+            }
+        } else {
+            if (StringUtils.isNotBlank(hubProjectName)) {
+                return FormValidation.error(Messages.HubBuildScan_getProvideProjectVersion());
             }
         }
         return FormValidation.ok();
