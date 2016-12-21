@@ -207,34 +207,6 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
                     dryRun);
         }
 
-        /**
-         * Performs on-the-fly validation of the form field 'hubProjectVersion'.
-         * Checks to see if there is already a project in the Hub with this
-         * name.
-         *
-         */
-        public FormValidation doCheckHubProjectVersion(
-                @QueryParameter("hubProjectVersion") final String hubProjectVersion,
-                @QueryParameter("hubProjectName") final String hubProjectName,
-                @QueryParameter("dryRun") final boolean dryRun) throws IOException, ServletException {
-            return BDCommonDescriptorUtil.doCheckHubProjectVersion(getHubServerInfo(), hubProjectVersion,
-                    hubProjectName, dryRun);
-        }
-
-        /**
-         * Creates the Hub project AND/OR version
-         *
-         *
-         */
-        public FormValidation doCreateHubProject(@QueryParameter("hubProjectName") final String hubProjectName,
-                @QueryParameter("hubProjectVersion") final String hubProjectVersion,
-                @QueryParameter("hubVersionPhase") final String hubVersionPhase,
-                @QueryParameter("hubVersionDist") final String hubVersionDist) {
-            save();
-            return BDCommonDescriptorUtil.doCreateHubProject(getHubServerInfo(), hubProjectName, hubProjectVersion,
-                    hubVersionPhase, hubVersionDist);
-        }
-
     }
 
     public static final class Execution extends AbstractSynchronousNonBlockingStepExecution<Void> {

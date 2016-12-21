@@ -5,28 +5,16 @@
 
 	<st:once>
 		<script type="text/javascript"
-			src="${rootURL}/plugin/blackduck-hub/js/HubJenkinsScan.js" />
-		<script type="text/javascript"
 			src="${rootURL}/plugin/blackduck-hub/js/HubJenkinsShared.js" />
 		<link href="${rootURL}/plugin/blackduck-hub/css/BdHubCustom.css"  rel="stylesheet" type="text/css"  />
 	</st:once>
 
 <f:entry field="hubProjectName" title="${%ProjectNameTitle}">
-	<f:textbox value="${it.getHubProjectName()}" default="${descriptor.getDefaultProjectName()}" onchange="clearCreateProjectMessage('projectCreateMessageField')" />
+	<f:textbox value="${it.getHubProjectName()}" default="${descriptor.getDefaultProjectName()}" />
 </f:entry>
 
 <f:entry field="hubProjectVersion" title="${%ProjectVersionTitle}">
-	<f:textbox value="${it.getHubProjectVersion()}" default="${descriptor.getDefaultProjectVersion()}" onchange="clearCreateProjectMessage('projectCreateMessageField')" />
-</f:entry>
-
-<f:entry>
-    <div style="float:right">
-      <input name="hubCreateButton" type="button" value="${%CreateProject}" class="yui-button validate-button" onclick="customCreateProject('${descriptor.descriptorFullUrl}/createHubProject', 'hubProjectName,hubProjectVersion,hubVersionPhase,hubVersionDist', this);" />
-    </div>
-    <div style="display:none;">
-      <img src="${imagesURL}/spinner.gif" /> ${%CreateProjectProgress}
-    </div>
-    <div id="projectCreateMessageField" > </div>
+	<f:textbox value="${it.getHubProjectVersion()}" default="${descriptor.getDefaultProjectVersion()}" />
 </f:entry>
 
 <f:advanced>
