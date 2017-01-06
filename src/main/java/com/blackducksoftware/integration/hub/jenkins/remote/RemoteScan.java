@@ -65,9 +65,11 @@ public class RemoteScan implements Callable<List<ScanSummaryItem>, HubIntegratio
 
     private final HubServerConfig hubServerConfig;
 
+    private final boolean performWorkspaceCheck;
+
     public RemoteScan(IntLogger logger, String hubProjectName, String hubProjectVersion, String scanMemory, String workingDirectoryPath,
             List<String> scanTargetPaths, boolean dryRun, String toolsDirectory, String thirdPartyVersion,
-            String pluginVersion, HubServerConfig hubServerConfig) {
+            String pluginVersion, HubServerConfig hubServerConfig, boolean performWorkspaceCheck) {
         this.logger = logger;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
@@ -79,6 +81,7 @@ public class RemoteScan implements Callable<List<ScanSummaryItem>, HubIntegratio
         this.thirdPartyVersion = thirdPartyVersion;
         this.pluginVersion = pluginVersion;
         this.hubServerConfig = hubServerConfig;
+        this.performWorkspaceCheck = performWorkspaceCheck;
     }
 
     @Override
@@ -104,6 +107,9 @@ public class RemoteScan implements Callable<List<ScanSummaryItem>, HubIntegratio
             hubScanConfigBuilder.setThirdPartyName(ThirdPartyName.JENKINS);
             hubScanConfigBuilder.setThirdPartyVersion(thirdPartyVersion);
             hubScanConfigBuilder.setPluginVersion(pluginVersion);
+            if (performWorkspaceCheck) {
+                // TODO hubScanConfigBuilder.enableScanTargetPathsWithinWorkingDirectoryCheck();
+            }
 
             HubScanConfig hubScanConfig = hubScanConfigBuilder.build();
 

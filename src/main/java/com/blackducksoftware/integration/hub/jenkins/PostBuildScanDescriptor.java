@@ -91,6 +91,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     private static final String FORM_TIMEOUT = "hubTimeout";
 
+    private static final String FORM_WORKSPACE_CHECK = "hubWorkspaceCheck";
+
     private static final String FORM_CREDENTIALSID = "hubCredentialsId";
 
     private HubServerInfo hubServerInfo;
@@ -150,6 +152,11 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     public String getHubCredentialsId() {
         return (getHubServerInfo() == null ? ""
                 : (getHubServerInfo().getCredentialsId() == null ? "" : getHubServerInfo().getCredentialsId()));
+    }
+
+    public boolean getHubWorkspaceCheck() {
+        return (getHubServerInfo() == null ? true
+                : (getHubServerInfo().isPerformWorkspaceCheck()));
     }
 
     /**
@@ -246,6 +253,17 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     }
                 }
 
+                final Node workspaceCheckNode = hubServerInfoElement.getElementsByTagName("hubWorkspaceCheck").item(0);
+                String hubWorkspaceCheck = "";
+                // timeout
+                if (workspaceCheckNode != null && workspaceCheckNode.getChildNodes() != null
+                        && workspaceCheckNode.getChildNodes().item(0) != null) {
+                    hubWorkspaceCheck = workspaceCheckNode.getChildNodes().item(0).getNodeValue();
+                    if (hubWorkspaceCheck != null) {
+                        hubWorkspaceCheck = hubWorkspaceCheck.trim();
+                    }
+                }
+
                 serverInfo.setCredentialsId(credentialId);
                 serverInfo.setServerUrl(serverUrl);
 
@@ -257,6 +275,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     e.printStackTrace(System.err);
                 }
                 serverInfo.setTimeout(serverTimeout);
+
+                serverInfo.setPerformWorkspaceCheck(Boolean.valueOf(hubWorkspaceCheck));
             }
         }
         hubServerInfo = serverInfo;
@@ -282,10 +302,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     public boolean configure(final StaplerRequest req, final JSONObject formData) throws Descriptor.FormException {
         // To persist global configuration information,
         // set that to properties and call save().
-        final String hubServerUrl = formData.getString(FORM_SERVER_URL);
 
-        hubServerInfo = new HubServerInfo(hubServerUrl, formData.getString(FORM_CREDENTIALSID),
-                formData.getInt(FORM_TIMEOUT));
+        hubServerInfo = new HubServerInfo(formData.getString(FORM_SERVER_URL), formData.getString(FORM_CREDENTIALSID),
+                formData.getInt(FORM_TIMEOUT), formData.getBoolean(FORM_WORKSPACE_CHECK));
         save();
         HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 

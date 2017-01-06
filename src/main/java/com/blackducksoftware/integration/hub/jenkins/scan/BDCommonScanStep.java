@@ -211,7 +211,7 @@ public class BDCommonScanStep {
 
                     final RemoteScan scan = new RemoteScan(logger, projectName, projectVersion, scanMemory, workingDirectory, scanTargetPaths, dryRun,
                             toolsDirectory,
-                            thirdPartyVersion, pluginVersion, hubServerConfig);
+                            thirdPartyVersion, pluginVersion, hubServerConfig, getHubServerInfo().isPerformWorkspaceCheck());
 
                     final List<ScanSummaryItem> scanSummaries = builtOn.getChannel().call(scan);
 

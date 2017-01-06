@@ -46,13 +46,16 @@ public class HubServerInfo {
 
     private int timeout;
 
+    private boolean performWorkspaceCheck;
+
     public HubServerInfo() {
     }
 
-    public HubServerInfo(final String serverUrl, final String hubCredentialsId, final int timeout) {
+    public HubServerInfo(final String serverUrl, final String hubCredentialsId, final int timeout, final boolean performWorkspaceCheck) {
         this.serverUrl = serverUrl;
         this.hubCredentialsId = hubCredentialsId;
         this.timeout = timeout;
+        this.performWorkspaceCheck = performWorkspaceCheck;
     }
 
     public static int getDefaultTimeout() {
@@ -127,9 +130,17 @@ public class HubServerInfo {
         return credential;
     }
 
+    public boolean isPerformWorkspaceCheck() {
+        return performWorkspaceCheck;
+    }
+
+    public void setPerformWorkspaceCheck(boolean performWorkspaceCheck) {
+        this.performWorkspaceCheck = performWorkspaceCheck;
+    }
+
     @Override
     public String toString() {
-        final StringBuilder builder = new StringBuilder();
+        StringBuilder builder = new StringBuilder();
         builder.append("HubServerInfo [serverUrl=");
         builder.append(serverUrl);
         builder.append(", hubCredentialsId=");
@@ -138,7 +149,10 @@ public class HubServerInfo {
         builder.append(credential);
         builder.append(", timeout=");
         builder.append(timeout);
+        builder.append(", performWorkspaceCheck=");
+        builder.append(performWorkspaceCheck);
         builder.append("]");
         return builder.toString();
     }
+
 }

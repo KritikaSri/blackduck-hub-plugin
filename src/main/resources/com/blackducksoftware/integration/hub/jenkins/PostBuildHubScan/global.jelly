@@ -26,6 +26,9 @@
       <f:entry title="${%ConnectionTimeout}" field="hubTimeout" description="in seconds" >
           <f:textbox clazz="required number"  default="${descriptor.getDefaultTimeout()}" />
       </f:entry>
+      <f:entry title="${%PerformWorkspaceCheck}" field="hubWorkspaceCheck" >
+          <f:checkbox default="true" />
+      </f:entry>
     </f:advanced>
     
     <f:validateButton title="${%TestConnection}" progress="${%TestConnectionProgress}"
