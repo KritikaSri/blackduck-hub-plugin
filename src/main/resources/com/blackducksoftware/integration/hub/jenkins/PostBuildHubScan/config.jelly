@@ -32,6 +32,10 @@
 		<f:checkbox default="false" />
 		<label>${%DryRunTitle}</label>
 	</f:entry>
+	<f:entry field="cleanupOnSuccessfulScan">
+		<f:checkbox default="true" />
+		<label>${%CleanupOnSuccessfulScanTitle}</label>
+	</f:entry>
 </f:advanced>
        
 <f:block>

@@ -57,6 +57,8 @@ public class RemoteScan implements Callable<List<ScanSummaryItem>, HubIntegratio
 
     private final boolean dryRun;
 
+    private final boolean cleanupOnSuccessfulScan;
+
     private final String toolsDirectory;
 
     private final String thirdPartyVersion;
@@ -66,7 +68,7 @@ public class RemoteScan implements Callable<List<ScanSummaryItem>, HubIntegratio
     private final HubServerConfig hubServerConfig;
 
     public RemoteScan(IntLogger logger, String hubProjectName, String hubProjectVersion, String scanMemory, String workingDirectoryPath,
-            List<String> scanTargetPaths, boolean dryRun, String toolsDirectory, String thirdPartyVersion,
+            List<String> scanTargetPaths, boolean dryRun, boolean cleanupOnSuccessfulScan, String toolsDirectory, String thirdPartyVersion,
             String pluginVersion, HubServerConfig hubServerConfig) {
         this.logger = logger;
         this.hubProjectName = hubProjectName;
@@ -75,6 +77,7 @@ public class RemoteScan implements Callable<List<ScanSummaryItem>, HubIntegratio
         this.workingDirectoryPath = workingDirectoryPath;
         this.scanTargetPaths = scanTargetPaths;
         this.dryRun = dryRun;
+        this.cleanupOnSuccessfulScan = cleanupOnSuccessfulScan;
         this.toolsDirectory = toolsDirectory;
         this.thirdPartyVersion = thirdPartyVersion;
         this.pluginVersion = pluginVersion;
@@ -104,6 +107,7 @@ public class RemoteScan implements Callable<List<ScanSummaryItem>, HubIntegratio
             hubScanConfigBuilder.setThirdPartyName(ThirdPartyName.JENKINS);
             hubScanConfigBuilder.setThirdPartyVersion(thirdPartyVersion);
             hubScanConfigBuilder.setPluginVersion(pluginVersion);
+            hubScanConfigBuilder.setCleanupLogsOnSuccess(cleanupOnSuccessfulScan);
 
             HubScanConfig hubScanConfig = hubScanConfigBuilder.build();
 

@@ -90,13 +90,15 @@ public class BDCommonScanStep {
 
     private final boolean dryRun;
 
+    private final boolean cleanupOnSuccessfulScan;
+
     private final Boolean verbose;
 
     private final BomUpToDateAction bomUpToDateAction = new BomUpToDateAction();
 
     public BDCommonScanStep(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
             final String scanMemory,
-            final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun,
+            final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun, boolean cleanupOnSuccessfulScan,
             final Boolean verbose) {
         this.scans = scans;
         this.hubProjectName = hubProjectName;
@@ -105,6 +107,7 @@ public class BDCommonScanStep {
         this.shouldGenerateHubReport = shouldGenerateHubReport;
         this.bomUpdateMaxiumWaitTime = bomUpdateMaxiumWaitTime;
         this.dryRun = dryRun;
+        this.cleanupOnSuccessfulScan = cleanupOnSuccessfulScan;
         this.verbose = verbose;
     }
 
@@ -138,6 +141,10 @@ public class BDCommonScanStep {
 
     public Boolean isVerbose() {
         return verbose;
+    }
+
+    public boolean isCleanupOnSuccessfulScan() {
+        return cleanupOnSuccessfulScan;
     }
 
     public BomUpToDateAction getBomUpToDateAction() {
@@ -210,6 +217,7 @@ public class BDCommonScanStep {
                     final String pluginVersion = PluginHelper.getPluginVersion();
 
                     final RemoteScan scan = new RemoteScan(logger, projectName, projectVersion, scanMemory, workingDirectory, scanTargetPaths, dryRun,
+                            isCleanupOnSuccessfulScan(),
                             toolsDirectory,
                             thirdPartyVersion, pluginVersion, hubServerConfig);
 

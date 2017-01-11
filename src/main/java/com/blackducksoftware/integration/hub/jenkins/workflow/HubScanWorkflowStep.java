@@ -70,12 +70,14 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
     private final boolean dryRun;
 
+    private final boolean cleanupOnSuccessfulScan;
+
     private Boolean verbose;
 
     @DataBoundConstructor
     public HubScanWorkflowStep(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
             final String scanMemory,
-            final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun) {
+            final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan) {
         this.scans = scans;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
@@ -83,6 +85,7 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
         this.shouldGenerateHubReport = shouldGenerateHubReport;
         this.bomUpdateMaxiumWaitTime = bomUpdateMaxiumWaitTime;
         this.dryRun = dryRun;
+        this.cleanupOnSuccessfulScan = cleanupOnSuccessfulScan;
     }
 
     public void setVerbose(final boolean verbose) {
@@ -122,6 +125,10 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
     public boolean isDryRun() {
         return dryRun;
+    }
+
+    public boolean isCleanupOnSuccessfulScan() {
+        return cleanupOnSuccessfulScan;
     }
 
     @Override
@@ -257,7 +264,7 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
                         hubScanStep.getHubProjectName(), hubScanStep.getHubProjectVersion(),
                         hubScanStep.getScanMemory(),
                         hubScanStep.getShouldGenerateHubReport(), hubScanStep.getBomUpdateMaxiumWaitTime(),
-                        hubScanStep.isDryRun(), hubScanStep.isVerbose());
+                        hubScanStep.isDryRun(), hubScanStep.isCleanupOnSuccessfulScan(), hubScanStep.isVerbose());
 
                 scanStep.runScan(run, node, envVars, workspace, logger, launcher, listener,
                         run.getFullDisplayName(),
