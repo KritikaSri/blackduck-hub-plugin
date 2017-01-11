@@ -15,20 +15,20 @@
 	<version>2.1.0-SNAPSHOT</version>
 	<packaging>hpi</packaging>
 
-	<name>Black Duck Hub Plug-In for Jenkins</name>
-	<description>Runs the Black Duck Hub scan in Jenkins builds</description>
-	<url>https://wiki.jenkins-ci.org/display/JENKINS/BlackDuck+Hub+Plugin</url>
-	<inceptionYear>2014</inceptionYear>
-	<organization>
-		<name>Black Duck Software, Inc.</name>
-		<url>http://www.blackducksoftware.com/</url>
-	</organization>
-	<licenses>
-		<license>
-			<name>Apache 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0</url>
-		</license>
-	</licenses>
+  <name>Black Duck Hub Plugin for Jenkins</name>
+  <description>Runs the Black Duck Hub scan in Jenkins builds</description>
+  <url>https://wiki.jenkins-ci.org/display/JENKINS/BlackDuck+Hub+Plugin</url>
+  <inceptionYear>2014</inceptionYear>
+  <organization>
+    <name>Black Duck Software, Inc.</name>
+    <url>http://www.blackducksoftware.com/</url>
+  </organization>
+  <licenses>
+    <license>
+      <name>Apache 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+    </license>
+  </licenses>
 
 	<scm>
 		<connection>scm:git:https://github.com/jenkinsci/blackduck-hub-plugin.git</connection>
