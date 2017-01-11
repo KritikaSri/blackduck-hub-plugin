@@ -28,12 +28,14 @@ import javax.servlet.ServletException;
 import org.kohsuke.stapler.QueryParameter;
 
 import com.blackducksoftware.integration.hub.jenkins.Messages;
+import com.blackducksoftware.integration.hub.jenkins.scan.BDCommonDescriptorUtil;
 
 import hudson.Extension;
 import hudson.model.AbstractProject;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 
 @Extension(ordinal = 1)
 public class HubFailureConditionStepDescriptor extends BuildStepDescriptor<Publisher> {
@@ -55,6 +57,10 @@ public class HubFailureConditionStepDescriptor extends BuildStepDescriptor<Publi
     public FormValidation doCheckFailBuildForPolicyViolations(@QueryParameter("failBuildForPolicyViolations") final boolean failBuildForPolicyViolations)
             throws IOException, ServletException {
         return FormValidation.ok();
+    }
+
+    public ListBoxModel doFillBuildStateOnFailureItems() {
+        return BDCommonDescriptorUtil.doFillBuildStateOnFailureItems();
     }
 
 }

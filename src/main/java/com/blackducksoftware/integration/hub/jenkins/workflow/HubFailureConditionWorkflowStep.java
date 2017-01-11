@@ -37,7 +37,10 @@ import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.action.BomUpToDateAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
+import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
+import com.blackducksoftware.integration.hub.jenkins.failure.FailureConditionBuildStateEnum;
 import com.blackducksoftware.integration.hub.jenkins.failure.HubCommonFailureStep;
+import com.blackducksoftware.integration.hub.jenkins.scan.BDCommonDescriptorUtil;
 
 import hudson.EnvVars;
 import hudson.Extension;
@@ -47,18 +50,26 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 
 public class HubFailureConditionWorkflowStep extends AbstractStepImpl {
 
     private final boolean failBuildForPolicyViolations;
 
+    private final String buildStateOnFailure;
+
     @DataBoundConstructor
-    public HubFailureConditionWorkflowStep(final Boolean failBuildForPolicyViolations) {
+    public HubFailureConditionWorkflowStep(final Boolean failBuildForPolicyViolations, final String buildStateOnFailure) {
         this.failBuildForPolicyViolations = failBuildForPolicyViolations;
+        this.buildStateOnFailure = buildStateOnFailure;
     }
 
     public Boolean getFailBuildForPolicyViolations() {
         return failBuildForPolicyViolations;
+    }
+
+    public String getBuildStateOnFailure() {
+        return buildStateOnFailure;
     }
 
     @Override
@@ -88,6 +99,10 @@ public class HubFailureConditionWorkflowStep extends AbstractStepImpl {
                 throws IOException, ServletException {
             return FormValidation.ok();
         }
+
+        public ListBoxModel doFillBuildStateOnFailureItems() {
+            return BDCommonDescriptorUtil.doFillBuildStateOnFailureItems();
+        }
     }
 
     public static final class Execution extends AbstractSynchronousNonBlockingStepExecution<Void> {
@@ -115,8 +130,8 @@ public class HubFailureConditionWorkflowStep extends AbstractStepImpl {
             try {
                 final Node node = computer.getNode();
 
-                final HubCommonFailureStep commonFailureStep = new HubCommonFailureStep(
-                        failureConditionStep.getFailBuildForPolicyViolations());
+                final HubCommonFailureStep commonFailureStep = createCommonFailureStep(
+                        failureConditionStep.getFailBuildForPolicyViolations(), failureConditionStep.getBuildStateOnFailure());
 
                 if (run.getResult() != Result.SUCCESS) {
                     logger.error("The Build did not run sucessfully, will not check the Hub Failure Conditions.");
@@ -145,6 +160,16 @@ public class HubFailureConditionWorkflowStep extends AbstractStepImpl {
                 run.setResult(Result.UNSTABLE);
             }
             return null;
+        }
+
+        public HubCommonFailureStep createCommonFailureStep(final Boolean failBuildForPolicyViolations, final String buildStateOnFailure)
+                throws BDJenkinsHubPluginException {
+            final FailureConditionBuildStateEnum buildStateOnFailureEnum = FailureConditionBuildStateEnum
+                    .getFailureConditionBuildStateEnum(buildStateOnFailure);
+            if (buildStateOnFailureEnum == null) {
+                throw new BDJenkinsHubPluginException("Invalid Build State on Failure Condition configured : " + buildStateOnFailure);
+            }
+            return new HubCommonFailureStep(failBuildForPolicyViolations, buildStateOnFailureEnum);
         }
 
     }

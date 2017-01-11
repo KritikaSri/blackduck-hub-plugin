@@ -42,6 +42,7 @@ import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
+import com.blackducksoftware.integration.hub.jenkins.failure.FailureConditionBuildStateEnum;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.scan.HubScanConfigFieldEnum;
 import com.blackducksoftware.integration.hub.service.HubServicesFactory;
@@ -62,6 +63,14 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 
 public class BDCommonDescriptorUtil {
+
+    public static ListBoxModel doFillBuildStateOnFailureItems() {
+        final ListBoxModel items = new ListBoxModel();
+        for (final FailureConditionBuildStateEnum buildState : FailureConditionBuildStateEnum.values()) {
+            items.add(buildState.getDisplayValue(), buildState.name());
+        }
+        return items;
+    }
 
     /**
      * Fills the Credential drop down list in the global config
@@ -100,8 +109,6 @@ public class BDCommonDescriptorUtil {
      *
      */
     public static ListBoxModel doFillHubVersionPhaseItems() {
-        final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
-        final boolean changed = false;
         final ListBoxModel items = new ListBoxModel();
         try {
             // should get this list from the Hub server, ticket HUB-1610
@@ -113,10 +120,6 @@ public class BDCommonDescriptorUtil {
         } catch (final Exception e) {
             e.printStackTrace();
             System.err.println(e.getMessage());
-        } finally {
-            if (changed) {
-                Thread.currentThread().setContextClassLoader(originalClassLoader);
-            }
         }
         return items;
     }
@@ -126,8 +129,6 @@ public class BDCommonDescriptorUtil {
      *
      */
     public static ListBoxModel doFillHubVersionDistItems() {
-        final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
-        final boolean changed = false;
         final ListBoxModel items = new ListBoxModel();
         try {
             // should get this list from the Hub server, ticket HUB-1610
@@ -139,10 +140,6 @@ public class BDCommonDescriptorUtil {
         } catch (final Exception e) {
             e.printStackTrace();
             System.err.println(e.getMessage());
-        } finally {
-            if (changed) {
-                Thread.currentThread().setContextClassLoader(originalClassLoader);
-            }
         }
         return items;
     }

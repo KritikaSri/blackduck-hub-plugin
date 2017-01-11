@@ -49,12 +49,19 @@ public class HubCommonFailureStep {
 
     private final Boolean failBuildForPolicyViolations;
 
-    public HubCommonFailureStep(final Boolean failBuildForPolicyViolations) {
+    private final FailureConditionBuildStateEnum buildStateOnFailure;
+
+    public HubCommonFailureStep(final Boolean failBuildForPolicyViolations, final FailureConditionBuildStateEnum buildStateOnFailure) {
         this.failBuildForPolicyViolations = failBuildForPolicyViolations;
+        this.buildStateOnFailure = buildStateOnFailure;
     }
 
     public Boolean getFailBuildForPolicyViolations() {
         return failBuildForPolicyViolations;
+    }
+
+    public FailureConditionBuildStateEnum getBuildStateOnFailure() {
+        return buildStateOnFailure;
     }
 
     public boolean checkFailureConditions(final Run run, final Node builtOn, final EnvVars envVars,
@@ -69,6 +76,12 @@ public class HubCommonFailureStep {
             logger.error("The Hub failure condition step has not been configured to do anything.");
             run.setResult(Result.UNSTABLE);
             return true;
+        }
+        Result resultToSetForFailureCondition = Result.SUCCESS;
+        if (buildStateOnFailure == FailureConditionBuildStateEnum.UNSTABLE) {
+            resultToSetForFailureCondition = Result.UNSTABLE;
+        } else if (buildStateOnFailure == FailureConditionBuildStateEnum.FAILURE) {
+            resultToSetForFailureCondition = Result.FAILURE;
         }
 
         final HubServerInfo serverInfo = HubServerInfoSingleton.getInstance().getServerInfo();
@@ -104,8 +117,10 @@ public class HubCommonFailureStep {
                     logger.error("Could not find any information about the Policy status of the bom.");
                     return true;
                 }
+
+                logger.alwaysLog("--> Configured to set the Build Result to " + buildStateOnFailure.getDisplayValue() + " for Hub Failure Conditions.");
                 if (policyStatus.getOverallStatus() == PolicyStatusEnum.IN_VIOLATION) {
-                    run.setResult(Result.FAILURE);
+                    run.setResult(resultToSetForFailureCondition);
                 }
 
                 final HubVariableContributor variableContributor = new HubVariableContributor();
