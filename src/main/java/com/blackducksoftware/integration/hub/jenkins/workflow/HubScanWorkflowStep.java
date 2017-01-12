@@ -40,6 +40,7 @@ import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.scan.BDCommonDescriptorUtil;
 import com.blackducksoftware.integration.hub.jenkins.scan.BDCommonScanStep;
+import com.blackducksoftware.integration.hub.jenkins.scan.ScanExclusion;
 
 import hudson.EnvVars;
 import hudson.Extension;
@@ -74,10 +75,13 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
     private Boolean verbose;
 
+    private final ScanExclusion[] excludePatterns;
+
     @DataBoundConstructor
     public HubScanWorkflowStep(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
             final String scanMemory,
-            final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan) {
+            final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan,
+            final ScanExclusion[] excludePatterns) {
         this.scans = scans;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
@@ -86,6 +90,7 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
         this.bomUpdateMaxiumWaitTime = bomUpdateMaxiumWaitTime;
         this.dryRun = dryRun;
         this.cleanupOnSuccessfulScan = cleanupOnSuccessfulScan;
+        this.excludePatterns = excludePatterns;
     }
 
     public void setVerbose(final boolean verbose) {
@@ -101,6 +106,23 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
     public ScanJobs[] getScans() {
         return scans;
+    }
+
+    public ScanExclusion[] getExcludePatterns() {
+        return excludePatterns;
+    }
+
+    public String[] getExclusionPatterns() {
+        String[] exclusionPatterns = null;
+        if (getExcludePatterns() != null) {
+            exclusionPatterns = new String[getExcludePatterns().length];
+            int i = 0;
+            for (final ScanExclusion exclusion : getExcludePatterns()) {
+                exclusionPatterns[i] = exclusion.getExclusionPattern();
+                i++;
+            }
+        }
+        return exclusionPatterns;
     }
 
     public String getHubProjectName() {
@@ -264,7 +286,7 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
                         hubScanStep.getHubProjectName(), hubScanStep.getHubProjectVersion(),
                         hubScanStep.getScanMemory(),
                         hubScanStep.getShouldGenerateHubReport(), hubScanStep.getBomUpdateMaxiumWaitTime(),
-                        hubScanStep.isDryRun(), hubScanStep.isCleanupOnSuccessfulScan(), hubScanStep.isVerbose());
+                        hubScanStep.isDryRun(), hubScanStep.isCleanupOnSuccessfulScan(), hubScanStep.isVerbose(), hubScanStep.getExclusionPatterns());
 
                 scanStep.runScan(run, node, envVars, workspace, logger, launcher, listener,
                         run.getFullDisplayName(),

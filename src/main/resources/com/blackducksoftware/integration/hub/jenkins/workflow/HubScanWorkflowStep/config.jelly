@@ -50,4 +50,15 @@
 	</f:repeatable>
 </f:block>
 
+<f:block>
+	<f:repeatable field="excludePatterns" add="${%AddExclusion}" minimum="1">
+		<table style="width:100%" id="hubBlackDuckExclusionTable">
+				<f:entry title="${%ExclusionPattern}" field="exclusionPattern" help="/plugin/blackduck-hub/help/PostBuildHubScan/help-exclusionPattern.html">
+              		<f:textbox/>
+            	</f:entry>
+      	</table>
+      	<f:repeatableDeleteButton value="${%DeleteExclusion}"/>
+	</f:repeatable>
+</f:block>
+
 </j:jelly>
