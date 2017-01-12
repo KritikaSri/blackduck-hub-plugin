@@ -28,6 +28,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.action.BomUpToDateAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
+import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 
 import hudson.EnvVars;
 import hudson.Launcher;
@@ -41,13 +42,20 @@ public class HubFailureConditionStep extends Recorder {
 
     private final Boolean failBuildForPolicyViolations;
 
+    private final String buildStateOnFailure;
+
     @DataBoundConstructor
-    public HubFailureConditionStep(final Boolean failBuildForPolicyViolations) {
+    public HubFailureConditionStep(final Boolean failBuildForPolicyViolations, final String buildStateOnFailure) {
         this.failBuildForPolicyViolations = failBuildForPolicyViolations;
+        this.buildStateOnFailure = buildStateOnFailure;
     }
 
     public Boolean getFailBuildForPolicyViolations() {
         return failBuildForPolicyViolations;
+    }
+
+    public String getBuildStateOnFailure() {
+        return buildStateOnFailure;
     }
 
     @Override
@@ -89,7 +97,7 @@ public class HubFailureConditionStep extends Recorder {
                 return true;
             }
 
-            final HubCommonFailureStep commonFailureStep = createCommonFailureStep(getFailBuildForPolicyViolations());
+            final HubCommonFailureStep commonFailureStep = createCommonFailureStep(getFailBuildForPolicyViolations(), getBuildStateOnFailure());
             commonFailureStep.checkFailureConditions(build, build.getBuiltOn(), envVars, logger,
                     listener,
                     bomUpToDateAction);
@@ -100,8 +108,13 @@ public class HubFailureConditionStep extends Recorder {
         return true;
     }
 
-    public HubCommonFailureStep createCommonFailureStep(final Boolean failBuildForPolicyViolations) {
-        return new HubCommonFailureStep(failBuildForPolicyViolations);
+    public HubCommonFailureStep createCommonFailureStep(final Boolean failBuildForPolicyViolations, final String buildStateOnFailure)
+            throws BDJenkinsHubPluginException {
+        final FailureConditionBuildStateEnum buildStateOnFailureEnum = FailureConditionBuildStateEnum.getFailureConditionBuildStateEnum(buildStateOnFailure);
+        if (buildStateOnFailureEnum == null) {
+            throw new BDJenkinsHubPluginException("Invalid Build State on Failure Condition configured : " + buildStateOnFailure);
+        }
+        return new HubCommonFailureStep(failBuildForPolicyViolations, buildStateOnFailureEnum);
     }
 
 }

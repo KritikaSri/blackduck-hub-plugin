@@ -57,6 +57,8 @@ public class RemoteScan implements Callable<List<ScanSummaryItem>, HubIntegratio
 
     private final boolean dryRun;
 
+    private final boolean cleanupOnSuccessfulScan;
+
     private final String toolsDirectory;
 
     private final String thirdPartyVersion;
@@ -67,9 +69,13 @@ public class RemoteScan implements Callable<List<ScanSummaryItem>, HubIntegratio
 
     private final boolean performWorkspaceCheck;
 
-    public RemoteScan(IntLogger logger, String hubProjectName, String hubProjectVersion, String scanMemory, String workingDirectoryPath,
-            List<String> scanTargetPaths, boolean dryRun, String toolsDirectory, String thirdPartyVersion,
-            String pluginVersion, HubServerConfig hubServerConfig, boolean performWorkspaceCheck) {
+    private final String[] excludePatterns;
+
+    public RemoteScan(final IntLogger logger, final String hubProjectName, final String hubProjectVersion, final String scanMemory,
+            final String workingDirectoryPath,
+            final List<String> scanTargetPaths, final boolean dryRun, final boolean cleanupOnSuccessfulScan, final String toolsDirectory,
+            final String thirdPartyVersion,
+            final String pluginVersion, final HubServerConfig hubServerConfig, final boolean performWorkspaceCheck, final String[] excludePatterns) {
         this.logger = logger;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
@@ -77,24 +83,26 @@ public class RemoteScan implements Callable<List<ScanSummaryItem>, HubIntegratio
         this.workingDirectoryPath = workingDirectoryPath;
         this.scanTargetPaths = scanTargetPaths;
         this.dryRun = dryRun;
+        this.cleanupOnSuccessfulScan = cleanupOnSuccessfulScan;
         this.toolsDirectory = toolsDirectory;
         this.thirdPartyVersion = thirdPartyVersion;
         this.pluginVersion = pluginVersion;
         this.hubServerConfig = hubServerConfig;
         this.performWorkspaceCheck = performWorkspaceCheck;
+        this.excludePatterns = excludePatterns;
     }
 
     @Override
     public List<ScanSummaryItem> call() throws HubIntegrationException {
         try {
-            RestConnection restConnection = new CredentialsRestConnection(logger, hubServerConfig);
+            final RestConnection restConnection = new CredentialsRestConnection(logger, hubServerConfig);
             restConnection.connect();
 
             final HubServicesFactory services = new HubServicesFactory(restConnection);
             final CLIDataService cliDataService = services.createCLIDataService(logger);
 
-            File workingDirectory = new File(workingDirectoryPath);
-            File toolsDir = new File(toolsDirectory);
+            final File workingDirectory = new File(workingDirectoryPath);
+            final File toolsDir = new File(toolsDirectory);
 
             final HubScanConfigBuilder hubScanConfigBuilder = new HubScanConfigBuilder();
             hubScanConfigBuilder.setDryRun(dryRun);
@@ -108,23 +116,25 @@ public class RemoteScan implements Callable<List<ScanSummaryItem>, HubIntegratio
             hubScanConfigBuilder.setThirdPartyVersion(thirdPartyVersion);
             hubScanConfigBuilder.setPluginVersion(pluginVersion);
             if (performWorkspaceCheck) {
-                // TODO hubScanConfigBuilder.enableScanTargetPathsWithinWorkingDirectoryCheck();
+                hubScanConfigBuilder.enableScanTargetPathsWithinWorkingDirectoryCheck();
             }
+            hubScanConfigBuilder.setCleanupLogsOnSuccess(cleanupOnSuccessfulScan);
+            hubScanConfigBuilder.setExcludePatterns(excludePatterns);
 
-            HubScanConfig hubScanConfig = hubScanConfigBuilder.build();
+            final HubScanConfig hubScanConfig = hubScanConfigBuilder.build();
 
-            List<ScanSummaryItem> scans = cliDataService.installAndRunScan(hubServerConfig, hubScanConfig);
+            final List<ScanSummaryItem> scans = cliDataService.installAndRunScan(hubServerConfig, hubScanConfig);
 
             return scans;
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             throw new HubIntegrationException(e.getMessage(), e);
-        } catch (EncryptionException e) {
+        } catch (final EncryptionException e) {
             throw new HubIntegrationException(e.getMessage(), e);
         }
     }
 
     @Override
-    public void checkRoles(RoleChecker checker) throws SecurityException {
+    public void checkRoles(final RoleChecker checker) throws SecurityException {
         checker.check(this, new Role(RemoteScan.class));
     }
 }

@@ -90,14 +90,18 @@ public class BDCommonScanStep {
 
     private final boolean dryRun;
 
+    private final boolean cleanupOnSuccessfulScan;
+
     private final Boolean verbose;
 
     private final BomUpToDateAction bomUpToDateAction = new BomUpToDateAction();
 
+    private final String[] excludePatterns;
+
     public BDCommonScanStep(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
             final String scanMemory,
-            final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun,
-            final Boolean verbose) {
+            final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan,
+            final Boolean verbose, final String[] excludePatterns) {
         this.scans = scans;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
@@ -105,11 +109,17 @@ public class BDCommonScanStep {
         this.shouldGenerateHubReport = shouldGenerateHubReport;
         this.bomUpdateMaxiumWaitTime = bomUpdateMaxiumWaitTime;
         this.dryRun = dryRun;
+        this.cleanupOnSuccessfulScan = cleanupOnSuccessfulScan;
         this.verbose = verbose;
+        this.excludePatterns = excludePatterns;
     }
 
     public ScanJobs[] getScans() {
         return scans;
+    }
+
+    public String[] getExcludePatterns() {
+        return excludePatterns;
     }
 
     public String getHubProjectName() {
@@ -138,6 +148,10 @@ public class BDCommonScanStep {
 
     public Boolean isVerbose() {
         return verbose;
+    }
+
+    public boolean isCleanupOnSuccessfulScan() {
+        return cleanupOnSuccessfulScan;
     }
 
     public BomUpToDateAction getBomUpToDateAction() {
@@ -210,8 +224,9 @@ public class BDCommonScanStep {
                     final String pluginVersion = PluginHelper.getPluginVersion();
 
                     final RemoteScan scan = new RemoteScan(logger, projectName, projectVersion, scanMemory, workingDirectory, scanTargetPaths, dryRun,
+                            isCleanupOnSuccessfulScan(),
                             toolsDirectory,
-                            thirdPartyVersion, pluginVersion, hubServerConfig, getHubServerInfo().isPerformWorkspaceCheck());
+                            thirdPartyVersion, pluginVersion, hubServerConfig, getHubServerInfo().isPerformWorkspaceCheck(), getExcludePatterns());
 
                     final List<ScanSummaryItem> scanSummaries = builtOn.getChannel().call(scan);
 
@@ -303,8 +318,8 @@ public class BDCommonScanStep {
         logger.alwaysLog("Finished running Black Duck Scans.");
     }
 
-    private ProjectVersionItem getProjectVersionFromScanStatus(CodeLocationRequestService codeLocationRequestService,
-            ProjectVersionRequestService projectVersionRequestService, MetaService metaService, ScanSummaryItem scanSummaryItem)
+    private ProjectVersionItem getProjectVersionFromScanStatus(final CodeLocationRequestService codeLocationRequestService,
+            final ProjectVersionRequestService projectVersionRequestService, final MetaService metaService, final ScanSummaryItem scanSummaryItem)
             throws HubIntegrationException {
         final CodeLocationItem codeLocationItem = codeLocationRequestService.getItem(metaService.getLink(scanSummaryItem, MetaService.CODE_LOCATION_LINK));
         final String projectVersionUrl = codeLocationItem.getMappedProjectVersion();
@@ -339,6 +354,7 @@ public class BDCommonScanStep {
                 }
             }
         }
+
         return scanTargetPaths;
     }
 

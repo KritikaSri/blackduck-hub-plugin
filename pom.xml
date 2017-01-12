@@ -14,7 +14,7 @@
   <version>2.1.0-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
-  <name>Black Duck Hub Plug-In for Jenkins</name>
+  <name>Black Duck Hub Plugin for Jenkins</name>
   <description>Runs the Black Duck Hub scan in Jenkins builds</description>
   <url>https://wiki.jenkins-ci.org/display/JENKINS/BlackDuck+Hub+Plugin</url>
   <inceptionYear>2014</inceptionYear>
@@ -45,7 +45,7 @@
   <properties>
     <findbugs.failOnError>false</findbugs.failOnError>
     <hpi-plugin.version>1.117</hpi-plugin.version>
-    <hub.common.version>5.4.1</hub.common.version>
+    <hub.common.version>6.0.0-SNAPSHOT</hub.common.version>
     <jenkins.version>1.580.3</jenkins.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>

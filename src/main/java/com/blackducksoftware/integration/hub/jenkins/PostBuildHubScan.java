@@ -28,6 +28,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.blackducksoftware.integration.hub.jenkins.remote.GetCanonicalPath;
 import com.blackducksoftware.integration.hub.jenkins.scan.BDCommonScanStep;
+import com.blackducksoftware.integration.hub.jenkins.scan.ScanExclusion;
 import com.blackducksoftware.integration.log.IntLogger;
 
 import hudson.EnvVars;
@@ -53,6 +54,8 @@ public class PostBuildHubScan extends Recorder {
 
     private final boolean dryRun;
 
+    private final boolean cleanupOnSuccessfulScan;
+
     private Boolean verbose;
 
     // Old variable, renaming to hubProjectVersion
@@ -63,10 +66,13 @@ public class PostBuildHubScan extends Recorder {
     // need to keep this around for now for migration purposes
     private String reportMaxiumWaitTime;
 
+    private final ScanExclusion[] excludePatterns;
+
     @DataBoundConstructor
     public PostBuildHubScan(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
             final String scanMemory,
-            final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun) {
+            final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan,
+            final ScanExclusion[] excludePatterns) {
         this.scans = scans;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
@@ -74,6 +80,8 @@ public class PostBuildHubScan extends Recorder {
         this.shouldGenerateHubReport = shouldGenerateHubReport;
         this.bomUpdateMaxiumWaitTime = bomUpdateMaxiumWaitTime;
         this.dryRun = dryRun;
+        this.cleanupOnSuccessfulScan = cleanupOnSuccessfulScan;
+        this.excludePatterns = excludePatterns;
     }
 
     public void setverbose(final boolean verbose) {
@@ -89,6 +97,10 @@ public class PostBuildHubScan extends Recorder {
 
     public boolean isDryRun() {
         return dryRun;
+    }
+
+    public boolean isCleanupOnSuccessfulScan() {
+        return cleanupOnSuccessfulScan;
     }
 
     public boolean getShouldGenerateHubReport() {
@@ -121,6 +133,10 @@ public class PostBuildHubScan extends Recorder {
         return scans;
     }
 
+    public ScanExclusion[] getExcludePatterns() {
+        return excludePatterns;
+    }
+
     // http://javadoc.jenkins-ci.org/hudson/tasks/Recorder.html
     @Override
     public BuildStepMonitor getRequiredMonitorService() {
@@ -149,7 +165,7 @@ public class PostBuildHubScan extends Recorder {
         try {
             final BDCommonScanStep scanStep = new BDCommonScanStep(getScans(), getHubProjectName(),
                     getHubProjectVersion(), getScanMemory(),
-                    getShouldGenerateHubReport(), getBomUpdateMaxiumWaitTime(), isDryRun(), isVerbose());
+                    getShouldGenerateHubReport(), getBomUpdateMaxiumWaitTime(), isDryRun(), isCleanupOnSuccessfulScan(), isVerbose(), getExclusionPatterns());
             final EnvVars envVars = build.getEnvironment(listener);
 
             scanStep.runScan(build, build.getBuiltOn(), envVars, getWorkingDirectory(logger, build), logger, launcher,
@@ -158,6 +174,19 @@ public class PostBuildHubScan extends Recorder {
             logger.error(e);
         }
         return true;
+    }
+
+    public String[] getExclusionPatterns() {
+        String[] exclusionPatterns = null;
+        if (getExcludePatterns() != null) {
+            exclusionPatterns = new String[getExcludePatterns().length];
+            int i = 0;
+            for (final ScanExclusion exclusion : getExcludePatterns()) {
+                exclusionPatterns[i] = exclusion.getExclusionPattern();
+                i++;
+            }
+        }
+        return exclusionPatterns;
     }
 
     public FilePath getWorkingDirectory(final IntLogger logger, final AbstractBuild<?, ?> build)
