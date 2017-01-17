@@ -29,6 +29,9 @@
 	<f:entry field="scanMemory" title="${%MemoryAllocation}">
 		<f:textbox value="${it.scanMemory}" default="4096" />
 	</f:entry>
+	<f:entry field="codeLocationName" title="${%CodeLocationNameTitle}">
+		<f:textbox />
+	</f:entry>
 	<f:entry field="dryRun">
 		<f:checkbox default="false" />
 		<label>${%DryRunTitle}</label>

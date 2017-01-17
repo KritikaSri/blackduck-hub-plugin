@@ -68,11 +68,13 @@ public class PostBuildHubScan extends Recorder {
 
     private final ScanExclusion[] excludePatterns;
 
+    private final String codeLocationName;
+
     @DataBoundConstructor
     public PostBuildHubScan(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
             final String scanMemory,
             final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan,
-            final ScanExclusion[] excludePatterns) {
+            final ScanExclusion[] excludePatterns, final String codeLocationName) {
         this.scans = scans;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
@@ -82,6 +84,7 @@ public class PostBuildHubScan extends Recorder {
         this.dryRun = dryRun;
         this.cleanupOnSuccessfulScan = cleanupOnSuccessfulScan;
         this.excludePatterns = excludePatterns;
+        this.codeLocationName = codeLocationName;
     }
 
     public void setverbose(final boolean verbose) {
@@ -137,6 +140,10 @@ public class PostBuildHubScan extends Recorder {
         return excludePatterns;
     }
 
+    public String getCodeLocationName() {
+        return codeLocationName;
+    }
+
     // http://javadoc.jenkins-ci.org/hudson/tasks/Recorder.html
     @Override
     public BuildStepMonitor getRequiredMonitorService() {
@@ -165,7 +172,8 @@ public class PostBuildHubScan extends Recorder {
         try {
             final BDCommonScanStep scanStep = new BDCommonScanStep(getScans(), getHubProjectName(),
                     getHubProjectVersion(), getScanMemory(),
-                    getShouldGenerateHubReport(), getBomUpdateMaxiumWaitTime(), isDryRun(), isCleanupOnSuccessfulScan(), isVerbose(), getExclusionPatterns());
+                    getShouldGenerateHubReport(), getBomUpdateMaxiumWaitTime(), isDryRun(), isCleanupOnSuccessfulScan(), isVerbose(), getExclusionPatterns(),
+                    getCodeLocationName());
             final EnvVars envVars = build.getEnvironment(listener);
 
             scanStep.runScan(build, build.getBuiltOn(), envVars, getWorkingDirectory(logger, build), logger, launcher,

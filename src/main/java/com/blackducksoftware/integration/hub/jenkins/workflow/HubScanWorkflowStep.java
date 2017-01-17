@@ -77,11 +77,13 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
     private final ScanExclusion[] excludePatterns;
 
+    private final String codeLocationName;
+
     @DataBoundConstructor
     public HubScanWorkflowStep(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
             final String scanMemory,
             final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan,
-            final ScanExclusion[] excludePatterns) {
+            final ScanExclusion[] excludePatterns, final String codeLocationName) {
         this.scans = scans;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
@@ -91,6 +93,7 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
         this.dryRun = dryRun;
         this.cleanupOnSuccessfulScan = cleanupOnSuccessfulScan;
         this.excludePatterns = excludePatterns;
+        this.codeLocationName = codeLocationName;
     }
 
     public void setVerbose(final boolean verbose) {
@@ -151,6 +154,10 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
     public boolean isCleanupOnSuccessfulScan() {
         return cleanupOnSuccessfulScan;
+    }
+
+    public String getCodeLocationName() {
+        return codeLocationName;
     }
 
     @Override
@@ -286,7 +293,8 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
                         hubScanStep.getHubProjectName(), hubScanStep.getHubProjectVersion(),
                         hubScanStep.getScanMemory(),
                         hubScanStep.getShouldGenerateHubReport(), hubScanStep.getBomUpdateMaxiumWaitTime(),
-                        hubScanStep.isDryRun(), hubScanStep.isCleanupOnSuccessfulScan(), hubScanStep.isVerbose(), hubScanStep.getExclusionPatterns());
+                        hubScanStep.isDryRun(), hubScanStep.isCleanupOnSuccessfulScan(), hubScanStep.isVerbose(), hubScanStep.getExclusionPatterns(),
+                        hubScanStep.getCodeLocationName());
 
                 scanStep.runScan(run, node, envVars, workspace, logger, launcher, listener,
                         run.getFullDisplayName(),
