@@ -456,10 +456,12 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialPassword = credential.getPassword().getPlainText();
 
             BuildHelper.getRestConnection(null, serverUrl, credentialUserName,
-                    credentialPassword, Integer.valueOf(hubTimeout));
+                    credentialPassword, hubTimeout);
 
             return FormValidation.ok(Messages.HubBuildScan_getCredentialsValidFor_0_(serverUrl));
 
+        } catch (final IllegalStateException e) {
+            return FormValidation.error(e.getMessage());
         } catch (final HubIntegrationException e) {
             String message;
             if (e.getCause() != null) {
