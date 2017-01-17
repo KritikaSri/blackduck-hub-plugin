@@ -332,28 +332,12 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return BDCommonDescriptorUtil.doFillCredentialsIdItems();
     }
 
-    /**
-     * Fills the drop down list of possible Version phases
-     *
-     */
-    public ListBoxModel doFillHubVersionPhaseItems() {
-        return BDCommonDescriptorUtil.doFillHubVersionPhaseItems();
-    }
-
-    /**
-     * Fills the drop down list of possible Version distribution types
-     *
-     */
-    public ListBoxModel doFillHubVersionDistItems() {
-        return BDCommonDescriptorUtil.doFillHubVersionDistItems();
-    }
-
     public FormValidation doCheckHubTimeout(@QueryParameter("hubTimeout") final String hubTimeout)
             throws IOException, ServletException {
         if (StringUtils.isBlank(hubTimeout)) {
             return FormValidation.error(Messages.HubBuildScan_getPleaseSetTimeout());
         }
-        HubServerConfigValidator validator = new HubServerConfigValidator();
+        final HubServerConfigValidator validator = new HubServerConfigValidator();
         validator.setTimeout(hubTimeout);
 
         final ValidationResults results = new ValidationResults();
@@ -377,7 +361,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             proxyConfig = jenkins.proxy;
         }
 
-        HubServerConfigValidator validator = new HubServerConfigValidator();
+        final HubServerConfigValidator validator = new HubServerConfigValidator();
         validator.setHubUrl(hubServerUrl);
         if (proxyConfig != null) {
             validator.setProxyHost(proxyConfig.name);

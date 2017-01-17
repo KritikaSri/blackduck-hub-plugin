@@ -257,7 +257,7 @@ public class BDCommonScanStep {
 
                     Long bomWait = 300000l;
                     if (!isDryRun()) {
-                        logger.alwaysLog("--> Bom wait time : " + bomUpdateMaxiumWaitTime);
+                        logger.alwaysLog("--> Bom wait time : " + bomUpdateMaxiumWaitTime + "m");
                         // User input is in minutes, need to changes to milliseconds
                         bomWait = Long.valueOf(bomUpdateMaxiumWaitTime) * 60 * 1000;
                     }
@@ -267,12 +267,12 @@ public class BDCommonScanStep {
 
                         final HubReportAction reportAction = new HubReportAction(run);
 
-                        final RiskReportDataService reportService = services.createRiskReportDataService(logger);
+                        final RiskReportDataService reportService = services.createRiskReportDataService(logger, bomWait);
                         logger.debug("Waiting for Bom to be updated.");
-                        services.createScanStatusDataService(logger).assertBomImportScansFinished(scanSummaries, bomWait);
+                        services.createScanStatusDataService(logger, bomWait).assertBomImportScansFinished(scanSummaries);
 
                         logger.debug("Generating the Risk Report.");
-                        final HubRiskReportData reportData = reportService.createRiskReport(projectName, projectVersion, bomWait);
+                        final HubRiskReportData reportData = reportService.createRiskReport(projectName, projectVersion);
                         reportAction.setReportData(reportData);
                         run.addAction(reportAction);
                         bomUpToDateAction.setHasBomBeenUdpated(true);

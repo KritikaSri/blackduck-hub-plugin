@@ -209,22 +209,6 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
             return BDCommonDescriptorUtil.doFillCredentialsIdItems();
         }
 
-        /**
-         * Fills the drop down list of possible Version phases
-         *
-         */
-        public ListBoxModel doFillHubVersionPhaseItems() {
-            return BDCommonDescriptorUtil.doFillHubVersionPhaseItems();
-        }
-
-        /**
-         * Fills the drop down list of possible Version distribution types
-         *
-         */
-        public ListBoxModel doFillHubVersionDistItems() {
-            return BDCommonDescriptorUtil.doFillHubVersionDistItems();
-        }
-
         public AutoCompletionCandidates doAutoCompleteHubProjectName(
                 @QueryParameter("value") final String hubProjectName) throws IOException, ServletException {
             return BDCommonDescriptorUtil.doAutoCompleteHubProjectName(getHubServerInfo(), hubProjectName);

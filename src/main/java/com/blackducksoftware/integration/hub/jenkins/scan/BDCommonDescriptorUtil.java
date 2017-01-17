@@ -36,8 +36,7 @@ import com.blackducksoftware.integration.hub.api.project.ProjectItem;
 import com.blackducksoftware.integration.hub.api.project.ProjectRequestService;
 import com.blackducksoftware.integration.hub.api.project.version.ProjectVersionItem;
 import com.blackducksoftware.integration.hub.api.project.version.ProjectVersionRequestService;
-import com.blackducksoftware.integration.hub.api.version.DistributionEnum;
-import com.blackducksoftware.integration.hub.api.version.PhaseEnum;
+import com.blackducksoftware.integration.hub.exception.DoesNotExistException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
@@ -102,46 +101,6 @@ public class BDCommonDescriptorUtil {
             }
         }
         return boxModel;
-    }
-
-    /**
-     * Fills the drop down list of possible Version phases
-     *
-     */
-    public static ListBoxModel doFillHubVersionPhaseItems() {
-        final ListBoxModel items = new ListBoxModel();
-        try {
-            // should get this list from the Hub server, ticket HUB-1610
-            for (final PhaseEnum phase : PhaseEnum.values()) {
-                if (phase != PhaseEnum.UNKNOWNPHASE) {
-                    items.add(phase.getDisplayValue(), phase.name());
-                }
-            }
-        } catch (final Exception e) {
-            e.printStackTrace();
-            System.err.println(e.getMessage());
-        }
-        return items;
-    }
-
-    /**
-     * Fills the drop down list of possible Version distribution types
-     *
-     */
-    public static ListBoxModel doFillHubVersionDistItems() {
-        final ListBoxModel items = new ListBoxModel();
-        try {
-            // should get this list from the Hub server, ticket HUB-1610
-            for (final DistributionEnum distribution : DistributionEnum.values()) {
-                if (distribution != DistributionEnum.UNKNOWNDISTRIBUTION) {
-                    items.add(distribution.getDisplayValue(), distribution.name());
-                }
-            }
-        } catch (final Exception e) {
-            e.printStackTrace();
-            System.err.println(e.getMessage());
-        }
-        return items;
     }
 
     public static AutoCompletionCandidates doAutoCompleteHubProjectName(final HubServerInfo serverInfo,
@@ -219,9 +178,9 @@ public class BDCommonDescriptorUtil {
                     return FormValidation.error(Messages.HubBuildScan_getProjectNotAccessible());
                 }
                 return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(serverInfo.getServerUrl()));
-                // } catch (final ProjectDoesNotExistException e) {
-                // return FormValidation
-                // .error(Messages.HubBuildScan_getProjectNonExistingIn_0_(serverInfo.getServerUrl()));
+            } catch (final DoesNotExistException e) {
+                return FormValidation
+                        .error(Messages.HubBuildScan_getProjectNonExistingIn_0_(serverInfo.getServerUrl()));
             } catch (final HubIntegrationException e) {
                 String message;
                 if (e.getCause() != null) {
