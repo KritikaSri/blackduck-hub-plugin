@@ -337,7 +337,7 @@ public class BDCommonDescriptorUtil {
                 return FormValidation.error("Bom wait time must be greater than 0.");
             }
         } catch (final NumberFormatException e) {
-            return FormValidation.error(e, e.getMessage());
+            return FormValidation.error("The String : " + bomUpdateMaxiumWaitTime + " , is not an Integer.");
         }
         return FormValidation.ok();
     }
