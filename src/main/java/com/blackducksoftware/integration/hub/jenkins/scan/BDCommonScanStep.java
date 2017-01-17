@@ -24,6 +24,7 @@ package com.blackducksoftware.integration.hub.jenkins.scan;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.util.ArrayList;
@@ -61,6 +62,7 @@ import com.blackducksoftware.integration.hub.jenkins.remote.RemoteScan;
 import com.blackducksoftware.integration.hub.rest.CredentialsRestConnection;
 import com.blackducksoftware.integration.hub.rest.RestConnection;
 import com.blackducksoftware.integration.hub.service.HubServicesFactory;
+import com.blackducksoftware.integration.hub.util.HostnameHelper;
 import com.blackducksoftware.integration.log.IntLogger;
 import com.blackducksoftware.integration.util.CIEnvironmentVariables;
 
@@ -223,7 +225,9 @@ public class BDCommonScanStep {
                     final String thirdPartyVersion = Jenkins.getVersion().toString();
                     final String pluginVersion = PluginHelper.getPluginVersion();
 
-                    final RemoteScan scan = new RemoteScan(logger, projectName, projectVersion, scanMemory, workingDirectory, scanTargetPaths, dryRun,
+                    final RemoteScan scan = new RemoteScan(logger, getJenkinsName(), run.getParent().getName(), projectName, projectVersion, scanMemory,
+                            workingDirectory,
+                            scanTargetPaths, dryRun,
                             isCleanupOnSuccessfulScan(),
                             toolsDirectory,
                             thirdPartyVersion, pluginVersion, hubServerConfig, getHubServerInfo().isPerformWorkspaceCheck(), getExcludePatterns());
@@ -316,6 +320,22 @@ public class BDCommonScanStep {
             logger.alwaysLog("Build was not successful. Will not run Black Duck Scans.");
         }
         logger.alwaysLog("Finished running Black Duck Scans.");
+    }
+
+    private String getJenkinsName() {
+
+        String jenkinsHost = "UnknownJenkinsHost";
+        final String jenkinsServer = Jenkins.getInstance().getRootUrl();
+        try {
+            final URL jenkinsURL = new URL(jenkinsServer);
+            jenkinsHost = jenkinsURL.getHost();
+        } catch (final MalformedURLException e) {
+        }
+        if (jenkinsHost.equalsIgnoreCase("localhost")) {
+            jenkinsHost = HostnameHelper.getMyHostname();
+        }
+
+        return jenkinsHost;
     }
 
     private ProjectVersionItem getProjectVersionFromScanStatus(final CodeLocationRequestService codeLocationRequestService,

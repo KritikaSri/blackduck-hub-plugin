@@ -45,6 +45,10 @@ import hudson.remoting.Callable;
 public class RemoteScan implements Callable<List<ScanSummaryItem>, HubIntegrationException> {
     private final IntLogger logger;
 
+    private final String jenkinsName;
+
+    private final String jobName;
+
     private final String hubProjectName;
 
     private final String hubProjectVersion;
@@ -71,12 +75,15 @@ public class RemoteScan implements Callable<List<ScanSummaryItem>, HubIntegratio
 
     private final String[] excludePatterns;
 
-    public RemoteScan(final IntLogger logger, final String hubProjectName, final String hubProjectVersion, final String scanMemory,
+    public RemoteScan(final IntLogger logger, final String jenkinsName, final String jobName, final String hubProjectName, final String hubProjectVersion,
+            final String scanMemory,
             final String workingDirectoryPath,
             final List<String> scanTargetPaths, final boolean dryRun, final boolean cleanupOnSuccessfulScan, final String toolsDirectory,
             final String thirdPartyVersion,
             final String pluginVersion, final HubServerConfig hubServerConfig, final boolean performWorkspaceCheck, final String[] excludePatterns) {
         this.logger = logger;
+        this.jenkinsName = jenkinsName;
+        this.jobName = jobName;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
         this.scanMemory = scanMemory;
@@ -120,6 +127,7 @@ public class RemoteScan implements Callable<List<ScanSummaryItem>, HubIntegratio
             }
             hubScanConfigBuilder.setCleanupLogsOnSuccess(cleanupOnSuccessfulScan);
             hubScanConfigBuilder.setExcludePatterns(excludePatterns);
+            hubScanConfigBuilder.setCodeLocationAlias(jenkinsName, jobName);
 
             final HubScanConfig hubScanConfig = hubScanConfigBuilder.build();
 
