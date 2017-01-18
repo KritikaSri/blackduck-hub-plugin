@@ -22,6 +22,7 @@
 package com.blackducksoftware.integration.hub.jenkins.remote;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.jenkinsci.remoting.Role;
@@ -42,7 +43,7 @@ import com.blackducksoftware.integration.phone.home.enums.ThirdPartyName;
 
 import hudson.remoting.Callable;
 
-public class RemoteScan implements Callable<List<ScanSummaryItem>, HubIntegrationException> {
+public class RemoteScan implements Callable<List<String>, HubIntegrationException> {
     private final IntLogger logger;
 
     private final String codeLocationName;
@@ -97,7 +98,7 @@ public class RemoteScan implements Callable<List<ScanSummaryItem>, HubIntegratio
     }
 
     @Override
-    public List<ScanSummaryItem> call() throws HubIntegrationException {
+    public List<String> call() throws HubIntegrationException {
         try {
             final RestConnection restConnection = new CredentialsRestConnection(logger, hubServerConfig);
             restConnection.connect();
@@ -130,7 +131,13 @@ public class RemoteScan implements Callable<List<ScanSummaryItem>, HubIntegratio
 
             final List<ScanSummaryItem> scans = cliDataService.installAndRunScan(hubServerConfig, hubScanConfig);
 
-            return scans;
+            final List<String> scanStrings = new ArrayList<>();
+
+            for (final ScanSummaryItem scan : scans) {
+                scanStrings.add(cliDataService.getRestConnection().getGson().toJson(scan));
+            }
+
+            return scanStrings;
         } catch (final IllegalArgumentException e) {
             throw new HubIntegrationException(e.getMessage(), e);
         } catch (final EncryptionException e) {

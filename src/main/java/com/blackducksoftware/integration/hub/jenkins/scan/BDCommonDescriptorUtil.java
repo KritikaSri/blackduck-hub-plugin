@@ -148,9 +148,6 @@ public class BDCommonDescriptorUtil {
         // Query for the project version so hopefully the check methods run for
         // both fields
         // when the User changes the Name of the project
-        if (dryRun) {
-            return FormValidation.ok();
-        }
         if (StringUtils.isNotBlank(hubProjectName)) {
             final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
             final boolean changed = false;
@@ -211,19 +208,13 @@ public class BDCommonDescriptorUtil {
                 }
             }
         } else {
-            if (StringUtils.isNotBlank(hubProjectVersion)) {
-                return FormValidation.error(Messages.HubBuildScan_getProvideProjectName());
-            }
+            return FormValidation.error(Messages.HubBuildScan_getProvideProjectName());
         }
-        return FormValidation.ok();
     }
 
     public static FormValidation doCheckHubProjectVersion(final HubServerInfo serverInfo,
             final String hubProjectVersion, final String hubProjectName, final boolean dryRun)
             throws IOException, ServletException {
-        if (dryRun) {
-            return FormValidation.ok();
-        }
         if (StringUtils.isNotBlank(hubProjectVersion)) {
             final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
             final boolean changed = false;
@@ -304,11 +295,8 @@ public class BDCommonDescriptorUtil {
                 }
             }
         } else {
-            if (StringUtils.isNotBlank(hubProjectName)) {
-                return FormValidation.error(Messages.HubBuildScan_getProvideProjectVersion());
-            }
+            return FormValidation.error(Messages.HubBuildScan_getProvideProjectVersion());
         }
-        return FormValidation.ok();
     }
 
     public static FormValidation doCheckScanMemory(final String scanMemory) throws IOException, ServletException {

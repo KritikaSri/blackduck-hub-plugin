@@ -239,10 +239,17 @@ public class BDCommonScanStep {
                             toolsDirectory,
                             thirdPartyVersion, pluginVersion, hubServerConfig, getHubServerInfo().isPerformWorkspaceCheck(), getExcludePatterns());
 
-                    final List<ScanSummaryItem> scanSummaries = builtOn.getChannel().call(scan);
+                    final List<String> scanSummaryStrings = builtOn.getChannel().call(scan);
 
                     final RestConnection restConnection = new CredentialsRestConnection(logger, hubServerConfig);
                     restConnection.connect();
+
+                    final List<ScanSummaryItem> scanSummaries = new ArrayList<>();
+
+                    for (final String scanString : scanSummaryStrings) {
+                        final ScanSummaryItem scanSummaryItem = restConnection.getGson().fromJson(scanString, ScanSummaryItem.class);
+                        scanSummaryItem.setJson(scanString);
+                    }
 
                     final HubServicesFactory services = new HubServicesFactory(restConnection);
                     final MetaService metaService = services.createMetaService(logger);
@@ -350,9 +357,13 @@ public class BDCommonScanStep {
                     scanTargetPaths.add(workingDirectory);
                 } else {
                     String target = BuildHelper.handleVariableReplacement(variables, scanJob.getScanTarget().trim());
-                    // make sure the target provided doesn't already begin with
-                    // a slash or end in a slash
-                    // removes the slash if the target begins or ends with one
+                    try {
+                        logger.alwaysLog(new FilePath(builtOn.getChannel(), "/Test/").absolutize().getRemote());
+                        logger.alwaysLog(new FilePath(builtOn.getChannel(), "Test/").absolutize().getRemote());
+                    } catch (final Exception e) {
+                        logger.error(e);
+                    }
+
                     final File targetFile = new File(workingDirectory, target);
 
                     try {
