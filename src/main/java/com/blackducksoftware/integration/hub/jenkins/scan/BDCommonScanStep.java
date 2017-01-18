@@ -21,7 +21,6 @@
  *******************************************************************************/
 package com.blackducksoftware.integration.hub.jenkins.scan;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
@@ -57,7 +56,7 @@ import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPlug
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
-import com.blackducksoftware.integration.hub.jenkins.remote.GetCanonicalPath;
+import com.blackducksoftware.integration.hub.jenkins.remote.DetermineTargetPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.RemoteScan;
 import com.blackducksoftware.integration.hub.rest.CredentialsRestConnection;
 import com.blackducksoftware.integration.hub.rest.RestConnection;
@@ -366,17 +365,9 @@ public class BDCommonScanStep {
                     scanTargetPaths.add(workingDirectory);
                 } else {
                     String target = BuildHelper.handleVariableReplacement(variables, scanJob.getScanTarget().trim());
-                    try {
-                        logger.alwaysLog(new FilePath(builtOn.getChannel(), "/Test/").absolutize().getRemote());
-                        logger.alwaysLog(new FilePath(builtOn.getChannel(), "Test/").absolutize().getRemote());
-                    } catch (final Exception e) {
-                        logger.error(e);
-                    }
-
-                    final File targetFile = new File(workingDirectory, target);
 
                     try {
-                        target = builtOn.getChannel().call(new GetCanonicalPath(targetFile));
+                        target = builtOn.getChannel().call(new DetermineTargetPath(workingDirectory, target));
                     } catch (final IOException e) {
                         logger.error("Problem getting the real path of the target : " + target
                                 + " on this node. Error : " + e.getMessage(), e);
