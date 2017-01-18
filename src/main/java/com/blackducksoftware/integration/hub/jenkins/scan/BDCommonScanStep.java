@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 
 import com.blackducksoftware.integration.hub.api.codelocation.CodeLocationItem;
 import com.blackducksoftware.integration.hub.api.codelocation.CodeLocationRequestService;
@@ -141,6 +142,14 @@ public class BDCommonScanStep {
         return scanMemory;
     }
 
+    public int getScanMemoryInteger() {
+        int memory = NumberUtils.toInt(scanMemory);
+        if (memory <= 0) {
+            memory = 4096;
+        }
+        return memory;
+    }
+
     public boolean isShouldGenerateHubReport() {
         return shouldGenerateHubReport;
     }
@@ -232,7 +241,7 @@ public class BDCommonScanStep {
                     final String thirdPartyVersion = Jenkins.getVersion().toString();
                     final String pluginVersion = PluginHelper.getPluginVersion();
 
-                    final RemoteScan scan = new RemoteScan(logger, codeLocationName, projectName, projectVersion, scanMemory,
+                    final RemoteScan scan = new RemoteScan(logger, codeLocationName, projectName, projectVersion, getScanMemoryInteger(),
                             workingDirectory,
                             scanTargetPaths, dryRun,
                             isCleanupOnSuccessfulScan(),

@@ -52,7 +52,7 @@ public class RemoteScan implements Callable<List<String>, HubIntegrationExceptio
 
     private final String hubProjectVersion;
 
-    private final String scanMemory;
+    private final int scanMemory;
 
     private final String workingDirectoryPath;
 
@@ -75,7 +75,7 @@ public class RemoteScan implements Callable<List<String>, HubIntegrationExceptio
     private final String[] excludePatterns;
 
     public RemoteScan(final IntLogger logger, final String codeLocationName, final String hubProjectName, final String hubProjectVersion,
-            final String scanMemory,
+            final int scanMemory,
             final String workingDirectoryPath,
             final List<String> scanTargetPaths, final boolean dryRun, final boolean cleanupOnSuccessfulScan, final String toolsDirectory,
             final String thirdPartyVersion,
