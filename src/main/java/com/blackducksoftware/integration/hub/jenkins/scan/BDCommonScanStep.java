@@ -257,6 +257,7 @@ public class BDCommonScanStep {
                     for (final String scanString : scanSummaryStrings) {
                         final ScanSummaryItem scanSummaryItem = restConnection.getGson().fromJson(scanString, ScanSummaryItem.class);
                         scanSummaryItem.setJson(scanString);
+                        scanSummaries.add(scanSummaryItem);
                     }
 
                     final HubServicesFactory services = new HubServicesFactory(restConnection);
