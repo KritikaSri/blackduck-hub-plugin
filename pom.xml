@@ -11,7 +11,7 @@
 
   <groupId>com.blackducksoftware.integration</groupId>
   <artifactId>blackduck-hub</artifactId>
-  <version>2.0.0</version>
+  <version>2.0.1-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <name>Black Duck Hub Plug-In for Jenkins</name>
@@ -45,7 +45,7 @@
   <properties>
     <findbugs.failOnError>false</findbugs.failOnError>
     <hpi-plugin.version>1.117</hpi-plugin.version>
-    <hub.common.version>2.1.0</hub.common.version>
+    <hub.common.version>2.1.1</hub.common.version>
     <jenkins.version>1.580.3</jenkins.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -139,7 +139,13 @@
     <dependency>
       <groupId>com.blackducksoftware.integration</groupId>
       <artifactId>phone-home-api</artifactId>
-      <version>1.1.7</version>
+      <version>1.5.1-BACKWARDS</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.blackducksoftware.integration</groupId>
+          <artifactId>integration-common</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.main</groupId>

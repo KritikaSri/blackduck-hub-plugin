@@ -35,7 +35,6 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
-import org.json.JSONException;
 import org.restlet.resource.ResourceException;
 
 import com.blackducksoftware.integration.builder.ValidationResult;
@@ -104,6 +103,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import jenkins.model.Jenkins;
+import net.sf.json.JSONException;
 
 public class BDCommonScanStep {
 
@@ -318,7 +318,7 @@ public class BDCommonScanStep {
                         } catch (final Exception e) {
                             logger.debug("Could not get the Hub Host name.");
                         }
-                        bdPhoneHome(hubVersion, regId, hubHostName);
+                        bdPhoneHome(hubVersion, regId, hubHostName, logger);
                     } catch (final Exception e) {
                         logger.debug("Unable to phone-home", e);
                     }
@@ -416,7 +416,7 @@ public class BDCommonScanStep {
         logger.alwaysLog("Finished running Black Duck Scans.");
     }
 
-    private ProjectVersionItem getProjectVersionFromScanStatus(VirtualChannel channel, String statusDirectory, DataServicesFactory services)
+    private ProjectVersionItem getProjectVersionFromScanStatus(final VirtualChannel channel, final String statusDirectory, final DataServicesFactory services)
             throws IOException, InterruptedException, HubIntegrationException, BDRestException, URISyntaxException, UnexpectedHubResponseException {
         final FilePath statusDirectoryFilePath = new FilePath(channel, statusDirectory);
         if (!statusDirectoryFilePath.exists()) {
@@ -432,15 +432,15 @@ public class BDCommonScanStep {
         final String fileContent = statusFiles.get(0).readToString();
         final Gson gson = new GsonBuilder().create();
         final ScanSummaryItem scanSummaryItem = gson.fromJson(fileContent, ScanSummaryItem.class);
-        CodeLocationItem codeLocationItem = services.getCodeLocationRestService().getItem(scanSummaryItem.getLink(ScanSummaryItem.CODE_LOCATION_LINK));
-        String projectVersionUrl = codeLocationItem.getMappedProjectVersion();
-        ProjectVersionItem projectVersion = services.getProjectVersionRestService().getItem(projectVersionUrl);
+        final CodeLocationItem codeLocationItem = services.getCodeLocationRestService().getItem(scanSummaryItem.getLink(ScanSummaryItem.CODE_LOCATION_LINK));
+        final String projectVersionUrl = codeLocationItem.getMappedProjectVersion();
+        final ProjectVersionItem projectVersion = services.getProjectVersionRestService().getItem(projectVersionUrl);
         return projectVersion;
     }
 
-    private ProjectItem getProjectFromVersion(ProjectVersionItem version, DataServicesFactory services)
+    private ProjectItem getProjectFromVersion(final ProjectVersionItem version, final DataServicesFactory services)
             throws IOException, BDRestException, URISyntaxException, UnexpectedHubResponseException {
-        ProjectItem project = services.getProjectRestService().getItem(version.getLink(ProjectVersionItem.PROJECT_LINK));
+        final ProjectItem project = services.getProjectRestService().getItem(version.getLink(ProjectVersionItem.PROJECT_LINK));
         return project;
     }
 
@@ -824,12 +824,29 @@ public class BDCommonScanStep {
      *            This method "phones-home" to the internal BlackDuck
      *            Integrations server. Every time a build is kicked off,
      */
-    public void bdPhoneHome(final String blackDuckVersion, final String regId, final String hubHostName)
+    public void bdPhoneHome(final String blackDuckVersion, final String regId, final String hubHostName, final IntLogger logger)
             throws IOException, PhoneHomeException, PropertiesLoaderException, ResourceException, JSONException {
         final String thirdPartyVersion = Jenkins.getVersion().toString();
         final String pluginVersion = PluginHelper.getPluginVersion();
 
-        final PhoneHomeClient phClient = new PhoneHomeClient();
+        final PhoneHomeClient phClient = new PhoneHomeClient(logger);
+        phClient.setTimeout(getHubServerInfo().getTimeout());
+
+        final Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins != null) {
+            final ProxyConfiguration proxyConfig = jenkins.proxy;
+            if (proxyConfig != null) {
+                final URL actualUrl = new URL(getHubServerInfo().getServerUrl());
+                final Proxy proxy = ProxyConfiguration.createProxy(actualUrl.getHost(), proxyConfig.name,
+                        proxyConfig.port, proxyConfig.noProxyHost);
+
+                if (proxy.address() != null) {
+                    final InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
+                    phClient.setProxyProperties(proxyAddress.getHostName(), proxyAddress.getPort(), jenkins.proxy.getUserName(), jenkins.proxy.getPassword(),
+                            proxyConfig.noProxyHost);
+                }
+            }
+        }
         phClient.callHomeIntegrations(regId, hubHostName, BlackDuckName.HUB, blackDuckVersion, ThirdPartyName.JENKINS,
                 thirdPartyVersion, pluginVersion);
     }

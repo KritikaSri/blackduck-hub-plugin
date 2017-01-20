@@ -62,6 +62,7 @@ import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPlug
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.jenkins.scan.BDCommonDescriptorUtil;
+import com.blackducksoftware.integration.util.AuthenticatorUtil;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
@@ -361,6 +362,13 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      */
     public FormValidation doCheckHubServerUrl(@QueryParameter("hubServerUrl") final String hubServerUrl)
             throws IOException, ServletException {
+
+        System.clearProperty("http.proxyHost");
+        System.clearProperty("http.proxyPort");
+        System.clearProperty("http.nonProxyHosts");
+
+        AuthenticatorUtil.resetAuthenticator();
+
         ProxyConfiguration proxyConfig = null;
         final Jenkins jenkins = Jenkins.getInstance();
         if (jenkins != null) {
