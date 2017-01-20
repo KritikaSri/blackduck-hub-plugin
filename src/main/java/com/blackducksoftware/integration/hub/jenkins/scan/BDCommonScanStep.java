@@ -277,8 +277,7 @@ public class BDCommonScanStep {
                         bomWait = Long.valueOf(bomUpdateMaxiumWaitTime) * 60 * 1000;
                     }
 
-                    if (run.getResult().equals(Result.SUCCESS) && !isDryRun() && isShouldGenerateHubReport() && StringUtils.isNotBlank(projectName)
-                            && StringUtils.isNotBlank(projectVersion)) {
+                    if (run.getResult().equals(Result.SUCCESS) && !isDryRun() && isShouldGenerateHubReport() && version != null) {
 
                         final HubReportAction reportAction = new HubReportAction(run);
 
@@ -287,7 +286,7 @@ public class BDCommonScanStep {
                         services.createScanStatusDataService(logger, bomWait).assertBomImportScansFinished(scanSummaries);
 
                         logger.debug("Generating the Risk Report.");
-                        final HubRiskReportData reportData = reportService.createRiskReport(projectName, projectVersion);
+                        final HubRiskReportData reportData = reportService.createRiskReport(version);
                         reportAction.setReportData(reportData);
                         run.addAction(reportAction);
                         bomUpToDateAction.setHasBomBeenUdpated(true);
