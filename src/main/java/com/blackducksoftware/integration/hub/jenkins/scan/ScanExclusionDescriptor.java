@@ -21,8 +21,18 @@
  *******************************************************************************/
 package com.blackducksoftware.integration.hub.jenkins.scan;
 
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+
+import org.apache.commons.lang3.StringUtils;
+import org.kohsuke.stapler.QueryParameter;
+
+import com.blackducksoftware.integration.hub.jenkins.Messages;
+
 import hudson.Extension;
 import hudson.model.Descriptor;
+import hudson.util.FormValidation;
 
 @Extension
 public class ScanExclusionDescriptor extends Descriptor<ScanExclusion> {
@@ -35,6 +45,26 @@ public class ScanExclusionDescriptor extends Descriptor<ScanExclusion> {
     @Override
     public String getDisplayName() {
         return "";
+    }
+
+    /**
+     * Performs on-the-fly validation of the form field 'scanTarget'.
+     *
+     */
+    public FormValidation doCheckExclusionPattern(@QueryParameter("exclusionPattern") final String exclusionPattern)
+            throws IOException, ServletException {
+        if (StringUtils.isNotBlank(exclusionPattern)) {
+            if (!exclusionPattern.startsWith("/")) {
+                return FormValidation.warning(Messages.HubBuildScan_getExclusionPatternStartsWithSlash());
+            }
+            if (!exclusionPattern.endsWith("/")) {
+                return FormValidation.warning(Messages.HubBuildScan_getExclusionPatternEndsWithSlash());
+            }
+            if (!exclusionPattern.endsWith("**")) {
+                return FormValidation.warning(Messages.HubBuildScan_getExclusionPatternDoubleAstericks());
+            }
+        }
+        return FormValidation.ok();
     }
 
 }
