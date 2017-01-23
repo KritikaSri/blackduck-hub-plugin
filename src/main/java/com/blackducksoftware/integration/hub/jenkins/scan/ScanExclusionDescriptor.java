@@ -60,7 +60,7 @@ public class ScanExclusionDescriptor extends Descriptor<ScanExclusion> {
             if (!exclusionPattern.endsWith("/")) {
                 return FormValidation.warning(Messages.HubBuildScan_getExclusionPatternEndsWithSlash());
             }
-            if (!exclusionPattern.endsWith("**")) {
+            if (exclusionPattern.contains("**")) {
                 return FormValidation.warning(Messages.HubBuildScan_getExclusionPatternDoubleAstericks());
             }
         }
