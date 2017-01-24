@@ -24,7 +24,7 @@
                 }
             </style>
             <link href="${rootURL}/plugin/blackduck-hub/css/HubBomReport.css"  rel="stylesheet" type="text/css"  />
-            <link href="${rootURL}/plugin/blackduck-hub/jenkins-font-awesome-4.5.0/css/font-awesome.min.css"  rel="stylesheet" type="text/css"  />
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
             <script type="text/javascript"
                     src="${rootURL}/plugin/blackduck-hub/js/jquery-3.1.1.min.js" />
             <script type="text/javascript"
