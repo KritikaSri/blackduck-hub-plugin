@@ -272,9 +272,14 @@ public class BDCommonScanStep {
 
                     Long bomWait = 300000l;
                     if (!isDryRun()) {
-                        logger.alwaysLog("--> Bom wait time : " + bomUpdateMaxiumWaitTime + "m");
+                        try {
+                            // User input is in minutes, need to changes to milliseconds
+                            bomWait = Long.valueOf(bomUpdateMaxiumWaitTime) * 60 * 1000;
+                        } catch (final NumberFormatException e) {
+                            bomWait = 300000l;
+                        }
                         // User input is in minutes, need to changes to milliseconds
-                        bomWait = Long.valueOf(bomUpdateMaxiumWaitTime) * 60 * 1000;
+                        logger.alwaysLog("--> Bom wait time : " + bomWait / 60 / 1000 + "m");
                     }
 
                     if (run.getResult().equals(Result.SUCCESS) && !isDryRun() && isShouldGenerateHubReport() && version != null) {
