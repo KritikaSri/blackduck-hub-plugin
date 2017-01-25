@@ -300,9 +300,9 @@ public class BDCommonScanStep {
                         try {
                             // not all HUb users have the policy module enabled
                             // so there will be no policy status link
-                            policyStatusLink = metaService.getLink(version, MetaService.POLICY_STATUS_LINK);
+                            policyStatusLink = metaService.getFirstLink(version, MetaService.POLICY_STATUS_LINK);
                         } catch (final Exception e) {
-                            logger.debug("Could not get the policy status link.", e);
+                            logger.debug(e.getMessage(), e);
                         }
                         bomUpToDateAction.setPolicyStatusUrl(policyStatusLink);
                     }
@@ -346,7 +346,7 @@ public class BDCommonScanStep {
     private ProjectVersionItem getProjectVersionFromScanStatus(final CodeLocationRequestService codeLocationRequestService,
             final ProjectVersionRequestService projectVersionRequestService, final MetaService metaService, final ScanSummaryItem scanSummaryItem)
             throws HubIntegrationException {
-        final CodeLocationItem codeLocationItem = codeLocationRequestService.getItem(metaService.getLink(scanSummaryItem, MetaService.CODE_LOCATION_LINK));
+        final CodeLocationItem codeLocationItem = codeLocationRequestService.getItem(metaService.getFirstLink(scanSummaryItem, MetaService.CODE_LOCATION_LINK));
         final String projectVersionUrl = codeLocationItem.getMappedProjectVersion();
         final ProjectVersionItem projectVersion = projectVersionRequestService.getItem(projectVersionUrl);
         return projectVersion;
