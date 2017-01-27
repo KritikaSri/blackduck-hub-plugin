@@ -56,6 +56,7 @@ import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPlug
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.jenkins.scan.BDCommonDescriptorUtil;
+import com.blackducksoftware.integration.hub.rest.RestConnection;
 import com.blackducksoftware.integration.hub.validator.HubServerConfigValidator;
 import com.blackducksoftware.integration.validator.ValidationResults;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -455,9 +456,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
-            BuildHelper.getRestConnection(null, serverUrl, credentialUserName,
+            final RestConnection connection = BuildHelper.getRestConnection(null, serverUrl, credentialUserName,
                     credentialPassword, hubTimeout);
-
+            connection.connect();
             return FormValidation.ok(Messages.HubBuildScan_getCredentialsValidFor_0_(serverUrl));
 
         } catch (final IllegalStateException e) {
