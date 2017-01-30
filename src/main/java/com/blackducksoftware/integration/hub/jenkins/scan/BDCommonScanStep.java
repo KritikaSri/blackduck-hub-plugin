@@ -292,6 +292,7 @@ public class BDCommonScanStep {
                         logger.debug("Generating the Risk Report.");
                         final HubRiskReportData reportData = reportService.createRiskReport(version);
                         reportAction.setReportData(reportData);
+
                         run.addAction(reportAction);
                         bomUpToDateAction.setHasBomBeenUdpated(true);
                     } else {
@@ -350,7 +351,8 @@ public class BDCommonScanStep {
     private ProjectVersionItem getProjectVersionFromScanStatus(final CodeLocationRequestService codeLocationRequestService,
             final ProjectVersionRequestService projectVersionRequestService, final MetaService metaService, final ScanSummaryItem scanSummaryItem)
             throws HubIntegrationException {
-        final CodeLocationItem codeLocationItem = codeLocationRequestService.getItem(metaService.getFirstLink(scanSummaryItem, MetaService.CODE_LOCATION_LINK));
+        final CodeLocationItem codeLocationItem = codeLocationRequestService
+                .getItem(metaService.getFirstLink(scanSummaryItem, MetaService.CODE_LOCATION_BOM_STATUS_LINK));
         final String projectVersionUrl = codeLocationItem.getMappedProjectVersion();
         final ProjectVersionItem projectVersion = projectVersionRequestService.getItem(projectVersionUrl);
         return projectVersion;
