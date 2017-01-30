@@ -241,11 +241,10 @@ public class BDCommonScanStep {
                     final String pluginVersion = PluginHelper.getPluginVersion();
 
                     final RemoteScan scan = new RemoteScan(logger, codeLocationName, projectName, projectVersion, getScanMemoryInteger(),
-                            workingDirectory,
-                            scanTargetPaths, dryRun,
-                            isCleanupOnSuccessfulScan(),
-                            toolsDirectory,
-                            thirdPartyVersion, pluginVersion, hubServerConfig, getHubServerInfo().isPerformWorkspaceCheck(), getExcludePatterns());
+                            workingDirectory, scanTargetPaths, dryRun,
+                            isCleanupOnSuccessfulScan(), toolsDirectory,
+                            thirdPartyVersion, pluginVersion, hubServerConfig,
+                            getHubServerInfo().isPerformWorkspaceCheck(), getExcludePatterns(), envVars);
 
                     final List<String> scanSummaryStrings = builtOn.getChannel().call(scan);
 

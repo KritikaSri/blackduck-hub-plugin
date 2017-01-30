@@ -41,6 +41,7 @@ import com.blackducksoftware.integration.hub.service.HubServicesFactory;
 import com.blackducksoftware.integration.log.IntLogger;
 import com.blackducksoftware.integration.phone.home.enums.ThirdPartyName;
 
+import hudson.EnvVars;
 import hudson.remoting.Callable;
 
 public class RemoteScan implements Callable<List<String>, HubIntegrationException> {
@@ -74,12 +75,15 @@ public class RemoteScan implements Callable<List<String>, HubIntegrationExceptio
 
     private final String[] excludePatterns;
 
+    private final EnvVars envVars;
+
     public RemoteScan(final IntLogger logger, final String codeLocationName, final String hubProjectName, final String hubProjectVersion,
             final int scanMemory,
             final String workingDirectoryPath,
             final List<String> scanTargetPaths, final boolean dryRun, final boolean cleanupOnSuccessfulScan, final String toolsDirectory,
             final String thirdPartyVersion,
-            final String pluginVersion, final HubServerConfig hubServerConfig, final boolean performWorkspaceCheck, final String[] excludePatterns) {
+            final String pluginVersion, final HubServerConfig hubServerConfig, final boolean performWorkspaceCheck, final String[] excludePatterns,
+            final EnvVars envVars) {
         this.logger = logger;
         this.codeLocationName = codeLocationName;
         this.hubProjectName = hubProjectName;
@@ -95,6 +99,7 @@ public class RemoteScan implements Callable<List<String>, HubIntegrationExceptio
         this.hubServerConfig = hubServerConfig;
         this.performWorkspaceCheck = performWorkspaceCheck;
         this.excludePatterns = excludePatterns;
+        this.envVars = envVars;
     }
 
     @Override
@@ -104,6 +109,7 @@ public class RemoteScan implements Callable<List<String>, HubIntegrationExceptio
             restConnection.connect();
 
             final HubServicesFactory services = new HubServicesFactory(restConnection);
+            services.addEnvironmentVariables(envVars);
             final CLIDataService cliDataService = services.createCLIDataService(logger);
 
             final File workingDirectory = new File(workingDirectoryPath);
