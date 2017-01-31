@@ -54,10 +54,10 @@ public class ScanExclusionDescriptor extends Descriptor<ScanExclusion> {
     public FormValidation doCheckExclusionPattern(@QueryParameter("exclusionPattern") final String exclusionPattern)
             throws IOException, ServletException {
         if (StringUtils.isNotBlank(exclusionPattern)) {
-            if (!exclusionPattern.startsWith("/")) {
+            if (!exclusionPattern.startsWith("/") || !exclusionPattern.startsWith("\\")) {
                 return FormValidation.warning(Messages.HubBuildScan_getExclusionPatternStartsWithSlash());
             }
-            if (!exclusionPattern.endsWith("/")) {
+            if (!exclusionPattern.endsWith("/") || !exclusionPattern.endsWith("\\")) {
                 return FormValidation.warning(Messages.HubBuildScan_getExclusionPatternEndsWithSlash());
             }
             if (exclusionPattern.contains("**")) {
