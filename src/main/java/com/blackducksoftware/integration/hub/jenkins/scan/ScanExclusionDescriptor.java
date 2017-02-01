@@ -28,7 +28,9 @@ import javax.servlet.ServletException;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.blackducksoftware.integration.hub.jenkins.Messages;
+import com.blackducksoftware.integration.hub.scan.HubScanConfigFieldEnum;
+import com.blackducksoftware.integration.hub.validator.HubScanConfigValidator;
+import com.blackducksoftware.integration.validator.ValidationResults;
 
 import hudson.Extension;
 import hudson.model.Descriptor;
@@ -53,16 +55,13 @@ public class ScanExclusionDescriptor extends Descriptor<ScanExclusion> {
      */
     public FormValidation doCheckExclusionPattern(@QueryParameter("exclusionPattern") final String exclusionPattern)
             throws IOException, ServletException {
-        if (StringUtils.isNotBlank(exclusionPattern)) {
-            if (!exclusionPattern.startsWith("/")) {
-                return FormValidation.warning(Messages.HubBuildScan_getExclusionPatternStartsWithSlash());
-            }
-            if (!exclusionPattern.endsWith("/")) {
-                return FormValidation.warning(Messages.HubBuildScan_getExclusionPatternEndsWithSlash());
-            }
-            if (exclusionPattern.contains("**")) {
-                return FormValidation.warning(Messages.HubBuildScan_getExclusionPatternDoubleAstericks());
-            }
+        final HubScanConfigValidator validator = new HubScanConfigValidator();
+        final String[] array = { exclusionPattern };
+        validator.setExcludePatterns(array);
+        final ValidationResults results = validator.assertValid();
+        final String result = results.getResultString(HubScanConfigFieldEnum.EXCLUDE_PATTERNS);
+        if (StringUtils.isNotBlank(result)) {
+            return FormValidation.warning(result);
         }
         return FormValidation.ok();
     }
