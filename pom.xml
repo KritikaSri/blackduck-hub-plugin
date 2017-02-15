@@ -67,6 +67,10 @@
       <id>maven-snapshot</id>
       <url>https://oss.sonatype.org/content/repositories/snapshots</url>
     </repository>
+    <repository>
+      <id>jcenter</id>
+      <url>https://jcenter.bintray.com</url>
+    </repository>
   </repositories>
   <pluginRepositories>
     <pluginRepository>
