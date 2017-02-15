@@ -171,6 +171,12 @@
   <build>
     <pluginManagement>
       <plugins>
+         <plugin>
+          <groupId>com.blackducksoftware.integration</groupId>
+          <artifactId>hub-maven-plugin</artifactId>
+          <version>1.4.0</version>
+          <inherited>false</inherited>  
+        </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>build-helper-maven-plugin</artifactId>
