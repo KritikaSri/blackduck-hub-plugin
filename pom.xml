@@ -418,7 +418,6 @@
       <plugin>
         <groupId>com.blackducksoftware.integration</groupId>
         <artifactId>hub-maven-plugin</artifactId>
-        <version>1.4.0</version>
         <inherited>false</inherited>
       </plugin>
     </plugins>
