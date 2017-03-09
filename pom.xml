@@ -6,7 +6,7 @@
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
     <version>2.9</version>
-    <relativePath />
+    <relativePath></relativePath>
   </parent>
 
   <groupId>com.blackducksoftware.integration</groupId>
@@ -94,13 +94,13 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>gradle</artifactId>
-      <version>[1.24,)</version>
+      <version>1.24</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.main</groupId>
       <artifactId>maven-plugin</artifactId>
-      <version>[2.5,)</version>
+      <version>2.13</version>
       <exclusions>
         <exclusion>
           <groupId>org.jenkins-ci</groupId>
@@ -112,7 +112,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials</artifactId>
-      <version>[1.9.4,1.27)</version>
+      <version>1.9.4</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -175,11 +175,11 @@
   <build>
     <pluginManagement>
       <plugins>
-         <plugin>
+        <plugin>
           <groupId>com.blackducksoftware.integration</groupId>
           <artifactId>hub-maven-plugin</artifactId>
           <version>1.4.0</version>
-          <inherited>false</inherited>  
+          <inherited>false</inherited>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
