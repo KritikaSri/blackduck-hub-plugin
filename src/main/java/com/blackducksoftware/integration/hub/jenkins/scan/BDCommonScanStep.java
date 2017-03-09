@@ -31,16 +31,13 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 
-import com.blackducksoftware.integration.hub.api.codelocation.CodeLocationItem;
+import com.blackducksoftware.integration.exception.IntegrationException;
 import com.blackducksoftware.integration.hub.api.codelocation.CodeLocationRequestService;
 import com.blackducksoftware.integration.hub.api.item.MetaService;
-import com.blackducksoftware.integration.hub.api.project.version.ProjectVersionItem;
+import com.blackducksoftware.integration.hub.api.project.ProjectRequestService;
 import com.blackducksoftware.integration.hub.api.project.version.ProjectVersionRequestService;
-import com.blackducksoftware.integration.hub.api.report.HubRiskReportData;
-import com.blackducksoftware.integration.hub.api.scan.ScanSummaryItem;
 import com.blackducksoftware.integration.hub.builder.HubServerConfigBuilder;
 import com.blackducksoftware.integration.hub.dataservice.report.RiskReportDataService;
-import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.global.HubServerConfig;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
@@ -58,7 +55,11 @@ import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.jenkins.remote.DetermineTargetPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.RemoteScan;
-import com.blackducksoftware.integration.hub.rest.CredentialsRestConnection;
+import com.blackducksoftware.integration.hub.model.view.CodeLocationView;
+import com.blackducksoftware.integration.hub.model.view.ProjectVersionView;
+import com.blackducksoftware.integration.hub.model.view.ProjectView;
+import com.blackducksoftware.integration.hub.model.view.ScanSummaryView;
+import com.blackducksoftware.integration.hub.report.api.ReportData;
 import com.blackducksoftware.integration.hub.rest.RestConnection;
 import com.blackducksoftware.integration.hub.service.HubServicesFactory;
 import com.blackducksoftware.integration.log.IntLogger;
@@ -248,23 +249,25 @@ public class BDCommonScanStep {
 
                     final List<String> scanSummaryStrings = builtOn.getChannel().call(scan);
 
-                    final RestConnection restConnection = new CredentialsRestConnection(logger, hubServerConfig);
+                    final RestConnection restConnection = BuildHelper.getRestConnection(logger, hubServerConfig);
                     restConnection.connect();
 
-                    final List<ScanSummaryItem> scanSummaries = new ArrayList<>();
+                    final List<ScanSummaryView> scanSummaries = new ArrayList<>();
 
                     for (final String scanString : scanSummaryStrings) {
-                        final ScanSummaryItem scanSummaryItem = restConnection.getGson().fromJson(scanString, ScanSummaryItem.class);
+                        final ScanSummaryView scanSummaryItem = restConnection.gson.fromJson(scanString, ScanSummaryView.class);
                         scanSummaries.add(scanSummaryItem);
                     }
 
                     final HubServicesFactory services = new HubServicesFactory(restConnection);
                     final MetaService metaService = services.createMetaService(logger);
-                    ProjectVersionItem version = null;
+                    ProjectVersionView version = null;
+                    ProjectView project = null;
                     if (!isDryRun() && StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion) && !scanSummaries.isEmpty()) {
-                        version = getProjectVersionFromScanStatus(services.createCodeLocationRequestService(),
+                        version = getProjectVersionFromScanStatus(services.createCodeLocationRequestService(logger),
                                 services.createProjectVersionRequestService(logger), metaService,
                                 scanSummaries.get(0));
+                        project = getProjectFromVersion(services.createProjectRequestService(), metaService, version);
                     }
 
                     bomUpToDateAction.setDryRun(isDryRun());
@@ -290,7 +293,7 @@ public class BDCommonScanStep {
                         services.createScanStatusDataService(logger, bomWait).assertBomImportScansFinished(scanSummaries);
 
                         logger.debug("Generating the Risk Report.");
-                        final HubRiskReportData reportData = reportService.createRiskReport(version);
+                        final ReportData reportData = reportService.getRiskReportData(project, version);
                         reportAction.setReportData(reportData);
 
                         run.addAction(reportAction);
@@ -317,7 +320,7 @@ public class BDCommonScanStep {
             } catch (final BDJenkinsHubPluginException e) {
                 logger.error(e.getMessage(), e);
                 run.setResult(Result.UNSTABLE);
-            } catch (final HubIntegrationException e) {
+            } catch (final IntegrationException e) {
                 logger.error(e.getMessage(), e);
                 run.setResult(Result.UNSTABLE);
             } catch (final Exception e) {
@@ -348,13 +351,21 @@ public class BDCommonScanStep {
         logger.alwaysLog("Finished running Black Duck Scans.");
     }
 
-    private ProjectVersionItem getProjectVersionFromScanStatus(final CodeLocationRequestService codeLocationRequestService,
-            final ProjectVersionRequestService projectVersionRequestService, final MetaService metaService, final ScanSummaryItem scanSummaryItem)
-            throws HubIntegrationException {
-        final CodeLocationItem codeLocationItem = codeLocationRequestService
-                .getItem(metaService.getFirstLink(scanSummaryItem, MetaService.CODE_LOCATION_BOM_STATUS_LINK));
+    private ProjectView getProjectFromVersion(final ProjectRequestService projectRequestService, final MetaService metaService,
+            final ProjectVersionView version)
+            throws IntegrationException {
+        final String projectURL = metaService.getFirstLink(version, MetaService.PROJECT_LINK);
+        final ProjectView projectVersion = projectRequestService.getItem(projectURL, ProjectView.class);
+        return projectVersion;
+    }
+
+    private ProjectVersionView getProjectVersionFromScanStatus(final CodeLocationRequestService codeLocationRequestService,
+            final ProjectVersionRequestService projectVersionRequestService, final MetaService metaService, final ScanSummaryView scanSummaryItem)
+            throws IntegrationException {
+        final CodeLocationView codeLocationItem = codeLocationRequestService
+                .getItem(metaService.getFirstLink(scanSummaryItem, MetaService.CODE_LOCATION_BOM_STATUS_LINK), CodeLocationView.class);
         final String projectVersionUrl = codeLocationItem.getMappedProjectVersion();
-        final ProjectVersionItem projectVersion = projectVersionRequestService.getItem(projectVersionUrl);
+        final ProjectVersionView projectVersion = projectVersionRequestService.getItem(projectVersionUrl, ProjectVersionView.class);
         return projectVersion;
     }
 

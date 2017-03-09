@@ -28,14 +28,13 @@ import java.util.List;
 import org.jenkinsci.remoting.Role;
 import org.jenkinsci.remoting.RoleChecker;
 
-import com.blackducksoftware.integration.exception.EncryptionException;
-import com.blackducksoftware.integration.hub.api.scan.ScanSummaryItem;
 import com.blackducksoftware.integration.hub.builder.HubScanConfigBuilder;
 import com.blackducksoftware.integration.hub.dataservice.cli.CLIDataService;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.global.HubServerConfig;
-import com.blackducksoftware.integration.hub.rest.CredentialsRestConnection;
-import com.blackducksoftware.integration.hub.rest.RestConnection;
+import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
+import com.blackducksoftware.integration.hub.model.view.ScanSummaryView;
+import com.blackducksoftware.integration.hub.phonehome.IntegrationInfo;
 import com.blackducksoftware.integration.hub.scan.HubScanConfig;
 import com.blackducksoftware.integration.hub.service.HubServicesFactory;
 import com.blackducksoftware.integration.log.IntLogger;
@@ -105,10 +104,8 @@ public class RemoteScan implements Callable<List<String>, HubIntegrationExceptio
     @Override
     public List<String> call() throws HubIntegrationException {
         try {
-            final RestConnection restConnection = new CredentialsRestConnection(logger, hubServerConfig);
-            restConnection.connect();
+            final HubServicesFactory services = BuildHelper.getHubServicesFactory(logger, hubServerConfig);
 
-            final HubServicesFactory services = new HubServicesFactory(restConnection);
             services.addEnvironmentVariables(envVars);
             final CLIDataService cliDataService = services.createCLIDataService(logger);
 
@@ -123,9 +120,6 @@ public class RemoteScan implements Callable<List<String>, HubIntegrationExceptio
             hubScanConfigBuilder.setScanMemory(scanMemory);
             hubScanConfigBuilder.addAllScanTargetPaths(scanTargetPaths);
             hubScanConfigBuilder.setToolsDir(toolsDir);
-            hubScanConfigBuilder.setThirdPartyName(ThirdPartyName.JENKINS);
-            hubScanConfigBuilder.setThirdPartyVersion(thirdPartyVersion);
-            hubScanConfigBuilder.setPluginVersion(pluginVersion);
             if (performWorkspaceCheck) {
                 hubScanConfigBuilder.enableScanTargetPathsWithinWorkingDirectoryCheck();
             }
@@ -133,20 +127,16 @@ public class RemoteScan implements Callable<List<String>, HubIntegrationExceptio
             hubScanConfigBuilder.setExcludePatterns(excludePatterns);
             hubScanConfigBuilder.setCodeLocationAlias(codeLocationName);
 
+            final IntegrationInfo integrationInfo = new IntegrationInfo(ThirdPartyName.JENKINS.getName(), thirdPartyVersion, pluginVersion);
             final HubScanConfig hubScanConfig = hubScanConfigBuilder.build();
-
-            final List<ScanSummaryItem> scans = cliDataService.installAndRunScan(hubServerConfig, hubScanConfig);
-
+            final List<ScanSummaryView> scans = cliDataService.installAndRunScan(hubServerConfig, hubScanConfig, integrationInfo);
             final List<String> scanStrings = new ArrayList<>();
-
-            for (final ScanSummaryItem scan : scans) {
-                scanStrings.add(cliDataService.getRestConnection().getGson().toJson(scan));
+            for (final ScanSummaryView scan : scans) {
+                scanStrings.add(services.getRestConnection().gson.toJson(scan));
             }
 
             return scanStrings;
-        } catch (final IllegalArgumentException e) {
-            throw new HubIntegrationException(e.getMessage(), e);
-        } catch (final EncryptionException e) {
+        } catch (final Exception e) {
             throw new HubIntegrationException(e.getMessage(), e);
         }
     }

@@ -30,11 +30,9 @@ import javax.servlet.ServletException;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.blackducksoftware.integration.hub.api.item.HubItemFilter;
+import com.blackducksoftware.integration.hub.api.item.HubViewFilter;
 import com.blackducksoftware.integration.hub.api.item.MetaService;
-import com.blackducksoftware.integration.hub.api.project.ProjectItem;
 import com.blackducksoftware.integration.hub.api.project.ProjectRequestService;
-import com.blackducksoftware.integration.hub.api.project.version.ProjectVersionItem;
 import com.blackducksoftware.integration.hub.api.project.version.ProjectVersionRequestService;
 import com.blackducksoftware.integration.hub.exception.DoesNotExistException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
@@ -43,6 +41,8 @@ import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.failure.FailureConditionBuildStateEnum;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
+import com.blackducksoftware.integration.hub.model.view.ProjectVersionView;
+import com.blackducksoftware.integration.hub.model.view.ProjectView;
 import com.blackducksoftware.integration.hub.scan.HubScanConfigFieldEnum;
 import com.blackducksoftware.integration.hub.service.HubServicesFactory;
 import com.blackducksoftware.integration.hub.validator.HubScanConfigValidator;
@@ -120,13 +120,13 @@ public class BDCommonDescriptorUtil {
                 final MetaService metaService = service.createMetaService(null);
                 final ProjectRequestService projectService = service.createProjectRequestService();
 
-                final List<ProjectItem> suggestions = projectService.getAllProjectMatches(hubProjectName);
+                final List<ProjectView> suggestions = projectService.getAllProjectMatches(hubProjectName);
 
-                final HubItemFilter<ProjectItem> filter = new HubItemFilter<>();
-                final List<ProjectItem> accessibleSuggestions = filter.getAccessibleItems(metaService, suggestions);
+                final HubViewFilter<ProjectView> filter = new HubViewFilter<>();
+                final List<ProjectView> accessibleSuggestions = filter.getAccessibleItems(metaService, suggestions);
 
                 if (!accessibleSuggestions.isEmpty()) {
-                    for (final ProjectItem projectSuggestion : accessibleSuggestions) {
+                    for (final ProjectView projectSuggestion : accessibleSuggestions) {
                         potentialMatches.add(projectSuggestion.getName());
                     }
                 }
@@ -166,11 +166,11 @@ public class BDCommonDescriptorUtil {
                         serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
                 final MetaService metaService = service.createMetaService(null);
                 final ProjectRequestService projectService = service.createProjectRequestService();
-                final ProjectItem project = projectService.getProjectByName(hubProjectName);
-                final List<ProjectItem> projectList = new ArrayList<>();
+                final ProjectView project = projectService.getProjectByName(hubProjectName);
+                final List<ProjectView> projectList = new ArrayList<>();
                 projectList.add(project);
-                final HubItemFilter<ProjectItem> filter = new HubItemFilter<>();
-                final List<ProjectItem> filteredList = filter.getAccessibleItems(metaService, projectList);
+                final HubViewFilter<ProjectView> filter = new HubViewFilter<>();
+                final List<ProjectView> filteredList = filter.getAccessibleItems(metaService, projectList);
                 if (filteredList.isEmpty()) {
                     return FormValidation.error(Messages.HubBuildScan_getProjectNotAccessible());
                 }
@@ -240,7 +240,7 @@ public class BDCommonDescriptorUtil {
                 final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(),
                         serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
                 final ProjectRequestService projectService = service.createProjectRequestService();
-                ProjectItem project = null;
+                ProjectView project = null;
                 try {
                     project = projectService.getProjectByName(hubProjectName);
                 } catch (final Exception e) {
@@ -249,10 +249,10 @@ public class BDCommonDescriptorUtil {
                     return FormValidation.ok();
                 }
                 final ProjectVersionRequestService projectVersionService = service.createProjectVersionRequestService(null);
-                final List<ProjectVersionItem> releases = projectVersionService.getAllProjectVersions(project);
+                final List<ProjectVersionView> releases = projectVersionService.getAllProjectVersions(project);
 
                 final StringBuilder projectVersions = new StringBuilder();
-                for (final ProjectVersionItem release : releases) {
+                for (final ProjectVersionView release : releases) {
                     if (release.getVersionName().equals(hubProjectVersion)) {
                         return FormValidation.ok(Messages.HubBuildScan_getVersionExistsIn_0_(project.getName()));
                     } else {

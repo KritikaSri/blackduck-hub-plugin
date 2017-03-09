@@ -23,7 +23,7 @@ package com.blackducksoftware.integration.hub.jenkins.action;
 
 import java.util.List;
 
-import com.blackducksoftware.integration.hub.api.scan.ScanSummaryItem;
+import com.blackducksoftware.integration.hub.model.view.ScanSummaryView;
 
 import hudson.model.Action;
 
@@ -33,7 +33,7 @@ public class BomUpToDateAction implements Action {
 
     private long maxWaitTime;
 
-    private List<ScanSummaryItem> scanSummaries;
+    private List<ScanSummaryView> scanSummaries;
 
     private String policyStatusUrl;
 
@@ -55,11 +55,11 @@ public class BomUpToDateAction implements Action {
         this.maxWaitTime = maxWaitTime;
     }
 
-    public List<ScanSummaryItem> getScanSummaries() {
+    public List<ScanSummaryView> getScanSummaries() {
         return scanSummaries;
     }
 
-    public void setScanSummaries(List<ScanSummaryItem> scanSummaries) {
+    public void setScanSummaries(final List<ScanSummaryView> scanSummaries) {
         this.scanSummaries = scanSummaries;
     }
 

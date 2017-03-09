@@ -25,9 +25,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 
 import com.blackducksoftware.integration.exception.EncryptionException;
+import com.blackducksoftware.integration.exception.IntegrationException;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
-import com.blackducksoftware.integration.hub.api.policy.PolicyStatusEnum;
-import com.blackducksoftware.integration.hub.api.policy.PolicyStatusItem;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
@@ -36,6 +35,8 @@ import com.blackducksoftware.integration.hub.jenkins.action.BomUpToDateAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubVariableContributor;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
+import com.blackducksoftware.integration.hub.model.enumeration.VersionBomPolicyStatusOverallStatusEnum;
+import com.blackducksoftware.integration.hub.model.view.VersionBomPolicyStatusView;
 import com.blackducksoftware.integration.hub.service.HubServicesFactory;
 import com.blackducksoftware.integration.util.CIEnvironmentVariables;
 
@@ -86,6 +87,8 @@ public class HubCommonFailureStep {
 
         final HubServerInfo serverInfo = HubServerInfoSingleton.getInstance().getServerInfo();
         try {
+            // We use this conditional in case there are other failure
+            // conditions in the future
             if (getFailBuildForPolicyViolations()) {
                 if (bomUpToDateAction.getPolicyStatusUrl() == null) {
                     logger.error(
@@ -104,12 +107,9 @@ public class HubCommonFailureStep {
                 final HubSupportHelper hubSupport = new HubSupportHelper();
                 hubSupport.checkHubSupport(service.createHubVersionRequestService(), null);
 
-                // We use this conditional in case there are other failure
-                // conditions in the future
-                PolicyStatusItem policyStatus = null;
+                VersionBomPolicyStatusView policyStatus = null;
                 try {
-                    policyStatus = service.createHubRequestService()
-                            .getItem(bomUpToDateAction.getPolicyStatusUrl(), PolicyStatusItem.class);
+                    policyStatus = service.createHubResponseService().getItem(bomUpToDateAction.getPolicyStatusUrl(), VersionBomPolicyStatusView.class);
                 } catch (final HubIntegrationException e) {
                     // ignore exception, could not find policy information
                 }
@@ -119,7 +119,7 @@ public class HubCommonFailureStep {
                 }
 
                 logger.alwaysLog("--> Configured to set the Build Result to " + buildStateOnFailure.getDisplayValue() + " for Hub Failure Conditions.");
-                if (policyStatus.getOverallStatus() == PolicyStatusEnum.IN_VIOLATION) {
+                if (policyStatus.getOverallStatus() == VersionBomPolicyStatusOverallStatusEnum.IN_VIOLATION) {
                     run.setResult(resultToSetForFailureCondition);
                 }
 
@@ -151,7 +151,7 @@ public class HubCommonFailureStep {
         } catch (final BDJenkinsHubPluginException e) {
             logger.error(e.getMessage(), e);
             run.setResult(Result.UNSTABLE);
-        } catch (final HubIntegrationException e) {
+        } catch (final IntegrationException e) {
             logger.error(e.getMessage(), e);
             run.setResult(Result.UNSTABLE);
         } catch (final URISyntaxException e) {
