@@ -282,6 +282,7 @@ public class BDCommonScanStep {
                         }
                         // User input is in minutes, need to changes to milliseconds
                         logger.alwaysLog("--> Bom wait time : " + bomWait / 60 / 1000 + "m");
+                        logger.alwaysLog("--> Generate Report : " + isShouldGenerateHubReport());
                     }
 
                     if (run.getResult().equals(Result.SUCCESS) && !isDryRun() && isShouldGenerateHubReport() && version != null) {
