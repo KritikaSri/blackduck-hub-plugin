@@ -87,6 +87,11 @@ public class HubCommonFailureStep {
 
         final HubServerInfo serverInfo = HubServerInfoSingleton.getInstance().getServerInfo();
         try {
+            if (bomUpToDateAction.isDryRun()) {
+                logger.warn(
+                        "Will not check failure conditions since this was a dry run.");
+                return true;
+            }
             // We use this conditional in case there are other failure
             // conditions in the future
             if (getFailBuildForPolicyViolations()) {
