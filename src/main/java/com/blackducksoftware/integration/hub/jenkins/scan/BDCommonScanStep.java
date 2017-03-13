@@ -45,7 +45,7 @@ import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.action.BomUpToDateAction;
-import com.blackducksoftware.integration.hub.jenkins.action.HubReportAction;
+import com.blackducksoftware.integration.hub.jenkins.action.HubReportV2Action;
 import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
 import com.blackducksoftware.integration.hub.jenkins.cli.DummyToolInstallation;
 import com.blackducksoftware.integration.hub.jenkins.cli.DummyToolInstaller;
@@ -287,7 +287,7 @@ public class BDCommonScanStep {
 
                     if (run.getResult().equals(Result.SUCCESS) && !isDryRun() && isShouldGenerateHubReport() && version != null) {
 
-                        final HubReportAction reportAction = new HubReportAction(run);
+                        final HubReportV2Action reportAction = new HubReportV2Action(run);
 
                         final RiskReportDataService reportService = services.createRiskReportDataService(logger, bomWait);
                         logger.debug("Waiting for Bom to be updated.");

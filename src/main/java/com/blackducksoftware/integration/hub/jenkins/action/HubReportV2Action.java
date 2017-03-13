@@ -21,24 +21,23 @@
  *******************************************************************************/
 package com.blackducksoftware.integration.hub.jenkins.action;
 
-import com.blackducksoftware.integration.hub.api.report.HubRiskReportData;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
+import com.blackducksoftware.integration.hub.report.api.ReportData;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import hudson.model.Action;
 import hudson.model.Run;
 
-@Deprecated
-public class HubReportAction implements Action {
+public class HubReportV2Action implements Action {
 
     private final Run<?, ?> build;
 
-    private HubRiskReportData reportData;
+    private ReportData reportData;
 
     private String jsonReportData;
 
-    public HubReportAction(final Run<?, ?> build) {
+    public HubReportV2Action(final Run<?, ?> build) {
         this.build = build;
     }
 
@@ -46,13 +45,13 @@ public class HubReportAction implements Action {
         return build;
     }
 
-    public void setReportData(final HubRiskReportData reportData) {
+    public void setReportData(final ReportData reportData) {
         this.reportData = reportData;
         final Gson gson = new GsonBuilder().create();
         jsonReportData = gson.toJson(reportData);
     }
 
-    public HubRiskReportData getReportData() {
+    public ReportData getReportData() {
         return reportData;
     }
 
