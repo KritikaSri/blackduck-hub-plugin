@@ -133,23 +133,23 @@ public class HubCommonFailureStep {
                 if (policyStatus.getCountInViolation() == null) {
                     logger.error("Could not find the number of bom entries In Violation of a Policy.");
                 } else {
-                    logger.info("Found " + policyStatus.getCountInViolation().getValue()
+                    logger.info("Found " + policyStatus.getCountInViolation().value
                             + " bom entries to be In Violation of a defined Policy.");
-                    variableContributor.setBomEntriesInViolation(policyStatus.getCountInViolation().getValue());
+                    variableContributor.setBomEntriesInViolation(policyStatus.getCountInViolation().value);
                 }
                 if (policyStatus.getCountInViolationOverridden() == null) {
                     logger.error("Could not find the number of bom entries In Violation Overridden of a Policy.");
                 } else {
-                    logger.info("Found " + policyStatus.getCountInViolationOverridden().getValue()
+                    logger.info("Found " + policyStatus.getCountInViolationOverridden().value
                             + " bom entries to be In Violation of a defined Policy, but they have been overridden.");
-                    variableContributor.setViolationsOverriden(policyStatus.getCountInViolationOverridden().getValue());
+                    variableContributor.setViolationsOverriden(policyStatus.getCountInViolationOverridden().value);
                 }
                 if (policyStatus.getCountNotInViolation() == null) {
                     logger.error("Could not find the number of bom entries Not In Violation of a Policy.");
                 } else {
-                    logger.info("Found " + policyStatus.getCountNotInViolation().getValue()
+                    logger.info("Found " + policyStatus.getCountNotInViolation().value
                             + " bom entries to be Not In Violation of a defined Policy.");
-                    variableContributor.setBomEntriesNotInViolation(policyStatus.getCountNotInViolation().getValue());
+                    variableContributor.setBomEntriesNotInViolation(policyStatus.getCountNotInViolation().value);
                 }
                 run.addAction(variableContributor);
             }
