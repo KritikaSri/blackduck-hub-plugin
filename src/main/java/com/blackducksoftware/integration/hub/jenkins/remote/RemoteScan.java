@@ -76,13 +76,18 @@ public class RemoteScan implements Callable<List<String>, HubIntegrationExceptio
 
     private final EnvVars envVars;
 
+    private final boolean unmapPreviousCodeLocations;
+
+    private final boolean deletePreviousCodeLocations;
+
     public RemoteScan(final IntLogger logger, final String codeLocationName, final String hubProjectName, final String hubProjectVersion,
             final int scanMemory,
             final String workingDirectoryPath,
             final List<String> scanTargetPaths, final boolean dryRun, final boolean cleanupOnSuccessfulScan, final String toolsDirectory,
             final String thirdPartyVersion,
             final String pluginVersion, final HubServerConfig hubServerConfig, final boolean performWorkspaceCheck, final String[] excludePatterns,
-            final EnvVars envVars) {
+            final EnvVars envVars, final boolean unmapPreviousCodeLocations,
+            final boolean deletePreviousCodeLocations) {
         this.logger = logger;
         this.codeLocationName = codeLocationName;
         this.hubProjectName = hubProjectName;
@@ -99,6 +104,8 @@ public class RemoteScan implements Callable<List<String>, HubIntegrationExceptio
         this.performWorkspaceCheck = performWorkspaceCheck;
         this.excludePatterns = excludePatterns;
         this.envVars = envVars;
+        this.unmapPreviousCodeLocations = unmapPreviousCodeLocations;
+        this.deletePreviousCodeLocations = deletePreviousCodeLocations;
     }
 
     @Override
@@ -126,6 +133,8 @@ public class RemoteScan implements Callable<List<String>, HubIntegrationExceptio
             hubScanConfigBuilder.setCleanupLogsOnSuccess(cleanupOnSuccessfulScan);
             hubScanConfigBuilder.setExcludePatterns(excludePatterns);
             hubScanConfigBuilder.setCodeLocationAlias(codeLocationName);
+            hubScanConfigBuilder.setUnmapPreviousCodeLocations(unmapPreviousCodeLocations);
+            hubScanConfigBuilder.setDeletePreviousCodeLocations(deletePreviousCodeLocations);
 
             final IntegrationInfo integrationInfo = new IntegrationInfo(ThirdPartyName.JENKINS.getName(), thirdPartyVersion, pluginVersion);
             final HubScanConfig hubScanConfig = hubScanConfigBuilder.build();

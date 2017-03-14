@@ -79,11 +79,16 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
     private final String codeLocationName;
 
+    private final boolean unmapPreviousCodeLocations;
+
+    private final boolean deletePreviousCodeLocations;
+
     @DataBoundConstructor
     public HubScanWorkflowStep(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
             final String scanMemory,
             final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan,
-            final ScanExclusion[] excludePatterns, final String codeLocationName) {
+            final ScanExclusion[] excludePatterns, final String codeLocationName, final boolean unmapPreviousCodeLocations,
+            final boolean deletePreviousCodeLocations) {
         this.scans = scans;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
@@ -94,6 +99,8 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
         this.cleanupOnSuccessfulScan = cleanupOnSuccessfulScan;
         this.excludePatterns = excludePatterns;
         this.codeLocationName = codeLocationName;
+        this.unmapPreviousCodeLocations = unmapPreviousCodeLocations;
+        this.deletePreviousCodeLocations = deletePreviousCodeLocations;
     }
 
     public void setVerbose(final boolean verbose) {
@@ -158,6 +165,14 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
     public String getCodeLocationName() {
         return codeLocationName;
+    }
+
+    public boolean isUnmapPreviousCodeLocations() {
+        return unmapPreviousCodeLocations;
+    }
+
+    public boolean isDeletePreviousCodeLocations() {
+        return deletePreviousCodeLocations;
     }
 
     @Override
@@ -278,7 +293,7 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
                         hubScanStep.getScanMemory(),
                         hubScanStep.getShouldGenerateHubReport(), hubScanStep.getBomUpdateMaxiumWaitTime(),
                         hubScanStep.isDryRun(), hubScanStep.isCleanupOnSuccessfulScan(), hubScanStep.isVerbose(), hubScanStep.getExclusionPatterns(),
-                        hubScanStep.getCodeLocationName());
+                        hubScanStep.getCodeLocationName(), hubScanStep.isUnmapPreviousCodeLocations(), hubScanStep.isDeletePreviousCodeLocations());
 
                 scanStep.runScan(run, node, envVars, workspace, logger, launcher, listener,
                         run.getFullDisplayName(),

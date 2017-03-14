@@ -70,11 +70,16 @@ public class PostBuildHubScan extends Recorder {
 
     private final String codeLocationName;
 
+    private final boolean unmapPreviousCodeLocations;
+
+    private final boolean deletePreviousCodeLocations;
+
     @DataBoundConstructor
     public PostBuildHubScan(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
             final String scanMemory,
             final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan,
-            final ScanExclusion[] excludePatterns, final String codeLocationName) {
+            final ScanExclusion[] excludePatterns, final String codeLocationName, final boolean unmapPreviousCodeLocations,
+            final boolean deletePreviousCodeLocations) {
         this.scans = scans;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
@@ -85,6 +90,8 @@ public class PostBuildHubScan extends Recorder {
         this.cleanupOnSuccessfulScan = cleanupOnSuccessfulScan;
         this.excludePatterns = excludePatterns;
         this.codeLocationName = codeLocationName;
+        this.unmapPreviousCodeLocations = unmapPreviousCodeLocations;
+        this.deletePreviousCodeLocations = deletePreviousCodeLocations;
     }
 
     public void setverbose(final boolean verbose) {
@@ -144,6 +151,14 @@ public class PostBuildHubScan extends Recorder {
         return codeLocationName;
     }
 
+    public boolean isUnmapPreviousCodeLocations() {
+        return unmapPreviousCodeLocations;
+    }
+
+    public boolean isDeletePreviousCodeLocations() {
+        return deletePreviousCodeLocations;
+    }
+
     // http://javadoc.jenkins-ci.org/hudson/tasks/Recorder.html
     @Override
     public BuildStepMonitor getRequiredMonitorService() {
@@ -173,7 +188,7 @@ public class PostBuildHubScan extends Recorder {
             final BDCommonScanStep scanStep = new BDCommonScanStep(getScans(), getHubProjectName(),
                     getHubProjectVersion(), getScanMemory(),
                     getShouldGenerateHubReport(), getBomUpdateMaxiumWaitTime(), isDryRun(), isCleanupOnSuccessfulScan(), isVerbose(), getExclusionPatterns(),
-                    getCodeLocationName());
+                    getCodeLocationName(), isUnmapPreviousCodeLocations(), isDeletePreviousCodeLocations());
             final EnvVars envVars = build.getEnvironment(listener);
 
             scanStep.runScan(build, build.getBuiltOn(), envVars, getWorkingDirectory(logger, build), logger, launcher,

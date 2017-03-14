@@ -93,6 +93,10 @@ public class BDCommonScanStep {
 
     private final boolean cleanupOnSuccessfulScan;
 
+    private final boolean unmapPreviousCodeLocations;
+
+    private final boolean deletePreviousCodeLocations;
+
     private final Boolean verbose;
 
     private final BomUpToDateAction bomUpToDateAction = new BomUpToDateAction();
@@ -104,7 +108,8 @@ public class BDCommonScanStep {
     public BDCommonScanStep(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
             final String scanMemory,
             final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan,
-            final Boolean verbose, final String[] excludePatterns, final String codeLocationName) {
+            final Boolean verbose, final String[] excludePatterns, final String codeLocationName, final boolean unmapPreviousCodeLocations,
+            final boolean deletePreviousCodeLocations) {
         this.scans = scans;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
@@ -116,6 +121,8 @@ public class BDCommonScanStep {
         this.verbose = verbose;
         this.excludePatterns = excludePatterns;
         this.codeLocationName = codeLocationName;
+        this.unmapPreviousCodeLocations = unmapPreviousCodeLocations;
+        this.deletePreviousCodeLocations = deletePreviousCodeLocations;
     }
 
     public String getCodeLocationName() {
@@ -172,6 +179,14 @@ public class BDCommonScanStep {
 
     public BomUpToDateAction getBomUpToDateAction() {
         return bomUpToDateAction;
+    }
+
+    public boolean isUnmapPreviousCodeLocations() {
+        return unmapPreviousCodeLocations;
+    }
+
+    public boolean isDeletePreviousCodeLocations() {
+        return deletePreviousCodeLocations;
     }
 
     public HubServerInfo getHubServerInfo() {
@@ -245,7 +260,8 @@ public class BDCommonScanStep {
                             workingDirectory, scanTargetPaths, dryRun,
                             isCleanupOnSuccessfulScan(), toolsDirectory,
                             thirdPartyVersion, pluginVersion, hubServerConfig,
-                            getHubServerInfo().isPerformWorkspaceCheck(), getExcludePatterns(), envVars);
+                            getHubServerInfo().isPerformWorkspaceCheck(), getExcludePatterns(), envVars,
+                            unmapPreviousCodeLocations, deletePreviousCodeLocations);
 
                     final List<String> scanSummaryStrings = builtOn.getChannel().call(scan);
 

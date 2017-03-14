@@ -39,6 +39,14 @@
 		<f:checkbox default="true" />
 		<label>${%CleanupOnSuccessfulScanTitle}</label>
 	</f:entry>
+	<f:entry field="unmapPreviousCodeLocations">
+		<f:checkbox default="false" />
+		<label>${%UnmapPreviousCodeLocationsTitle}</label>
+	</f:entry>
+	<f:entry field="deletePreviousCodeLocations">
+		<f:checkbox default="false" />
+		<label>${%DeletePreviousCodeLocationsTitle}</label>
+	</f:entry>
 </f:advanced>
        
 <f:block>
