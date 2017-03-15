@@ -41,6 +41,7 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -303,9 +304,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     public boolean configure(final StaplerRequest req, final JSONObject formData) throws Descriptor.FormException {
         // To persist global configuration information,
         // set that to properties and call save().
+        final Integer timeout = NumberUtils.toInt(formData.getString(FORM_TIMEOUT), 300);
 
         hubServerInfo = new HubServerInfo(formData.getString(FORM_SERVER_URL), formData.getString(FORM_CREDENTIALSID),
-                formData.getInt(FORM_TIMEOUT), formData.getBoolean(FORM_WORKSPACE_CHECK));
+                timeout, formData.getBoolean(FORM_WORKSPACE_CHECK));
         save();
         HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
