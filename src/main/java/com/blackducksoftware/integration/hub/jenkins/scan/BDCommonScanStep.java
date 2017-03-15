@@ -299,40 +299,45 @@ public class BDCommonScanStep {
                         // User input is in minutes, need to changes to milliseconds
                         logger.alwaysLog("--> Bom wait time : " + bomWait / 60 / 1000 + "m");
                         logger.alwaysLog("--> Generate Report : " + isShouldGenerateHubReport());
-                    }
 
-                    if (run.getResult().equals(Result.SUCCESS) && !isDryRun() && isShouldGenerateHubReport() && version != null) {
+                        if (run.getResult().equals(Result.SUCCESS) && isShouldGenerateHubReport()) {
+                            if (project != null && version != null) {
+                                final HubReportV2Action reportAction = new HubReportV2Action(run);
 
-                        final HubReportV2Action reportAction = new HubReportV2Action(run);
+                                final RiskReportDataService reportService = services.createRiskReportDataService(logger, bomWait);
+                                logger.debug("Waiting for Bom to be updated.");
+                                services.createScanStatusDataService(logger, bomWait).assertBomImportScansFinished(scanSummaries);
 
-                        final RiskReportDataService reportService = services.createRiskReportDataService(logger, bomWait);
-                        logger.debug("Waiting for Bom to be updated.");
-                        services.createScanStatusDataService(logger, bomWait).assertBomImportScansFinished(scanSummaries);
+                                logger.debug("Generating the Risk Report.");
+                                final ReportData reportData = reportService.getRiskReportData(project, version);
+                                reportAction.setReportData(reportData);
 
-                        logger.debug("Generating the Risk Report.");
-                        final ReportData reportData = reportService.getRiskReportData(project, version);
-                        reportAction.setReportData(reportData);
-
-                        run.addAction(reportAction);
-                        bomUpToDateAction.setHasBomBeenUdpated(true);
-                    } else {
-                        bomUpToDateAction.setHasBomBeenUdpated(false);
-                        bomUpToDateAction.setMaxWaitTime(bomWait);
-                        bomUpToDateAction.setScanSummaries(scanSummaries);
-                    }
-                    if (version != null) {
-                        String policyStatusLink = null;
-                        try {
-                            // not all HUb users have the policy module enabled
-                            // so there will be no policy status link
-                            policyStatusLink = metaService.getFirstLink(version, MetaService.POLICY_STATUS_LINK);
-                        } catch (final Exception e) {
-                            logger.debug(e.getMessage(), e);
+                                run.addAction(reportAction);
+                                bomUpToDateAction.setHasBomBeenUdpated(true);
+                            } else {
+                                logger.error("Could not find the Hub Project or Version for this scan. Check that the status directory exists.");
+                                run.setResult(Result.UNSTABLE);
+                                return;
+                            }
+                        } else {
+                            bomUpToDateAction.setHasBomBeenUdpated(false);
+                            bomUpToDateAction.setMaxWaitTime(bomWait);
+                            bomUpToDateAction.setScanSummaries(scanSummaries);
                         }
-                        bomUpToDateAction.setPolicyStatusUrl(policyStatusLink);
+                        if (version != null) {
+                            String policyStatusLink = null;
+                            try {
+                                // not all HUb users have the policy module enabled
+                                // so there will be no policy status link
+                                policyStatusLink = metaService.getFirstLink(version, MetaService.POLICY_STATUS_LINK);
+                            } catch (final Exception e) {
+                                logger.debug(e.getMessage(), e);
+                            }
+                            bomUpToDateAction.setPolicyStatusUrl(policyStatusLink);
+                        }
+                        run.addAction(bomUpToDateAction);
+                        run.addAction(new HubScanFinishedAction());
                     }
-                    run.addAction(bomUpToDateAction);
-                    run.addAction(new HubScanFinishedAction());
                 }
             } catch (final BDJenkinsHubPluginException e) {
                 logger.error(e.getMessage(), e);
@@ -362,7 +367,9 @@ public class BDCommonScanStep {
                 logger.error(message, e);
                 run.setResult(Result.UNSTABLE);
             }
-        } else {
+        } else
+
+        {
             logger.alwaysLog("Build was not successful. Will not run Black Duck Scans.");
         }
         logger.alwaysLog("Finished running Black Duck Scans.");
