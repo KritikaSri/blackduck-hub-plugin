@@ -219,8 +219,10 @@ public class BDCommonScanStep {
 
                     String projectName = null;
                     String projectVersion = null;
-                    if (StringUtils.isNotBlank(getHubProjectName()) && StringUtils.isNotBlank(getHubProjectVersion())) {
+                    if (StringUtils.isNotBlank(getHubProjectName())) {
                         projectName = BuildHelper.handleVariableReplacement(envVars, getHubProjectName());
+                    }
+                    if (StringUtils.isNotBlank(getHubProjectVersion())) {
                         projectVersion = BuildHelper.handleVariableReplacement(envVars, getHubProjectVersion());
                     }
 
