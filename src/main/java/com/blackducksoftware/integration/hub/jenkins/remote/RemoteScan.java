@@ -22,6 +22,8 @@
 package com.blackducksoftware.integration.hub.jenkins.remote;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -112,6 +114,16 @@ public class RemoteScan implements Callable<List<String>, HubIntegrationExceptio
             services.addEnvironmentVariables(envVars);
             final CLIDataService cliDataService = services.createCLIDataService(logger);
 
+            final File bdIgnoreLogsFile = new File(workingDirectoryPath, ".bdignore");
+            if (bdIgnoreLogsFile.exists()) {
+                bdIgnoreLogsFile.delete();
+            }
+            if (!bdIgnoreLogsFile.createNewFile()) {
+                throw new IOException("Could not create the .bdignore file!");
+            }
+            final String exclusionPattern = "/HubScanLogs/";
+            Files.write(bdIgnoreLogsFile.toPath(), exclusionPattern.getBytes());
+
             final File workingDirectory = new File(workingDirectoryPath);
             final File toolsDir = new File(toolsDirectory);
 
@@ -147,6 +159,8 @@ public class RemoteScan implements Callable<List<String>, HubIntegrationExceptio
         } catch (final IllegalArgumentException e) {
             throw new HubIntegrationException(e.getMessage(), e);
         } catch (final EncryptionException e) {
+            throw new HubIntegrationException(e.getMessage(), e);
+        } catch (final IOException e) {
             throw new HubIntegrationException(e.getMessage(), e);
         }
     }

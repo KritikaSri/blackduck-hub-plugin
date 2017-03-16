@@ -372,6 +372,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             validator.setIgnoredProxyHosts(proxyConfig.noProxyHost);
         }
         final ValidationResults results = new ValidationResults();
+        validator.assertProxyValid();
         validator.validateHubUrl(results);
 
         if (!results.isSuccess()) {
