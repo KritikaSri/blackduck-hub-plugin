@@ -56,6 +56,9 @@ public class HubServerInfoSingleton {
      * @return The object containing the server information.
      */
     public HubServerInfo getServerInfo() {
+        if (_info == null) {
+            _info = new HubServerInfo();
+        }
         return _info;
     }
 
