@@ -46,6 +46,8 @@ import com.blackducksoftware.integration.hub.model.view.ProjectView;
 import com.blackducksoftware.integration.hub.scan.HubScanConfigFieldEnum;
 import com.blackducksoftware.integration.hub.service.HubServicesFactory;
 import com.blackducksoftware.integration.hub.validator.HubScanConfigValidator;
+import com.blackducksoftware.integration.log.LogLevel;
+import com.blackducksoftware.integration.log.PrintStreamIntLogger;
 import com.blackducksoftware.integration.validator.ValidationResults;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
@@ -118,7 +120,7 @@ public class BDCommonDescriptorUtil {
                 final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(),
                         serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
                 final MetaService metaService = service.createMetaService(null);
-                final ProjectRequestService projectService = service.createProjectRequestService();
+                final ProjectRequestService projectService = service.createProjectRequestService(new PrintStreamIntLogger(System.out, LogLevel.INFO));
 
                 final List<ProjectView> suggestions = projectService.getAllProjectMatches(hubProjectName);
 
@@ -127,7 +129,7 @@ public class BDCommonDescriptorUtil {
 
                 if (!accessibleSuggestions.isEmpty()) {
                     for (final ProjectView projectSuggestion : accessibleSuggestions) {
-                        potentialMatches.add(projectSuggestion.getName());
+                        potentialMatches.add(projectSuggestion.name);
                     }
                 }
             } catch (final Exception e) {
@@ -165,7 +167,7 @@ public class BDCommonDescriptorUtil {
                 final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(),
                         serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
                 final MetaService metaService = service.createMetaService(null);
-                final ProjectRequestService projectService = service.createProjectRequestService();
+                final ProjectRequestService projectService = service.createProjectRequestService(new PrintStreamIntLogger(System.out, LogLevel.INFO));
                 final ProjectView project = projectService.getProjectByName(hubProjectName);
                 final List<ProjectView> projectList = new ArrayList<>();
                 projectList.add(project);
@@ -239,7 +241,7 @@ public class BDCommonDescriptorUtil {
 
                 final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(),
                         serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
-                final ProjectRequestService projectService = service.createProjectRequestService();
+                final ProjectRequestService projectService = service.createProjectRequestService(new PrintStreamIntLogger(System.out, LogLevel.INFO));
                 ProjectView project = null;
                 try {
                     project = projectService.getProjectByName(hubProjectName);
@@ -253,17 +255,17 @@ public class BDCommonDescriptorUtil {
 
                 final StringBuilder projectVersions = new StringBuilder();
                 for (final ProjectVersionView release : releases) {
-                    if (release.getVersionName().equals(hubProjectVersion)) {
-                        return FormValidation.ok(Messages.HubBuildScan_getVersionExistsIn_0_(project.getName()));
+                    if (release.versionName.equals(hubProjectVersion)) {
+                        return FormValidation.ok(Messages.HubBuildScan_getVersionExistsIn_0_(project.name));
                     } else {
                         if (projectVersions.length() > 0) {
-                            projectVersions.append(", " + release.getVersionName());
+                            projectVersions.append(", " + release.versionName);
                         } else {
-                            projectVersions.append(release.getVersionName());
+                            projectVersions.append(release.versionName);
                         }
                     }
                 }
-                return FormValidation.error(Messages.HubBuildScan_getVersionNonExistingIn_0_(project.getName(),
+                return FormValidation.error(Messages.HubBuildScan_getVersionNonExistingIn_0_(project.name,
                         projectVersions.toString()));
             } catch (final HubIntegrationException e) {
                 String message;

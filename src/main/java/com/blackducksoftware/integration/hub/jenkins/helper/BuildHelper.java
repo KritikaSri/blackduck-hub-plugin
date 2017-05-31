@@ -21,14 +21,10 @@
  *******************************************************************************/
 package com.blackducksoftware.integration.hub.jenkins.helper;
 
-import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
-import java.net.Proxy;
-import java.net.URL;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 
 import com.blackducksoftware.integration.exception.EncryptionException;
 import com.blackducksoftware.integration.hub.builder.HubServerConfigBuilder;
@@ -77,10 +73,7 @@ public class BuildHelper {
 
     public static RestConnection getRestConnection(final IntLogger logger, final HubServerConfig hubServerConfig)
             throws EncryptionException, IllegalArgumentException {
-        return getRestConnection(logger, hubServerConfig.getHubUrl().toString(), hubServerConfig.getGlobalCredentials().getUsername(),
-                hubServerConfig.getGlobalCredentials().getDecryptedPassword(), hubServerConfig.getTimeout(), hubServerConfig.getProxyInfo().getHost(),
-                hubServerConfig.getProxyInfo().getPort(), hubServerConfig.getProxyInfo().getUsername(),
-                hubServerConfig.getProxyInfo().getDecryptedPassword());
+        return hubServerConfig.createCredentialsRestConnection(logger);
     }
 
     public static RestConnection getRestConnection(final IntLogger logger, final String serverUrl,
@@ -110,42 +103,30 @@ public class BuildHelper {
         final Jenkins jenkins = Jenkins.getInstance();
         String proxyHost = null;
         Integer proxyPort = null;
+        String proxyNoHosts = null;
         String proxyUser = null;
         String proxyPassword = null;
         if (jenkins != null) {
             final ProxyConfiguration proxyConfig = jenkins.proxy;
             if (proxyConfig != null) {
-                final URL actualUrl = new URL(hubServerConfigBuilder.getHubUrl());
-                final Proxy proxy = ProxyConfiguration.createProxy(actualUrl.getHost(), proxyConfig.name,
-                        proxyConfig.port, proxyConfig.noProxyHost);
-
-                if (proxy.address() != null) {
-                    final InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
-                    proxyHost = proxyAddress.getHostName();
-                    proxyPort = proxyAddress.getPort();
-                    proxyUser = jenkins.proxy.getUserName();
-                    proxyPassword = jenkins.proxy.getPassword();
-                }
+                proxyHost = proxyConfig.name;
+                proxyPort = proxyConfig.port;
+                proxyNoHosts = proxyConfig.noProxyHost;
+                proxyUser = jenkins.proxy.getUserName();
+                proxyPassword = jenkins.proxy.getPassword();
             }
         }
 
-        return getRestConnection(logger, hubServerConfigBuilder.getHubUrl(), hubServerConfigBuilder.getUsername(),
-                hubServerConfigBuilder.getPassword(),
-                NumberUtils.toInt(hubServerConfigBuilder.getTimeout()), proxyHost, proxyPort, proxyUser, proxyPassword);
+        return getRestConnection(logger, hubServerConfigBuilder, proxyHost, proxyPort, proxyNoHosts, proxyUser, proxyPassword);
     }
 
-    public static RestConnection getRestConnection(final IntLogger logger, final String serverUrl,
-            final String username, final String password, final int hubTimeout, final String proxyHost, final Integer proxyPort, final String proxyUser,
+    public static RestConnection getRestConnection(final IntLogger logger, final HubServerConfigBuilder hubServerConfigBuilder, final String proxyHost,
+            final Integer proxyPort, final String proxyNoHosts, final String proxyUser,
             final String proxyPassword) throws EncryptionException {
-        final HubServerConfigBuilder hubServerConfigBuilder = new HubServerConfigBuilder();
-        hubServerConfigBuilder.setHubUrl(serverUrl);
-        hubServerConfigBuilder.setUsername(username);
-        hubServerConfigBuilder.setPassword(password);
-        hubServerConfigBuilder.setTimeout(hubTimeout);
-
         if (StringUtils.isNotBlank(proxyHost) && proxyPort != null) {
             hubServerConfigBuilder.setProxyHost(proxyHost);
             hubServerConfigBuilder.setProxyPort(proxyPort);
+            hubServerConfigBuilder.setIgnoredProxyHosts(proxyNoHosts);
 
             if (StringUtils.isNotBlank(proxyUser) && StringUtils.isNotBlank(proxyPassword)) {
                 hubServerConfigBuilder.setProxyUsername(proxyUser);

@@ -204,7 +204,9 @@ public class BDCommonScanStep {
         if (run.getResult() == null) {
             run.setResult(Result.SUCCESS);
         }
-        if (run.getResult() == Result.SUCCESS) {
+        if (run.getResult() != Result.SUCCESS) {
+            logger.alwaysLog("Build was not successful. Will not run Black Duck Scans.");
+        } else {
             try {
                 logger.alwaysLog("Initializing - Hub Jenkins Plugin - " + PluginHelper.getPluginVersion());
                 logger.alwaysLog("Starting BlackDuck Scans...");
@@ -285,7 +287,7 @@ public class BDCommonScanStep {
                         version = getProjectVersionFromScanStatus(services.createCodeLocationRequestService(logger),
                                 services.createProjectVersionRequestService(logger), metaService,
                                 scanSummaries.get(0));
-                        project = getProjectFromVersion(services.createProjectRequestService(), metaService, version);
+                        project = getProjectFromVersion(services.createProjectRequestService(logger), metaService, version);
                     }
 
                     bomUpToDateAction.setDryRun(isDryRun());
@@ -337,8 +339,6 @@ public class BDCommonScanStep {
                             }
                             bomUpToDateAction.setPolicyStatusUrl(policyStatusLink);
                         }
-                        run.addAction(bomUpToDateAction);
-                        run.addAction(new HubScanFinishedAction());
                     }
                 }
             } catch (final BDJenkinsHubPluginException e) {
@@ -369,12 +369,10 @@ public class BDCommonScanStep {
                 logger.error(message, e);
                 run.setResult(Result.UNSTABLE);
             }
-        } else
-
-        {
-            logger.alwaysLog("Build was not successful. Will not run Black Duck Scans.");
         }
         logger.alwaysLog("Finished running Black Duck Scans.");
+        run.addAction(bomUpToDateAction);
+        run.addAction(new HubScanFinishedAction());
     }
 
     private ProjectView getProjectFromVersion(final ProjectRequestService projectRequestService, final MetaService metaService,
@@ -390,7 +388,7 @@ public class BDCommonScanStep {
             throws IntegrationException {
         final CodeLocationView codeLocationItem = codeLocationRequestService
                 .getItem(metaService.getFirstLink(scanSummaryItem, MetaService.CODE_LOCATION_BOM_STATUS_LINK), CodeLocationView.class);
-        final String projectVersionUrl = codeLocationItem.getMappedProjectVersion();
+        final String projectVersionUrl = codeLocationItem.mappedProjectVersion;
         final ProjectVersionView projectVersion = projectVersionRequestService.getItem(projectVersionUrl, ProjectVersionView.class);
         return projectVersion;
     }

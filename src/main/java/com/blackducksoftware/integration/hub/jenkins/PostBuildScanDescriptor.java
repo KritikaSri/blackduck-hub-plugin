@@ -363,7 +363,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         if (jenkins != null) {
             proxyConfig = jenkins.proxy;
         }
-
         final HubServerConfigValidator validator = new HubServerConfigValidator();
         validator.setHubUrl(hubServerUrl);
         if (proxyConfig != null) {
