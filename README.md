@@ -4,7 +4,7 @@ Hub plugin for Jenkins. This plugin provides ability to run a scan using the BD 
 
 ## Build ##
 [![Build Status](https://travis-ci.org/jenkinsci/blackduck-hub-plugin.svg?branch=master)](https://travis-ci.org/jenkinsci/blackduck-hub-plugin)
-[![Black Duck Security Risk](https://test.duckbuild.io/github/groups/jenkinsci/locations/blackduck-hub-plugin/public/results/branches/master/badge-risk.svg)](https://test.duckbuild.io/github/groups/jenkinsci/locations/blackduck-hub-plugin/public/results/branches/master)
+[![Black Duck Security Risk](https://copilot.blackducksoftware.com/github/groups/jenkinsci/locations/blackduck-hub-plugin/public/results/branches/master/badge-risk.svg)](https://copilot.blackducksoftware.com/github/groups/jenkinsci/locations/blackduck-hub-plugin/public/results/branches/master)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Where can I get the latest release? ##
