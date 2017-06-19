@@ -13,7 +13,6 @@ notifications:
       - ekerwin@blackducksoftware.com
 
 install: true
-script:
-  - mvn clean package com.blackducksoftware.integration:hub-maven-plugin:1.4.0:createHubOutput -DskipTests
 after_success:
-  - bash <(curl -s https://test.duckbuild.io/bash/travis) ./target/blackduck/blackduck-hub_bdio.jsonld
+    - mvn com.blackducksoftware.integration:hub-maven-plugin:2.0.0:build-bom -Dhub.output.directory=. -Dhub.deploy.bdio=false
+    - bash <(curl -s https://copilot.blackducksoftware.com/bash/circle) ./*_bdio.jsonld
