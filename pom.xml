@@ -6,7 +6,6 @@
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
     <version>2.9</version>
-    <relativePath />
   </parent>
 
   <groupId>com.blackducksoftware.integration</groupId>
@@ -45,7 +44,7 @@
   <properties>
     <findbugs.failOnError>false</findbugs.failOnError>
     <hpi-plugin.version>1.117</hpi-plugin.version>
-    <hub.common.version>12.0.1</hub.common.version>
+    <hub.common.version>13.0.1</hub.common.version>
     <jenkins.version>1.580.3</jenkins.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -139,6 +138,18 @@
       <groupId>org.jvnet.localizer</groupId>
       <artifactId>localizer</artifactId>
       <version>1.10</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-job</artifactId>
+      <version>2.9</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-cps</artifactId>
+      <version>2.23</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.main</groupId>

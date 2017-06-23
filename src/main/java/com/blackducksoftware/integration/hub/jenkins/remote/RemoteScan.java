@@ -22,7 +22,6 @@
 package com.blackducksoftware.integration.hub.jenkins.remote;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.jenkinsci.remoting.Role;
@@ -33,8 +32,10 @@ import com.blackducksoftware.integration.hub.dataservice.cli.CLIDataService;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.global.HubServerConfig;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
-import com.blackducksoftware.integration.hub.model.view.ScanSummaryView;
+import com.blackducksoftware.integration.hub.model.request.ProjectRequest;
+import com.blackducksoftware.integration.hub.model.view.ProjectVersionView;
 import com.blackducksoftware.integration.hub.phonehome.IntegrationInfo;
+import com.blackducksoftware.integration.hub.request.builder.ProjectRequestBuilder;
 import com.blackducksoftware.integration.hub.scan.HubScanConfig;
 import com.blackducksoftware.integration.hub.service.HubServicesFactory;
 import com.blackducksoftware.integration.log.IntLogger;
@@ -43,7 +44,7 @@ import com.blackducksoftware.integration.phone.home.enums.ThirdPartyName;
 import hudson.EnvVars;
 import hudson.remoting.Callable;
 
-public class RemoteScan implements Callable<List<String>, HubIntegrationException> {
+public class RemoteScan implements Callable<String, HubIntegrationException> {
     private final IntLogger logger;
 
     private final String codeLocationName;
@@ -80,6 +81,8 @@ public class RemoteScan implements Callable<List<String>, HubIntegrationExceptio
 
     private final boolean deletePreviousCodeLocations;
 
+    private final boolean shouldWaitForScansFinished;
+
     public RemoteScan(final IntLogger logger, final String codeLocationName, final String hubProjectName, final String hubProjectVersion,
             final int scanMemory,
             final String workingDirectoryPath,
@@ -87,7 +90,7 @@ public class RemoteScan implements Callable<List<String>, HubIntegrationExceptio
             final String thirdPartyVersion,
             final String pluginVersion, final HubServerConfig hubServerConfig, final boolean performWorkspaceCheck, final String[] excludePatterns,
             final EnvVars envVars, final boolean unmapPreviousCodeLocations,
-            final boolean deletePreviousCodeLocations) {
+            final boolean deletePreviousCodeLocations, final boolean shouldWaitForScansFinished) {
         this.logger = logger;
         this.codeLocationName = codeLocationName;
         this.hubProjectName = hubProjectName;
@@ -106,23 +109,22 @@ public class RemoteScan implements Callable<List<String>, HubIntegrationExceptio
         this.envVars = envVars;
         this.unmapPreviousCodeLocations = unmapPreviousCodeLocations;
         this.deletePreviousCodeLocations = deletePreviousCodeLocations;
+        this.shouldWaitForScansFinished = shouldWaitForScansFinished;
     }
 
     @Override
-    public List<String> call() throws HubIntegrationException {
+    public String call() throws HubIntegrationException {
         try {
             final HubServicesFactory services = BuildHelper.getHubServicesFactory(logger, hubServerConfig);
 
             services.addEnvironmentVariables(envVars);
-            final CLIDataService cliDataService = services.createCLIDataService(logger);
+            final CLIDataService cliDataService = services.createCLIDataService(logger, hubServerConfig.getTimeout() * 60 * 1000);
 
             final File workingDirectory = new File(workingDirectoryPath);
             final File toolsDir = new File(toolsDirectory);
 
             final HubScanConfigBuilder hubScanConfigBuilder = new HubScanConfigBuilder();
             hubScanConfigBuilder.setDryRun(dryRun);
-            hubScanConfigBuilder.setProjectName(hubProjectName);
-            hubScanConfigBuilder.setVersion(hubProjectVersion);
             hubScanConfigBuilder.setWorkingDirectory(workingDirectory);
             hubScanConfigBuilder.setScanMemory(scanMemory);
             hubScanConfigBuilder.addAllScanTargetPaths(scanTargetPaths);
@@ -136,15 +138,16 @@ public class RemoteScan implements Callable<List<String>, HubIntegrationExceptio
             hubScanConfigBuilder.setUnmapPreviousCodeLocations(unmapPreviousCodeLocations);
             hubScanConfigBuilder.setDeletePreviousCodeLocations(deletePreviousCodeLocations);
 
+            final ProjectRequestBuilder projectRequestBuilder = new ProjectRequestBuilder();
+            projectRequestBuilder.setProjectName(hubProjectName);
+            projectRequestBuilder.setVersionName(hubProjectVersion);
+
             final IntegrationInfo integrationInfo = new IntegrationInfo(ThirdPartyName.JENKINS.getName(), thirdPartyVersion, pluginVersion);
             final HubScanConfig hubScanConfig = hubScanConfigBuilder.build();
-            final List<ScanSummaryView> scans = cliDataService.installAndRunScan(hubServerConfig, hubScanConfig, integrationInfo);
-            final List<String> scanStrings = new ArrayList<>();
-            for (final ScanSummaryView scan : scans) {
-                scanStrings.add(services.getRestConnection().gson.toJson(scan));
-            }
-
-            return scanStrings;
+            final ProjectRequest projectRequest = projectRequestBuilder.build();
+            final ProjectVersionView projectVersionView = cliDataService.installAndRunControlledScan(hubServerConfig, hubScanConfig, projectRequest,
+                    shouldWaitForScansFinished, integrationInfo);
+            return dryRun ? null : projectVersionView.json;
         } catch (final Exception e) {
             throw new HubIntegrationException(e.getMessage(), e);
         }
