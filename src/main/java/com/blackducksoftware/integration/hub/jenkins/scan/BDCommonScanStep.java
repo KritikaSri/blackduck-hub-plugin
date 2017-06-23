@@ -30,9 +30,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
-import org.jenkinsci.plugins.workflow.flow.FlowDefinition;
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 
 import com.blackducksoftware.integration.exception.IntegrationException;
 import com.blackducksoftware.integration.hub.api.item.MetaService;
@@ -52,7 +49,6 @@ import com.blackducksoftware.integration.hub.jenkins.cli.DummyToolInstallation;
 import com.blackducksoftware.integration.hub.jenkins.cli.DummyToolInstaller;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
-import com.blackducksoftware.integration.hub.jenkins.failure.HubFailureConditionStep;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.jenkins.remote.DetermineTargetPath;
@@ -69,12 +65,10 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.ProxyConfiguration;
-import hudson.model.FreeStyleProject;
 import hudson.model.Node;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.tasks.Publisher;
 import jenkins.model.Jenkins;
 
 public class BDCommonScanStep {
@@ -107,11 +101,13 @@ public class BDCommonScanStep {
 
     private final String codeLocationName;
 
+    private final boolean failureConditionsConfigured;
+
     public BDCommonScanStep(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
             final String scanMemory,
             final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan,
             final Boolean verbose, final String[] excludePatterns, final String codeLocationName, final boolean unmapPreviousCodeLocations,
-            final boolean deletePreviousCodeLocations) {
+            final boolean deletePreviousCodeLocations, final boolean failureConditionsConfigured) {
         this.scans = scans;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
@@ -125,6 +121,7 @@ public class BDCommonScanStep {
         this.codeLocationName = codeLocationName;
         this.unmapPreviousCodeLocations = unmapPreviousCodeLocations;
         this.deletePreviousCodeLocations = deletePreviousCodeLocations;
+        this.failureConditionsConfigured = failureConditionsConfigured;
     }
 
     public String getCodeLocationName() {
@@ -189,6 +186,10 @@ public class BDCommonScanStep {
 
     public boolean isDeletePreviousCodeLocations() {
         return deletePreviousCodeLocations;
+    }
+
+    public boolean isFailureConditionsConfigured() {
+        return failureConditionsConfigured;
     }
 
     public HubServerInfo getHubServerInfo() {
@@ -267,7 +268,7 @@ public class BDCommonScanStep {
                             isCleanupOnSuccessfulScan(), toolsDirectory,
                             thirdPartyVersion, pluginVersion, hubServerConfig,
                             getHubServerInfo().isPerformWorkspaceCheck(), getExcludePatterns(), envVars,
-                            unmapPreviousCodeLocations, deletePreviousCodeLocations, isShouldWaitForScansFinished(run));
+                            unmapPreviousCodeLocations, deletePreviousCodeLocations, isShouldWaitForScansFinished());
 
                     final String projectVersionViewJson = builtOn.getChannel().call(scan);
 
@@ -378,26 +379,8 @@ public class BDCommonScanStep {
         return projectVersion;
     }
 
-    private boolean isShouldWaitForScansFinished(final Run<?, ?> run) {
-        if (!isDryRun()) {
-            if (isShouldGenerateHubReport()) {
-                return true;
-            }
-            final Object parent = run.getParent();
-            if (parent instanceof FreeStyleProject) {
-                for (final Publisher publisher : ((FreeStyleProject) parent).getPublishersList()) {
-                    if (publisher instanceof HubFailureConditionStep) {
-                        return ((HubFailureConditionStep) publisher).getFailBuildForPolicyViolations().booleanValue();
-                    }
-                }
-            } else if (parent instanceof WorkflowJob) {
-                final FlowDefinition definition = ((WorkflowJob) parent).getDefinition();
-                if (definition instanceof CpsFlowDefinition) {
-                    return ((CpsFlowDefinition) definition).getScript().contains("hub_scan_failure");
-                }
-            }
-        }
-        return false;
+    private boolean isShouldWaitForScansFinished() {
+        return !isDryRun() && (isShouldGenerateHubReport() || isFailureConditionsConfigured());
     }
 
     public List<String> getScanTargets(final IntLogger logger, final Node builtOn, final EnvVars variables,
