@@ -74,6 +74,8 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
     private final boolean shouldGenerateHubReport;
 
+    private final boolean projectLevelAdjustments;
+
     private final String bomUpdateMaxiumWaitTime;
 
     private final boolean dryRun;
@@ -92,8 +94,8 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
     @DataBoundConstructor
     public HubScanWorkflowStep(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
-            final String hubVersionPhase, final String hubVersionDist, final String scanMemory,
-            final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan,
+            final String hubVersionPhase, final String hubVersionDist, final String scanMemory, final boolean shouldGenerateHubReport,
+            final boolean projectLevelAdjustments, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan,
             final ScanExclusion[] excludePatterns, final String codeLocationName, final boolean unmapPreviousCodeLocations,
             final boolean deletePreviousCodeLocations) {
         this.scans = scans;
@@ -103,6 +105,7 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
         this.hubVersionDist = hubVersionDist;
         this.scanMemory = scanMemory;
         this.shouldGenerateHubReport = shouldGenerateHubReport;
+        this.projectLevelAdjustments = projectLevelAdjustments;
         this.bomUpdateMaxiumWaitTime = bomUpdateMaxiumWaitTime;
         this.dryRun = dryRun;
         this.cleanupOnSuccessfulScan = cleanupOnSuccessfulScan;
@@ -166,6 +169,10 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
     public boolean getShouldGenerateHubReport() {
         return shouldGenerateHubReport;
+    }
+
+    public boolean isProjectLevelAdjustments() {
+        return projectLevelAdjustments;
     }
 
     public String getBomUpdateMaxiumWaitTime() {
@@ -323,7 +330,7 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
                 final Node node = computer.getNode();
                 final BDCommonScanStep scanStep = new BDCommonScanStep(hubScanStep.getScans(),
                         hubScanStep.getHubProjectName(), hubScanStep.getHubProjectVersion(), hubScanStep.getHubVersionPhase(),
-                        hubScanStep.getHubVersionDist(), hubScanStep.getScanMemory(),
+                        hubScanStep.getHubVersionDist(), hubScanStep.getScanMemory(), hubScanStep.isProjectLevelAdjustments(),
                         hubScanStep.getShouldGenerateHubReport(), hubScanStep.getBomUpdateMaxiumWaitTime(),
                         hubScanStep.isDryRun(), hubScanStep.isCleanupOnSuccessfulScan(), hubScanStep.isVerbose(), hubScanStep.getExclusionPatterns(),
                         hubScanStep.getCodeLocationName(), hubScanStep.isUnmapPreviousCodeLocations(), hubScanStep.isDeletePreviousCodeLocations(),

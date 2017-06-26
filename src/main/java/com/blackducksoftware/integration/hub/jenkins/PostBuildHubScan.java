@@ -59,6 +59,8 @@ public class PostBuildHubScan extends Recorder {
 
     private String bomUpdateMaxiumWaitTime;
 
+    private final boolean projectLevelAdjustments;
+
     private final boolean dryRun;
 
     private final boolean cleanupOnSuccessfulScan;
@@ -83,8 +85,8 @@ public class PostBuildHubScan extends Recorder {
 
     @DataBoundConstructor
     public PostBuildHubScan(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
-            final String hubVersionPhase, final String hubVersionDist, final String scanMemory,
-            final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan,
+            final String hubVersionPhase, final String hubVersionDist, final String scanMemory, final boolean shouldGenerateHubReport,
+            final boolean projectLevelAdjustments, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan,
             final ScanExclusion[] excludePatterns, final String codeLocationName, final boolean unmapPreviousCodeLocations,
             final boolean deletePreviousCodeLocations) {
         this.scans = scans;
@@ -94,6 +96,7 @@ public class PostBuildHubScan extends Recorder {
         this.hubVersionDist = hubVersionDist;
         this.scanMemory = scanMemory;
         this.shouldGenerateHubReport = shouldGenerateHubReport;
+        this.projectLevelAdjustments = projectLevelAdjustments;
         this.bomUpdateMaxiumWaitTime = bomUpdateMaxiumWaitTime;
         this.dryRun = dryRun;
         this.cleanupOnSuccessfulScan = cleanupOnSuccessfulScan;
@@ -124,6 +127,10 @@ public class PostBuildHubScan extends Recorder {
 
     public boolean getShouldGenerateHubReport() {
         return shouldGenerateHubReport;
+    }
+
+    public boolean isProjectLevelAdjustments() {
+        return projectLevelAdjustments;
     }
 
     public String getScanMemory() {
@@ -203,7 +210,7 @@ public class PostBuildHubScan extends Recorder {
 
         try {
             final BDCommonScanStep scanStep = new BDCommonScanStep(getScans(), getHubProjectName(),
-                    getHubProjectVersion(), getHubVersionPhase(), getHubVersionDist(), getScanMemory(),
+                    getHubProjectVersion(), getHubVersionPhase(), getHubVersionDist(), getScanMemory(), isProjectLevelAdjustments(),
                     getShouldGenerateHubReport(), getBomUpdateMaxiumWaitTime(), isDryRun(), isCleanupOnSuccessfulScan(), isVerbose(), getExclusionPatterns(),
                     getCodeLocationName(), isUnmapPreviousCodeLocations(), isDeletePreviousCodeLocations(), isFailureConditionsConfigured(build));
             final EnvVars envVars = build.getEnvironment(listener);
