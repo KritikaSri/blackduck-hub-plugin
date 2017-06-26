@@ -26,6 +26,7 @@ import java.io.IOException;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import com.blackducksoftware.integration.hub.jenkins.failure.HubFailureConditionStep;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetCanonicalPath;
 import com.blackducksoftware.integration.hub.jenkins.scan.BDCommonScanStep;
 import com.blackducksoftware.integration.hub.jenkins.scan.ScanExclusion;
@@ -36,7 +37,9 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
+import hudson.model.FreeStyleProject;
 import hudson.tasks.BuildStepMonitor;
+import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 
 public class PostBuildHubScan extends Recorder {
@@ -188,7 +191,7 @@ public class PostBuildHubScan extends Recorder {
             final BDCommonScanStep scanStep = new BDCommonScanStep(getScans(), getHubProjectName(),
                     getHubProjectVersion(), getScanMemory(),
                     getShouldGenerateHubReport(), getBomUpdateMaxiumWaitTime(), isDryRun(), isCleanupOnSuccessfulScan(), isVerbose(), getExclusionPatterns(),
-                    getCodeLocationName(), isUnmapPreviousCodeLocations(), isDeletePreviousCodeLocations());
+                    getCodeLocationName(), isUnmapPreviousCodeLocations(), isDeletePreviousCodeLocations(), isFailureConditionsConfigured(build));
             final EnvVars envVars = build.getEnvironment(listener);
 
             scanStep.runScan(build, build.getBuiltOn(), envVars, getWorkingDirectory(logger, build), logger, launcher,
@@ -197,6 +200,15 @@ public class PostBuildHubScan extends Recorder {
             logger.error(e);
         }
         return true;
+    }
+
+    private boolean isFailureConditionsConfigured(final AbstractBuild<?, ?> build) {
+        for (final Publisher publisher : ((FreeStyleProject) build.getParent()).getPublishersList()) {
+            if (publisher instanceof HubFailureConditionStep) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public String[] getExclusionPatterns() {

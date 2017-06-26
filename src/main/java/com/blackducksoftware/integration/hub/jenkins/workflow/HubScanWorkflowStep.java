@@ -26,6 +26,9 @@ import java.io.IOException;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
 
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.flow.FlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
@@ -175,6 +178,14 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
         return deletePreviousCodeLocations;
     }
 
+    private boolean isFailureConditionsConfigured(final Run run) {
+        final FlowDefinition definition = ((WorkflowJob) run.getParent()).getDefinition();
+        if (definition instanceof CpsFlowDefinition) {
+            return ((CpsFlowDefinition) definition).getScript().contains("hub_scan_failure");
+        }
+        return false;
+    }
+
     @Override
     public HubScanWorkflowStepDescriptor getDescriptor() {
         return (HubScanWorkflowStepDescriptor) super.getDescriptor();
@@ -293,7 +304,8 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
                         hubScanStep.getScanMemory(),
                         hubScanStep.getShouldGenerateHubReport(), hubScanStep.getBomUpdateMaxiumWaitTime(),
                         hubScanStep.isDryRun(), hubScanStep.isCleanupOnSuccessfulScan(), hubScanStep.isVerbose(), hubScanStep.getExclusionPatterns(),
-                        hubScanStep.getCodeLocationName(), hubScanStep.isUnmapPreviousCodeLocations(), hubScanStep.isDeletePreviousCodeLocations());
+                        hubScanStep.getCodeLocationName(), hubScanStep.isUnmapPreviousCodeLocations(), hubScanStep.isDeletePreviousCodeLocations(),
+                        hubScanStep.isFailureConditionsConfigured(run));
 
                 scanStep.runScan(run, node, envVars, workspace, logger, launcher, listener,
                         run.getFullDisplayName(),
