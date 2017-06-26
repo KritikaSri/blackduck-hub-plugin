@@ -205,7 +205,7 @@ public class PostBuildHubScan extends Recorder {
     private boolean isFailureConditionsConfigured(final AbstractBuild<?, ?> build) {
         for (final Publisher publisher : ((FreeStyleProject) build.getParent()).getPublishersList()) {
             if (publisher instanceof HubFailureConditionStep) {
-                return ((HubFailureConditionStep) publisher).getFailBuildForPolicyViolations().booleanValue();
+                return true;
             }
         }
         return false;
