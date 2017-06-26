@@ -49,6 +49,10 @@ public class PostBuildHubScan extends Recorder {
 
     private String hubProjectVersion;
 
+    private final String hubVersionPhase;
+
+    private final String hubVersionDist;
+
     private final String scanMemory;
 
     private final boolean shouldGenerateHubReport;
@@ -79,13 +83,15 @@ public class PostBuildHubScan extends Recorder {
 
     @DataBoundConstructor
     public PostBuildHubScan(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
-            final String scanMemory,
+            final String hubVersionPhase, final String hubVersionDist, final String scanMemory,
             final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan,
             final ScanExclusion[] excludePatterns, final String codeLocationName, final boolean unmapPreviousCodeLocations,
             final boolean deletePreviousCodeLocations) {
         this.scans = scans;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
+        this.hubVersionPhase = hubVersionPhase;
+        this.hubVersionDist = hubVersionDist;
         this.scanMemory = scanMemory;
         this.shouldGenerateHubReport = shouldGenerateHubReport;
         this.bomUpdateMaxiumWaitTime = bomUpdateMaxiumWaitTime;
@@ -142,6 +148,14 @@ public class PostBuildHubScan extends Recorder {
         return hubProjectName;
     }
 
+    public String getHubVersionPhase() {
+        return hubVersionPhase;
+    }
+
+    public String getHubVersionDist() {
+        return hubVersionDist;
+    }
+
     public ScanJobs[] getScans() {
         return scans;
     }
@@ -189,7 +203,7 @@ public class PostBuildHubScan extends Recorder {
 
         try {
             final BDCommonScanStep scanStep = new BDCommonScanStep(getScans(), getHubProjectName(),
-                    getHubProjectVersion(), getScanMemory(),
+                    getHubProjectVersion(), getHubVersionPhase(), getHubVersionDist(), getScanMemory(),
                     getShouldGenerateHubReport(), getBomUpdateMaxiumWaitTime(), isDryRun(), isCleanupOnSuccessfulScan(), isVerbose(), getExclusionPatterns(),
                     getCodeLocationName(), isUnmapPreviousCodeLocations(), isDeletePreviousCodeLocations(), isFailureConditionsConfigured(build));
             final EnvVars envVars = build.getEnvironment(listener);

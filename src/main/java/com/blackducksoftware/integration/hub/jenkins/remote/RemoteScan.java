@@ -53,6 +53,10 @@ public class RemoteScan implements Callable<String, HubIntegrationException> {
 
     private final String hubProjectVersion;
 
+    private final String phase;
+
+    private final String distribution;
+
     private final int scanMemory;
 
     private final String workingDirectoryPath;
@@ -84,7 +88,7 @@ public class RemoteScan implements Callable<String, HubIntegrationException> {
     private final boolean shouldWaitForScansFinished;
 
     public RemoteScan(final IntLogger logger, final String codeLocationName, final String hubProjectName, final String hubProjectVersion,
-            final int scanMemory,
+            final String phase, final String distribution, final int scanMemory,
             final String workingDirectoryPath,
             final List<String> scanTargetPaths, final boolean dryRun, final boolean cleanupOnSuccessfulScan, final String toolsDirectory,
             final String thirdPartyVersion,
@@ -95,6 +99,8 @@ public class RemoteScan implements Callable<String, HubIntegrationException> {
         this.codeLocationName = codeLocationName;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
+        this.phase = phase;
+        this.distribution = distribution;
         this.scanMemory = scanMemory;
         this.workingDirectoryPath = workingDirectoryPath;
         this.scanTargetPaths = scanTargetPaths;
@@ -141,6 +147,8 @@ public class RemoteScan implements Callable<String, HubIntegrationException> {
             final ProjectRequestBuilder projectRequestBuilder = new ProjectRequestBuilder();
             projectRequestBuilder.setProjectName(hubProjectName);
             projectRequestBuilder.setVersionName(hubProjectVersion);
+            projectRequestBuilder.setPhase(phase);
+            projectRequestBuilder.setDistribution(distribution);
 
             final IntegrationInfo integrationInfo = new IntegrationInfo(ThirdPartyName.JENKINS.getName(), thirdPartyVersion, pluginVersion);
             final HubScanConfig hubScanConfig = hubScanConfigBuilder.build();

@@ -66,6 +66,10 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
     private final String hubProjectVersion;
 
+    private final String hubVersionPhase;
+
+    private final String hubVersionDist;
+
     private final String scanMemory;
 
     private final boolean shouldGenerateHubReport;
@@ -88,13 +92,15 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
     @DataBoundConstructor
     public HubScanWorkflowStep(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
-            final String scanMemory,
+            final String hubVersionPhase, final String hubVersionDist, final String scanMemory,
             final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan,
             final ScanExclusion[] excludePatterns, final String codeLocationName, final boolean unmapPreviousCodeLocations,
             final boolean deletePreviousCodeLocations) {
         this.scans = scans;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
+        this.hubVersionPhase = hubVersionPhase;
+        this.hubVersionDist = hubVersionDist;
         this.scanMemory = scanMemory;
         this.shouldGenerateHubReport = shouldGenerateHubReport;
         this.bomUpdateMaxiumWaitTime = bomUpdateMaxiumWaitTime;
@@ -144,6 +150,14 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
     public String getHubProjectVersion() {
         return hubProjectVersion;
+    }
+
+    public String getHubVersionPhase() {
+        return hubVersionPhase;
+    }
+
+    public String getHubVersionDist() {
+        return hubVersionDist;
     }
 
     public String getScanMemory() {
@@ -267,6 +281,14 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
                     hubProjectName, dryRun);
         }
 
+        public ListBoxModel doFillHubVersionPhaseItems() {
+            return BDCommonDescriptorUtil.doFillHubVersionPhaseItems();
+        }
+
+        public ListBoxModel doFillHubVersionDistItems() {
+            return BDCommonDescriptorUtil.doFillHubVersionDistItems();
+        }
+
     }
 
     public static final class Execution extends AbstractSynchronousNonBlockingStepExecution<Void> {
@@ -300,8 +322,8 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
             try {
                 final Node node = computer.getNode();
                 final BDCommonScanStep scanStep = new BDCommonScanStep(hubScanStep.getScans(),
-                        hubScanStep.getHubProjectName(), hubScanStep.getHubProjectVersion(),
-                        hubScanStep.getScanMemory(),
+                        hubScanStep.getHubProjectName(), hubScanStep.getHubProjectVersion(), hubScanStep.getHubVersionPhase(),
+                        hubScanStep.getHubVersionDist(), hubScanStep.getScanMemory(),
                         hubScanStep.getShouldGenerateHubReport(), hubScanStep.getBomUpdateMaxiumWaitTime(),
                         hubScanStep.isDryRun(), hubScanStep.isCleanupOnSuccessfulScan(), hubScanStep.isVerbose(), hubScanStep.getExclusionPatterns(),
                         hubScanStep.getCodeLocationName(), hubScanStep.isUnmapPreviousCodeLocations(), hubScanStep.isDeletePreviousCodeLocations(),

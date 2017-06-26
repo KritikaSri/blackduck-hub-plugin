@@ -17,8 +17,13 @@
 	<f:textbox value="${it.getHubProjectVersion()}" default="${descriptor.getDefaultProjectVersion()}" />
 </f:entry>
 
-
 <f:advanced>
+    <f:entry field="hubVersionPhase" title="${%VersionPhaseTitle}">
+        <f:select/>
+    </f:entry>
+    <f:entry field="hubVersionDist" title="${%VersionDistTitle}">
+        <f:select/>
+    </f:entry>
 	<f:entry field="shouldGenerateHubReport">
 		<f:checkbox default="false" />
 		<label>${%GenerateHubReportTitle}</label>

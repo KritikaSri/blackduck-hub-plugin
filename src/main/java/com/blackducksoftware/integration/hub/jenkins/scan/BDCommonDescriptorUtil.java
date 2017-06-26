@@ -41,6 +41,8 @@ import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.failure.FailureConditionBuildStateEnum;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
+import com.blackducksoftware.integration.hub.model.enumeration.ProjectVersionDistributionEnum;
+import com.blackducksoftware.integration.hub.model.enumeration.ProjectVersionPhaseEnum;
 import com.blackducksoftware.integration.hub.model.view.ProjectVersionView;
 import com.blackducksoftware.integration.hub.model.view.ProjectView;
 import com.blackducksoftware.integration.hub.scan.HubScanConfigFieldEnum;
@@ -103,6 +105,58 @@ public class BDCommonDescriptorUtil {
             }
         }
         return boxModel;
+    }
+
+    /**
+     * Fills the drop down list of possible Version phases
+     *
+     * @return
+     */
+    public static ListBoxModel doFillHubVersionPhaseItems() {
+        final ClassLoader originalClassLoader = Thread.currentThread()
+                .getContextClassLoader();
+        final boolean changed = false;
+        final ListBoxModel items = new ListBoxModel();
+        try {
+            for (final ProjectVersionPhaseEnum phase : ProjectVersionPhaseEnum.values()) {
+                items.add(phase.name(), phase.name());
+            }
+        } catch (final Exception e) {
+            e.printStackTrace();
+            System.err.println(e.getMessage());
+        } finally {
+            if (changed) {
+                Thread.currentThread().setContextClassLoader(
+                        originalClassLoader);
+            }
+        }
+        return items;
+    }
+
+    /**
+     * Fills the drop down list of possible Version distribution types
+     *
+     * @return
+     */
+    public static ListBoxModel doFillHubVersionDistItems() {
+        final ClassLoader originalClassLoader = Thread.currentThread()
+                .getContextClassLoader();
+        final boolean changed = false;
+        final ListBoxModel items = new ListBoxModel();
+        try {
+            for (final ProjectVersionDistributionEnum dist : ProjectVersionDistributionEnum.values()) {
+                items.add(dist.name(), dist.name());
+            }
+        } catch (final Exception e) {
+            e.printStackTrace();
+            System.err.println(e.getMessage());
+        } finally {
+            if (changed) {
+                Thread.currentThread().setContextClassLoader(
+                        originalClassLoader);
+            }
+        }
+        return items;
     }
 
     public static AutoCompletionCandidates doAutoCompleteHubProjectName(final HubServerInfo serverInfo,

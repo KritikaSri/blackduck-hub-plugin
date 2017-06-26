@@ -128,6 +128,14 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return "unnamed";
     }
 
+    public ListBoxModel doFillHubVersionPhaseItems() {
+        return BDCommonDescriptorUtil.doFillHubVersionPhaseItems();
+    }
+
+    public ListBoxModel doFillHubVersionDistItems() {
+        return BDCommonDescriptorUtil.doFillHubVersionDistItems();
+    }
+
     public String getHubServerUrl() {
         return (getHubServerInfo() == null ? ""
                 : (getHubServerInfo().getServerUrl() == null ? "" : getHubServerInfo().getServerUrl()));
