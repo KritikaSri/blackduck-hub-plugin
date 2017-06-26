@@ -79,7 +79,13 @@ public class BDCommonScanStep {
 
     private final String hubProjectVersion;
 
+    private final String phase;
+
+    private final String distribution;
+
     private final String scanMemory;
+
+    private final boolean projectLevelAdjustments;
 
     private final boolean shouldGenerateHubReport;
 
@@ -104,14 +110,17 @@ public class BDCommonScanStep {
     private final boolean failureConditionsConfigured;
 
     public BDCommonScanStep(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
-            final String scanMemory,
+            final String phase, final String distribution, final String scanMemory, final boolean projectLevelAdjustments,
             final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan,
             final Boolean verbose, final String[] excludePatterns, final String codeLocationName, final boolean unmapPreviousCodeLocations,
             final boolean deletePreviousCodeLocations, final boolean failureConditionsConfigured) {
         this.scans = scans;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
+        this.phase = phase;
+        this.distribution = distribution;
         this.scanMemory = scanMemory;
+        this.projectLevelAdjustments = projectLevelAdjustments;
         this.shouldGenerateHubReport = shouldGenerateHubReport;
         this.bomUpdateMaxiumWaitTime = bomUpdateMaxiumWaitTime;
         this.dryRun = dryRun;
@@ -144,6 +153,14 @@ public class BDCommonScanStep {
         return hubProjectVersion;
     }
 
+    public String getPhase() {
+        return phase;
+    }
+
+    public String getDistribution() {
+        return distribution;
+    }
+
     public String getScanMemory() {
         return scanMemory;
     }
@@ -154,6 +171,10 @@ public class BDCommonScanStep {
             memory = 4096;
         }
         return memory;
+    }
+
+    public boolean isProjectLevelAdjustments() {
+        return projectLevelAdjustments;
     }
 
     public boolean isShouldGenerateHubReport() {
@@ -263,8 +284,8 @@ public class BDCommonScanStep {
                     final String thirdPartyVersion = Jenkins.getVersion().toString();
                     final String pluginVersion = PluginHelper.getPluginVersion();
 
-                    final RemoteScan scan = new RemoteScan(logger, codeLocationName, projectName, projectVersion, getScanMemoryInteger(),
-                            workingDirectory, scanTargetPaths, dryRun,
+                    final RemoteScan scan = new RemoteScan(logger, codeLocationName, projectName, projectVersion, getPhase(), getDistribution(),
+                            getScanMemoryInteger(), isProjectLevelAdjustments(), workingDirectory, scanTargetPaths, isDryRun(),
                             isCleanupOnSuccessfulScan(), toolsDirectory,
                             thirdPartyVersion, pluginVersion, hubServerConfig,
                             getHubServerInfo().isPerformWorkspaceCheck(), getExcludePatterns(), envVars,
