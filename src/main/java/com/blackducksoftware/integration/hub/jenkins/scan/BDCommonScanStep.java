@@ -259,6 +259,7 @@ public class BDCommonScanStep {
                     hubServerConfigBuilder.setUsername(getHubServerInfo().getUsername());
                     hubServerConfigBuilder.setPassword(getHubServerInfo().getPassword());
                     hubServerConfigBuilder.setTimeout(getHubServerInfo().getTimeout());
+                    hubServerConfigBuilder.setAutoImportHttpsCertificates(getHubServerInfo().shouldImportSSLCerts());
 
                     final Jenkins jenkins = Jenkins.getInstance();
                     if (jenkins != null) {

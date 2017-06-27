@@ -77,12 +77,14 @@ public class BuildHelper {
     }
 
     public static RestConnection getRestConnection(final IntLogger logger, final String serverUrl,
-            final String username, final String password, final String hubTimeout) throws EncryptionException, MalformedURLException {
+            final String username, final String password, final String hubTimeout, final boolean autoImportHttpsCertificates)
+            throws EncryptionException, MalformedURLException {
         final HubServerConfigBuilder hubServerConfigBuilder = new HubServerConfigBuilder();
         hubServerConfigBuilder.setHubUrl(serverUrl);
         hubServerConfigBuilder.setUsername(username);
         hubServerConfigBuilder.setPassword(password);
         hubServerConfigBuilder.setTimeout(hubTimeout);
+        hubServerConfigBuilder.setAutoImportHttpsCertificates(autoImportHttpsCertificates);
 
         return getRestConnection(logger, hubServerConfigBuilder);
     }

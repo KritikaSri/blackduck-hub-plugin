@@ -76,7 +76,6 @@ import hudson.security.ACL;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
-import hudson.util.FormValidation.Kind;
 import hudson.util.IOUtils;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
@@ -92,6 +91,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     private static final String FORM_SERVER_URL = "hubServerUrl";
 
     private static final String FORM_TIMEOUT = "hubTimeout";
+
+    private static final String FORM_IMPORT_CERTS = "importSSLCerts";
 
     private static final String FORM_WORKSPACE_CHECK = "hubWorkspaceCheck";
 
@@ -162,6 +163,11 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     public String getHubCredentialsId() {
         return (getHubServerInfo() == null ? ""
                 : (getHubServerInfo().getCredentialsId() == null ? "" : getHubServerInfo().getCredentialsId()));
+    }
+
+    public boolean getImportSSLCerts() {
+        return (getHubServerInfo() == null ? true
+                : (getHubServerInfo().shouldImportSSLCerts()));
     }
 
     public boolean getHubWorkspaceCheck() {
@@ -263,6 +269,17 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     }
                 }
 
+                final Node importSSLCertsNode = hubServerInfoElement.getElementsByTagName("importSSLCerts").item(0);
+                String importSSLCerts = "";
+                // timeout
+                if (importSSLCertsNode != null && importSSLCertsNode.getChildNodes() != null
+                        && importSSLCertsNode.getChildNodes().item(0) != null) {
+                    importSSLCerts = importSSLCertsNode.getChildNodes().item(0).getNodeValue();
+                    if (importSSLCerts != null) {
+                        importSSLCerts = importSSLCerts.trim();
+                    }
+                }
+
                 final Node workspaceCheckNode = hubServerInfoElement.getElementsByTagName("hubWorkspaceCheck").item(0);
                 String hubWorkspaceCheck = "";
                 // timeout
@@ -285,7 +302,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     e.printStackTrace(System.err);
                 }
                 serverInfo.setTimeout(serverTimeout);
-
+                serverInfo.setImportSSLCerts(Boolean.valueOf(importSSLCerts));
                 serverInfo.setPerformWorkspaceCheck(Boolean.valueOf(hubWorkspaceCheck));
             }
         }
@@ -315,7 +332,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         final Integer timeout = NumberUtils.toInt(formData.getString(FORM_TIMEOUT), 120);
 
         hubServerInfo = new HubServerInfo(formData.getString(FORM_SERVER_URL), formData.getString(FORM_CREDENTIALSID),
-                timeout, formData.getBoolean(FORM_WORKSPACE_CHECK));
+                timeout, formData.getBoolean(FORM_IMPORT_CERTS), formData.getBoolean(FORM_WORKSPACE_CHECK));
         save();
         HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
@@ -426,7 +443,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      */
     public FormValidation doTestConnection(@QueryParameter("hubServerUrl") final String serverUrl,
             @QueryParameter("hubCredentialsId") final String hubCredentialsId,
-            @QueryParameter("hubTimeout") final String hubTimeout) {
+            @QueryParameter("hubTimeout") final String hubTimeout, @QueryParameter("importSSLCerts") final boolean importSSLCerts) {
         final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
         boolean changed = false;
         try {
@@ -439,10 +456,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             }
             if (StringUtils.isBlank(hubCredentialsId)) {
                 return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
-            }
-            final FormValidation urlCheck = doCheckHubServerUrl(serverUrl);
-            if (urlCheck.kind != Kind.OK) {
-                return urlCheck;
             }
 
             String credentialUserName = null;
@@ -466,7 +479,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialPassword = credential.getPassword().getPlainText();
 
             final RestConnection connection = BuildHelper.getRestConnection(null, serverUrl, credentialUserName,
-                    credentialPassword, hubTimeout);
+                    credentialPassword, hubTimeout, importSSLCerts);
             connection.connect();
             return FormValidation.ok(Messages.HubBuildScan_getCredentialsValidFor_0_(serverUrl));
 

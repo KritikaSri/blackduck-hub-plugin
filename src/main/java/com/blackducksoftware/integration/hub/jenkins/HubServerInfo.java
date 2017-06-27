@@ -46,15 +46,19 @@ public class HubServerInfo {
 
     private int timeout;
 
+    private boolean importSSLCerts;
+
     private boolean performWorkspaceCheck;
 
     public HubServerInfo() {
     }
 
-    public HubServerInfo(final String serverUrl, final String hubCredentialsId, final int timeout, final boolean performWorkspaceCheck) {
+    public HubServerInfo(final String serverUrl, final String hubCredentialsId, final int timeout,
+            final boolean importSSLCerts, final boolean performWorkspaceCheck) {
         this.serverUrl = serverUrl;
         this.hubCredentialsId = hubCredentialsId;
         this.timeout = timeout;
+        this.importSSLCerts = importSSLCerts;
         this.performWorkspaceCheck = performWorkspaceCheck;
     }
 
@@ -130,17 +134,25 @@ public class HubServerInfo {
         return credential;
     }
 
+    public boolean shouldImportSSLCerts() {
+        return importSSLCerts;
+    }
+
+    public void setImportSSLCerts(final boolean importSSLCerts) {
+        this.importSSLCerts = importSSLCerts;
+    }
+
     public boolean isPerformWorkspaceCheck() {
         return performWorkspaceCheck;
     }
 
-    public void setPerformWorkspaceCheck(boolean performWorkspaceCheck) {
+    public void setPerformWorkspaceCheck(final boolean performWorkspaceCheck) {
         this.performWorkspaceCheck = performWorkspaceCheck;
     }
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
+        final StringBuilder builder = new StringBuilder();
         builder.append("HubServerInfo [serverUrl=");
         builder.append(serverUrl);
         builder.append(", hubCredentialsId=");
@@ -149,6 +161,8 @@ public class HubServerInfo {
         builder.append(credential);
         builder.append(", timeout=");
         builder.append(timeout);
+        builder.append(", importSSLCerts=");
+        builder.append(importSSLCerts);
         builder.append(", performWorkspaceCheck=");
         builder.append(performWorkspaceCheck);
         builder.append("]");
