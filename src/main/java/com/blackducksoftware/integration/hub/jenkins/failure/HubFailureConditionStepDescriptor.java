@@ -53,14 +53,6 @@ public class HubFailureConditionStepDescriptor extends BuildStepDescriptor<Publi
     public String getDisplayName() {
         return Messages.HubFailureCondition_getDisplayName();
     }
-    
-    public ListBoxModel doFillHubVersionPhaseItems() {
-        return BDCommonDescriptorUtil.doFillHubVersionPhaseItems();
-    }
-
-    public ListBoxModel doFillHubVersionDistItems() {
-        return BDCommonDescriptorUtil.doFillHubVersionDistItems();
-    }
 
     public FormValidation doCheckFailBuildForPolicyViolations(@QueryParameter("failBuildForPolicyViolations") final boolean failBuildForPolicyViolations)
             throws IOException, ServletException {
@@ -69,6 +61,10 @@ public class HubFailureConditionStepDescriptor extends BuildStepDescriptor<Publi
 
     public ListBoxModel doFillBuildStateOnFailureItems() {
         return BDCommonDescriptorUtil.doFillBuildStateOnFailureItems();
+    }
+
+    public ListBoxModel doFillPolicySeverityThresholdItems() {
+        return BDCommonDescriptorUtil.doFillPolicySeverityThresholdItems();
     }
 
 }

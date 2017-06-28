@@ -14,5 +14,9 @@
 	<f:entry title="${%BuildStateOnFailureTitle}" field="buildStateOnFailure" >
     	<f:select/>
     </f:entry>
+    
+    <f:entry title="${%PolicySeverityThreshold}" field="policySeverityThreshold" >
+        <f:select/>
+    </f:entry>
 
 </j:jelly>

@@ -41,6 +41,7 @@ import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.failure.FailureConditionBuildStateEnum;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
+import com.blackducksoftware.integration.hub.model.enumeration.PolicySeverityEnum;
 import com.blackducksoftware.integration.hub.model.enumeration.ProjectVersionDistributionEnum;
 import com.blackducksoftware.integration.hub.model.enumeration.ProjectVersionPhaseEnum;
 import com.blackducksoftware.integration.hub.model.view.ProjectVersionView;
@@ -71,6 +72,15 @@ public class BDCommonDescriptorUtil {
         final ListBoxModel items = new ListBoxModel();
         for (final FailureConditionBuildStateEnum buildState : FailureConditionBuildStateEnum.values()) {
             items.add(buildState.getDisplayValue(), buildState.name());
+        }
+        return items;
+    }
+
+    public static ListBoxModel doFillPolicySeverityThresholdItems() {
+        final ListBoxModel items = new ListBoxModel();
+        items.add("-all-", null);
+        for (final PolicySeverityEnum severity : PolicySeverityEnum.values()) {
+            items.add(severity.name(), severity.name());
         }
         return items;
     }

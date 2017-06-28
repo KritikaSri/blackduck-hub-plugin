@@ -23,10 +23,13 @@ package com.blackducksoftware.integration.hub.jenkins.failure;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.LinkedList;
+import java.util.List;
 
 import com.blackducksoftware.integration.exception.EncryptionException;
 import com.blackducksoftware.integration.exception.IntegrationException;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
+import com.blackducksoftware.integration.hub.api.item.MetaService;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
@@ -35,7 +38,9 @@ import com.blackducksoftware.integration.hub.jenkins.action.BomUpToDateAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubVariableContributor;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
+import com.blackducksoftware.integration.hub.model.enumeration.PolicySeverityEnum;
 import com.blackducksoftware.integration.hub.model.enumeration.VersionBomPolicyStatusOverallStatusEnum;
+import com.blackducksoftware.integration.hub.model.view.PolicyRuleView;
 import com.blackducksoftware.integration.hub.model.view.VersionBomPolicyStatusView;
 import com.blackducksoftware.integration.hub.model.view.components.ComponentVersionStatusCount;
 import com.blackducksoftware.integration.hub.service.HubServicesFactory;
@@ -53,9 +58,13 @@ public class HubCommonFailureStep {
 
     private final FailureConditionBuildStateEnum buildStateOnFailure;
 
-    public HubCommonFailureStep(final Boolean failBuildForPolicyViolations, final FailureConditionBuildStateEnum buildStateOnFailure) {
+    private final PolicySeverityEnum policySeverityEnum;
+
+    public HubCommonFailureStep(final Boolean failBuildForPolicyViolations, final FailureConditionBuildStateEnum buildStateOnFailure,
+            final PolicySeverityEnum policySeverityEnum) {
         this.failBuildForPolicyViolations = failBuildForPolicyViolations;
         this.buildStateOnFailure = buildStateOnFailure;
+        this.policySeverityEnum = policySeverityEnum;
     }
 
     public Boolean getFailBuildForPolicyViolations() {
@@ -64,6 +73,10 @@ public class HubCommonFailureStep {
 
     public FailureConditionBuildStateEnum getBuildStateOnFailure() {
         return buildStateOnFailure;
+    }
+
+    public PolicySeverityEnum getPolicySeverityEnum() {
+        return policySeverityEnum;
     }
 
     public boolean checkFailureConditions(final Run run, final Node builtOn, final EnvVars envVars,
@@ -108,8 +121,16 @@ public class HubCommonFailureStep {
                 hubSupport.checkHubSupport(service.createHubVersionRequestService(), null);
 
                 VersionBomPolicyStatusView policyStatus = null;
+                PolicyRuleView policyRule = null;
                 try {
                     policyStatus = service.createHubResponseService().getItem(bomUpToDateAction.getPolicyStatusUrl(), VersionBomPolicyStatusView.class);
+
+                    // TODO: there's a better way to do this
+                    final String policyRuleUrl = service.createMetaService(logger).getFirstLinkSafely(policyStatus, MetaService.POLICY_RULE_LINK);
+                    logger.alwaysLog("Policy Severity Threshold: " + getPolicySeverityEnum());
+                    if (null != policyRuleUrl) {
+                        policyRule = service.createHubResponseService().getItem(policyRuleUrl, PolicyRuleView.class);
+                    }
                 } catch (final HubIntegrationException e) {
                     // ignore exception, could not find policy information
                 }
@@ -119,7 +140,8 @@ public class HubCommonFailureStep {
                 }
 
                 logger.alwaysLog("--> Configured to set the Build Result to " + buildStateOnFailure.getDisplayValue() + " for Hub Failure Conditions.");
-                if (policyStatus.overallStatus == VersionBomPolicyStatusOverallStatusEnum.IN_VIOLATION) {
+                if (policyStatus.overallStatus == VersionBomPolicyStatusOverallStatusEnum.IN_VIOLATION
+                        && meetsPolicySeverityThreshold(policyStatus, policyRule, logger)) {
                     run.setResult(resultToSetForFailureCondition);
                 }
 
@@ -165,6 +187,36 @@ public class HubCommonFailureStep {
             HubIntegrationException, IllegalArgumentException, EncryptionException {
         return BuildHelper.getHubServicesFactory(logger, serverInfo.getServerUrl(), serverInfo.getUsername(),
                 serverInfo.getPassword(), serverInfo.getTimeout());
+    }
+
+    private boolean meetsPolicySeverityThreshold(final VersionBomPolicyStatusView policyStatus, final PolicyRuleView policyRule,
+            final HubJenkinsLogger logger) {
+        final PolicySeverityEnum threshold = getPolicySeverityEnum();
+        if (null == threshold) {
+            logger.warn("No Policy Severity Threshold set. All severity levels will affect the build result.");
+            return true;
+        } else if (null == policyRule) {
+            return true;
+        }
+        final List<PolicySeverityEnum> severityLevelsToCheck = new LinkedList<>();
+        for (final PolicySeverityEnum level : PolicySeverityEnum.values()) {
+            if (null != level) {
+                severityLevelsToCheck.add(level);
+            }
+            if (level == threshold) {
+                break;
+            }
+        }
+        logger.info("Policy severity levels within threshold: " + severityLevelsToCheck.toArray().toString());
+        for (final ComponentVersionStatusCount count : policyStatus.componentVersionStatusCounts) {
+            if (count.name == VersionBomPolicyStatusOverallStatusEnum.IN_VIOLATION) {
+                // TODO: get policy violated by component
+                if (severityLevelsToCheck.contains(policyRule.severity)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
 }

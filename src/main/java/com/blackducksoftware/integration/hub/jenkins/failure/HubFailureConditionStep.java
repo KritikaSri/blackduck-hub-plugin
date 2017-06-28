@@ -23,12 +23,14 @@ package com.blackducksoftware.integration.hub.jenkins.failure;
 
 import java.io.IOException;
 
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.action.BomUpToDateAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
+import com.blackducksoftware.integration.hub.model.enumeration.PolicySeverityEnum;
 
 import hudson.EnvVars;
 import hudson.Launcher;
@@ -44,10 +46,13 @@ public class HubFailureConditionStep extends Recorder {
 
     private final String buildStateOnFailure;
 
+    private final String policySeverityThreshold;
+
     @DataBoundConstructor
-    public HubFailureConditionStep(final Boolean failBuildForPolicyViolations, final String buildStateOnFailure) {
+    public HubFailureConditionStep(final Boolean failBuildForPolicyViolations, final String buildStateOnFailure, final String policySeverityThreshold) {
         this.failBuildForPolicyViolations = failBuildForPolicyViolations;
         this.buildStateOnFailure = buildStateOnFailure;
+        this.policySeverityThreshold = policySeverityThreshold;
     }
 
     public Boolean getFailBuildForPolicyViolations() {
@@ -56,6 +61,10 @@ public class HubFailureConditionStep extends Recorder {
 
     public String getBuildStateOnFailure() {
         return buildStateOnFailure;
+    }
+
+    public String getPolicySeverityThreshold() {
+        return policySeverityThreshold;
     }
 
     @Override
@@ -97,7 +106,8 @@ public class HubFailureConditionStep extends Recorder {
                 return true;
             }
 
-            final HubCommonFailureStep commonFailureStep = createCommonFailureStep(getFailBuildForPolicyViolations(), getBuildStateOnFailure());
+            final HubCommonFailureStep commonFailureStep = createCommonFailureStep(getFailBuildForPolicyViolations(), getBuildStateOnFailure(),
+                    getPolicySeverityThreshold());
             commonFailureStep.checkFailureConditions(build, build.getBuiltOn(), envVars, logger,
                     listener,
                     bomUpToDateAction);
@@ -108,13 +118,16 @@ public class HubFailureConditionStep extends Recorder {
         return true;
     }
 
-    public HubCommonFailureStep createCommonFailureStep(final Boolean failBuildForPolicyViolations, final String buildStateOnFailure)
+    public HubCommonFailureStep createCommonFailureStep(final Boolean failBuildForPolicyViolations, final String buildStateOnFailure,
+            final String policySeverityThreshold)
             throws BDJenkinsHubPluginException {
         final FailureConditionBuildStateEnum buildStateOnFailureEnum = FailureConditionBuildStateEnum.getFailureConditionBuildStateEnum(buildStateOnFailure);
+        final PolicySeverityEnum policySeverityEnum = (StringUtils.isNotEmpty(policySeverityThreshold))
+                ? PolicySeverityEnum.valueOf(PolicySeverityEnum.class, policySeverityThreshold) : null;
         if (buildStateOnFailureEnum == null) {
             throw new BDJenkinsHubPluginException("Invalid Build State on Failure Condition configured : " + buildStateOnFailure);
         }
-        return new HubCommonFailureStep(failBuildForPolicyViolations, buildStateOnFailureEnum);
+        return new HubCommonFailureStep(failBuildForPolicyViolations, buildStateOnFailureEnum, policySeverityEnum);
     }
 
 }

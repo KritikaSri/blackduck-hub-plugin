@@ -26,6 +26,7 @@ import java.io.IOException;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
 
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
@@ -41,6 +42,7 @@ import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPlug
 import com.blackducksoftware.integration.hub.jenkins.failure.FailureConditionBuildStateEnum;
 import com.blackducksoftware.integration.hub.jenkins.failure.HubCommonFailureStep;
 import com.blackducksoftware.integration.hub.jenkins.scan.BDCommonDescriptorUtil;
+import com.blackducksoftware.integration.hub.model.enumeration.PolicySeverityEnum;
 
 import hudson.EnvVars;
 import hudson.Extension;
@@ -58,10 +60,13 @@ public class HubFailureConditionWorkflowStep extends AbstractStepImpl {
 
     private final String buildStateOnFailure;
 
+    private final String policySeverityThreshold;
+
     @DataBoundConstructor
-    public HubFailureConditionWorkflowStep(final Boolean failBuildForPolicyViolations, final String buildStateOnFailure) {
+    public HubFailureConditionWorkflowStep(final Boolean failBuildForPolicyViolations, final String buildStateOnFailure, final String policySeverityThreshold) {
         this.failBuildForPolicyViolations = failBuildForPolicyViolations;
         this.buildStateOnFailure = buildStateOnFailure;
+        this.policySeverityThreshold = policySeverityThreshold;
     }
 
     public Boolean getFailBuildForPolicyViolations() {
@@ -70,6 +75,10 @@ public class HubFailureConditionWorkflowStep extends AbstractStepImpl {
 
     public String getBuildStateOnFailure() {
         return buildStateOnFailure;
+    }
+
+    public String getPolicySeverityThreshold() {
+        return policySeverityThreshold;
     }
 
     @Override
@@ -103,6 +112,10 @@ public class HubFailureConditionWorkflowStep extends AbstractStepImpl {
         public ListBoxModel doFillBuildStateOnFailureItems() {
             return BDCommonDescriptorUtil.doFillBuildStateOnFailureItems();
         }
+
+        public ListBoxModel doFillPolicySeverityThresholdItems() {
+            return BDCommonDescriptorUtil.doFillPolicySeverityThresholdItems();
+        }
     }
 
     public static final class Execution extends AbstractSynchronousNonBlockingStepExecution<Void> {
@@ -131,7 +144,9 @@ public class HubFailureConditionWorkflowStep extends AbstractStepImpl {
                 final Node node = computer.getNode();
 
                 final HubCommonFailureStep commonFailureStep = createCommonFailureStep(
-                        failureConditionStep.getFailBuildForPolicyViolations(), failureConditionStep.getBuildStateOnFailure());
+                        failureConditionStep.getFailBuildForPolicyViolations(),
+                        failureConditionStep.getBuildStateOnFailure(),
+                        failureConditionStep.getPolicySeverityThreshold());
 
                 if (run.getResult() != Result.SUCCESS) {
                     logger.error("The Build did not run sucessfully, will not check the Hub Failure Conditions.");
@@ -162,14 +177,17 @@ public class HubFailureConditionWorkflowStep extends AbstractStepImpl {
             return null;
         }
 
-        public HubCommonFailureStep createCommonFailureStep(final Boolean failBuildForPolicyViolations, final String buildStateOnFailure)
+        public HubCommonFailureStep createCommonFailureStep(final Boolean failBuildForPolicyViolations, final String buildStateOnFailure,
+                final String policySeverityThreshold)
                 throws BDJenkinsHubPluginException {
             final FailureConditionBuildStateEnum buildStateOnFailureEnum = FailureConditionBuildStateEnum
                     .getFailureConditionBuildStateEnum(buildStateOnFailure);
+            final PolicySeverityEnum policySeverityEnum = (StringUtils.isNotEmpty(policySeverityThreshold))
+                    ? PolicySeverityEnum.valueOf(PolicySeverityEnum.class, policySeverityThreshold) : null;
             if (buildStateOnFailureEnum == null) {
                 throw new BDJenkinsHubPluginException("Invalid Build State on Failure Condition configured : " + buildStateOnFailure);
             }
-            return new HubCommonFailureStep(failBuildForPolicyViolations, buildStateOnFailureEnum);
+            return new HubCommonFailureStep(failBuildForPolicyViolations, buildStateOnFailureEnum, policySeverityEnum);
         }
 
     }
