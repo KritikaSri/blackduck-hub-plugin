@@ -118,9 +118,11 @@ public class BDCommonDescriptorUtil {
         final boolean changed = false;
         final ListBoxModel items = new ListBoxModel();
         try {
-            for (final ProjectVersionPhaseEnum phase : ProjectVersionPhaseEnum.values()) {
-                items.add(phase.name(), phase.name());
-            }
+            items.add("In Planning", ProjectVersionPhaseEnum.PLANNING.toString());
+            items.add("In Development", ProjectVersionPhaseEnum.DEVELOPMENT.toString());
+            items.add("Released", ProjectVersionPhaseEnum.RELEASED.toString());
+            items.add("Deprecated", ProjectVersionPhaseEnum.DEPRECATED.toString());
+            items.add("Archived", ProjectVersionPhaseEnum.ARCHIVED.toString());
         } catch (final Exception e) {
             e.printStackTrace();
             System.err.println(e.getMessage());
@@ -144,9 +146,10 @@ public class BDCommonDescriptorUtil {
         final boolean changed = false;
         final ListBoxModel items = new ListBoxModel();
         try {
-            for (final ProjectVersionDistributionEnum dist : ProjectVersionDistributionEnum.values()) {
-                items.add(dist.name(), dist.name());
-            }
+            items.add("External", ProjectVersionDistributionEnum.EXTERNAL.toString());
+            items.add("SaaS", ProjectVersionDistributionEnum.SAAS.toString());
+            items.add("Internal", ProjectVersionDistributionEnum.INTERNAL.toString());
+            items.add("Open Source", ProjectVersionDistributionEnum.OPENSOURCE.toString());
         } catch (final Exception e) {
             e.printStackTrace();
             System.err.println(e.getMessage());
