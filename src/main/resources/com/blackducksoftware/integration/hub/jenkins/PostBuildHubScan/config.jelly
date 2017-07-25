@@ -19,10 +19,10 @@
 
 <f:advanced>
     <f:entry field="hubVersionPhase" title="${%VersionPhaseTitle}">
-        <f:select/>
+        <f:select default="PLANNING"/>
     </f:entry>
     <f:entry field="hubVersionDist" title="${%VersionDistTitle}">
-        <f:select/>
+        <f:select default="EXTERNAL"/>
     </f:entry>
 	<f:entry field="shouldGenerateHubReport">
 		<f:checkbox default="false" />
