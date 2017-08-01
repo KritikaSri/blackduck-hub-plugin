@@ -36,11 +36,13 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
-import hudson.model.FreeStyleProject;
+import hudson.model.Descriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
+import hudson.util.DescribableList;
 
 public class PostBuildHubScan extends Recorder {
     private final ScanJobs[] scans;
@@ -84,11 +86,9 @@ public class PostBuildHubScan extends Recorder {
     private final boolean deletePreviousCodeLocations;
 
     @DataBoundConstructor
-    public PostBuildHubScan(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
-            final String hubVersionPhase, final String hubVersionDist, final String scanMemory, final boolean shouldGenerateHubReport,
-            final boolean projectLevelAdjustments, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan,
-            final ScanExclusion[] excludePatterns, final String codeLocationName, final boolean unmapPreviousCodeLocations,
-            final boolean deletePreviousCodeLocations) {
+    public PostBuildHubScan(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion, final String hubVersionPhase, final String hubVersionDist, final String scanMemory, final boolean shouldGenerateHubReport,
+            final boolean projectLevelAdjustments, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan, final ScanExclusion[] excludePatterns, final String codeLocationName,
+            final boolean unmapPreviousCodeLocations, final boolean deletePreviousCodeLocations) {
         this.scans = scans;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
@@ -199,24 +199,20 @@ public class PostBuildHubScan extends Recorder {
     }
 
     /**
-     * Overrides the Recorder perform method. This is the method that gets
-     * called by Jenkins to run as a Post Build Action
+     * Overrides the Recorder perform method. This is the method that gets called by Jenkins to run as a Post Build Action
      *
      */
     @Override
-    public boolean perform(final AbstractBuild<?, ?> build, final Launcher launcher, final BuildListener listener)
-            throws InterruptedException, IOException {
+    public boolean perform(final AbstractBuild<?, ?> build, final Launcher launcher, final BuildListener listener) throws InterruptedException, IOException {
         final HubJenkinsLogger logger = new HubJenkinsLogger(listener);
 
         try {
-            final BDCommonScanStep scanStep = new BDCommonScanStep(getScans(), getHubProjectName(),
-                    getHubProjectVersion(), getHubVersionPhase(), getHubVersionDist(), getScanMemory(), isProjectLevelAdjustments(),
-                    getShouldGenerateHubReport(), getBomUpdateMaxiumWaitTime(), isDryRun(), isCleanupOnSuccessfulScan(), isVerbose(), getExclusionPatterns(),
-                    getCodeLocationName(), isUnmapPreviousCodeLocations(), isDeletePreviousCodeLocations(), isFailureConditionsConfigured(build));
+            final BDCommonScanStep scanStep = new BDCommonScanStep(getScans(), getHubProjectName(), getHubProjectVersion(), getHubVersionPhase(), getHubVersionDist(), getScanMemory(), isProjectLevelAdjustments(),
+                    getShouldGenerateHubReport(), getBomUpdateMaxiumWaitTime(), isDryRun(), isCleanupOnSuccessfulScan(), isVerbose(), getExclusionPatterns(), getCodeLocationName(), isUnmapPreviousCodeLocations(),
+                    isDeletePreviousCodeLocations(), isFailureConditionsConfigured(build));
             final EnvVars envVars = build.getEnvironment(listener);
 
-            scanStep.runScan(build, build.getBuiltOn(), envVars, getWorkingDirectory(logger, build), logger, launcher,
-                    listener, build.getFullDisplayName(), String.valueOf(build.getNumber()));
+            scanStep.runScan(build, build.getBuiltOn(), envVars, getWorkingDirectory(logger, build), logger, launcher, listener, build.getFullDisplayName(), String.valueOf(build.getNumber()));
         } catch (final Exception e) {
             logger.error(e);
         }
@@ -224,8 +220,11 @@ public class PostBuildHubScan extends Recorder {
     }
 
     private boolean isFailureConditionsConfigured(final AbstractBuild<?, ?> build) {
-        for (final Publisher publisher : ((FreeStyleProject) build.getParent()).getPublishersList()) {
-            if (publisher instanceof HubFailureConditionStep) {
+        if (build.getParent() instanceof AbstractProject) {
+            final AbstractProject project = (build.getParent());
+            final DescribableList<Publisher, Descriptor<Publisher>> list = project.getPublishersList();
+            final HubFailureConditionStep failureCondition = list.get(HubFailureConditionStep.class);
+            if (failureCondition != null) {
                 return true;
             }
         }
@@ -245,8 +244,7 @@ public class PostBuildHubScan extends Recorder {
         return exclusionPatterns;
     }
 
-    public FilePath getWorkingDirectory(final IntLogger logger, final AbstractBuild<?, ?> build)
-            throws InterruptedException {
+    public FilePath getWorkingDirectory(final IntLogger logger, final AbstractBuild<?, ?> build) throws InterruptedException {
         String workingDirectory = "";
         try {
             if (build.getWorkspace() == null) {
