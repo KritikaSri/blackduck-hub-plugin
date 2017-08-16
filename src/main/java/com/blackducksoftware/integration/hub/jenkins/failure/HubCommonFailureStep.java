@@ -66,8 +66,7 @@ public class HubCommonFailureStep {
         return buildStateOnFailure;
     }
 
-    public boolean checkFailureConditions(final Run run, final Node builtOn, final EnvVars envVars,
-            final HubJenkinsLogger logger, final TaskListener listener, final BomUpToDateAction bomUpToDateAction)
+    public boolean checkFailureConditions(final Run run, final Node builtOn, final EnvVars envVars, final HubJenkinsLogger logger, final TaskListener listener, final BomUpToDateAction bomUpToDateAction)
             throws InterruptedException, IOException, IllegalArgumentException, EncryptionException {
 
         final CIEnvironmentVariables variables = new CIEnvironmentVariables();
@@ -89,16 +88,14 @@ public class HubCommonFailureStep {
         final HubServerInfo serverInfo = HubServerInfoSingleton.getInstance().getServerInfo();
         try {
             if (bomUpToDateAction.isDryRun()) {
-                logger.warn(
-                        "Will not check failure conditions since this was a dry run.");
+                logger.warn("Will not check failure conditions since this was a dry run.");
                 return true;
             }
             // We use this conditional in case there are other failure
             // conditions in the future
             if (getFailBuildForPolicyViolations()) {
                 if (bomUpToDateAction.getPolicyStatusUrl() == null) {
-                    logger.error(
-                            "Can not check policy violations, could not find the policy status URL for this Version.");
+                    logger.error("Can not check policy violations, the Hub policy module is not enabled.");
                     run.setResult(Result.UNSTABLE);
                     return true;
                 }
@@ -129,18 +126,15 @@ public class HubCommonFailureStep {
                 } else {
                     for (final ComponentVersionStatusCount count : policyStatus.componentVersionStatusCounts) {
                         if (count.name == VersionBomPolicyStatusOverallStatusEnum.IN_VIOLATION) {
-                            logger.info("Found " + count.value
-                                    + " bom entries to be In Violation of a defined Policy.");
+                            logger.info("Found " + count.value + " bom entries to be In Violation of a defined Policy.");
                             variableContributor.setBomEntriesInViolation(count.value);
                         }
                         if (count.name == VersionBomPolicyStatusOverallStatusEnum.IN_VIOLATION_OVERRIDDEN) {
-                            logger.info("Found " + count.value
-                                    + " bom entries to be In Violation of a defined Policy, but they have been overridden.");
+                            logger.info("Found " + count.value + " bom entries to be In Violation of a defined Policy, but they have been overridden.");
                             variableContributor.setViolationsOverriden(count.value);
                         }
                         if (count.name == VersionBomPolicyStatusOverallStatusEnum.NOT_IN_VIOLATION) {
-                            logger.info("Found " + count.value
-                                    + " bom entries to be Not In Violation of a defined Policy.");
+                            logger.info("Found " + count.value + " bom entries to be Not In Violation of a defined Policy.");
                             variableContributor.setBomEntriesNotInViolation(count.value);
                         }
                     }
@@ -161,10 +155,8 @@ public class HubCommonFailureStep {
     }
 
     public HubServicesFactory getHubServicesFactory(final HubJenkinsLogger logger, final HubServerInfo serverInfo)
-            throws IOException, URISyntaxException, BDJenkinsHubPluginException,
-            HubIntegrationException, IllegalArgumentException, EncryptionException {
-        return BuildHelper.getHubServicesFactory(logger, serverInfo.getServerUrl(), serverInfo.getUsername(),
-                serverInfo.getPassword(), serverInfo.getTimeout());
+            throws IOException, URISyntaxException, BDJenkinsHubPluginException, HubIntegrationException, IllegalArgumentException, EncryptionException {
+        return BuildHelper.getHubServicesFactory(logger, serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
     }
 
 }

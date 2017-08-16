@@ -109,11 +109,9 @@ public class BDCommonScanStep {
 
     private final boolean failureConditionsConfigured;
 
-    public BDCommonScanStep(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
-            final String phase, final String distribution, final String scanMemory, final boolean projectLevelAdjustments,
-            final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan,
-            final Boolean verbose, final String[] excludePatterns, final String codeLocationName, final boolean unmapPreviousCodeLocations,
-            final boolean deletePreviousCodeLocations, final boolean failureConditionsConfigured) {
+    public BDCommonScanStep(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion, final String phase, final String distribution, final String scanMemory, final boolean projectLevelAdjustments,
+            final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan, final Boolean verbose, final String[] excludePatterns, final String codeLocationName,
+            final boolean unmapPreviousCodeLocations, final boolean deletePreviousCodeLocations, final boolean failureConditionsConfigured) {
         this.scans = scans;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
@@ -217,10 +215,8 @@ public class BDCommonScanStep {
         return HubServerInfoSingleton.getInstance().getServerInfo();
     }
 
-    public void runScan(final Run run, final Node builtOn, final EnvVars envVars, final FilePath workspace,
-            final HubJenkinsLogger logger, final Launcher launcher, final TaskListener listener,
-            final String buildDisplayName, final String buildIdentifier)
-            throws InterruptedException, IOException {
+    public void runScan(final Run run, final Node builtOn, final EnvVars envVars, final FilePath workspace, final HubJenkinsLogger logger, final Launcher launcher, final TaskListener listener, final String buildDisplayName,
+            final String buildIdentifier) throws InterruptedException, IOException {
 
         final CIEnvironmentVariables variables = new CIEnvironmentVariables();
         variables.putAll(envVars);
@@ -238,8 +234,7 @@ public class BDCommonScanStep {
                 if (validateGlobalConfiguration()) {
 
                     final DummyToolInstaller dummyInstaller = new DummyToolInstaller();
-                    final String toolsDirectory = dummyInstaller.getToolDir(new DummyToolInstallation(), builtOn)
-                            .getRemote();
+                    final String toolsDirectory = dummyInstaller.getToolDir(new DummyToolInstallation(), builtOn).getRemote();
                     final String workingDirectory = workspace.getRemote();
                     final List<String> scanTargetPaths = getScanTargets(logger, builtOn, envVars, workingDirectory);
 
@@ -266,8 +261,7 @@ public class BDCommonScanStep {
                         final ProxyConfiguration proxyConfig = jenkins.proxy;
                         if (proxyConfig != null) {
                             final URL actualUrl = new URL(getHubServerInfo().getServerUrl());
-                            final Proxy proxy = ProxyConfiguration.createProxy(actualUrl.getHost(), proxyConfig.name,
-                                    proxyConfig.port, proxyConfig.noProxyHost);
+                            final Proxy proxy = ProxyConfiguration.createProxy(actualUrl.getHost(), proxyConfig.name, proxyConfig.port, proxyConfig.noProxyHost);
 
                             if (proxy.address() != null) {
                                 final InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
@@ -285,12 +279,9 @@ public class BDCommonScanStep {
                     final String thirdPartyVersion = Jenkins.getVersion().toString();
                     final String pluginVersion = PluginHelper.getPluginVersion();
 
-                    final RemoteScan scan = new RemoteScan(logger, codeLocationName, projectName, projectVersion, getPhase(), getDistribution(),
-                            getScanMemoryInteger(), isProjectLevelAdjustments(), workingDirectory, scanTargetPaths, isDryRun(),
-                            isCleanupOnSuccessfulScan(), toolsDirectory,
-                            thirdPartyVersion, pluginVersion, hubServerConfig,
-                            getHubServerInfo().isPerformWorkspaceCheck(), getExcludePatterns(), envVars,
-                            unmapPreviousCodeLocations, deletePreviousCodeLocations, isShouldWaitForScansFinished());
+                    final RemoteScan scan = new RemoteScan(logger, codeLocationName, projectName, projectVersion, getPhase(), getDistribution(), getScanMemoryInteger(), isProjectLevelAdjustments(), workingDirectory, scanTargetPaths,
+                            isDryRun(), isCleanupOnSuccessfulScan(), toolsDirectory, thirdPartyVersion, pluginVersion, hubServerConfig, getHubServerInfo().isPerformWorkspaceCheck(), getExcludePatterns(), envVars, unmapPreviousCodeLocations,
+                            deletePreviousCodeLocations, isShouldWaitForScansFinished());
 
                     final String projectVersionViewJson = builtOn.getChannel().call(scan);
 
@@ -307,8 +298,7 @@ public class BDCommonScanStep {
 
                         ProjectVersionView version = null;
                         ProjectView project = null;
-                        if (StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion)
-                                && StringUtils.isNotBlank(projectVersionViewJson)) {
+                        if (StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion) && StringUtils.isNotBlank(projectVersionViewJson)) {
                             version = services.createHubResponseService().getItemAs(projectVersionViewJson, ProjectVersionView.class);
                             project = getProjectFromVersion(services.createProjectRequestService(logger), metaService, version);
                         }
@@ -351,7 +341,7 @@ public class BDCommonScanStep {
                                 // so there will be no policy status link
                                 policyStatusLink = metaService.getFirstLink(version, MetaService.POLICY_STATUS_LINK);
                             } catch (final Exception e) {
-                                logger.debug(e.getMessage(), e);
+                                logger.debug("Could not get the policy status link, the Hub policy module is not enabled");
                             }
                             bomUpToDateAction.setPolicyStatusUrl(policyStatusLink);
                         }
@@ -393,9 +383,7 @@ public class BDCommonScanStep {
         run.addAction(new HubScanFinishedAction());
     }
 
-    private ProjectView getProjectFromVersion(final ProjectRequestService projectRequestService, final MetaService metaService,
-            final ProjectVersionView version)
-            throws IntegrationException {
+    private ProjectView getProjectFromVersion(final ProjectRequestService projectRequestService, final MetaService metaService, final ProjectVersionView version) throws IntegrationException {
         final String projectURL = metaService.getFirstLink(version, MetaService.PROJECT_LINK);
         final ProjectView projectVersion = projectRequestService.getItem(projectURL, ProjectView.class);
         return projectVersion;
@@ -405,8 +393,7 @@ public class BDCommonScanStep {
         return !isDryRun() && (isShouldGenerateHubReport() || isFailureConditionsConfigured());
     }
 
-    public List<String> getScanTargets(final IntLogger logger, final Node builtOn, final EnvVars variables,
-            final String workingDirectory) throws BDJenkinsHubPluginException, InterruptedException {
+    public List<String> getScanTargets(final IntLogger logger, final Node builtOn, final EnvVars variables, final String workingDirectory) throws BDJenkinsHubPluginException, InterruptedException {
         final List<String> scanTargetPaths = new ArrayList<>();
         final ScanJobs[] scans = getScans();
         if (scans == null || scans.length == 0) {
@@ -421,8 +408,7 @@ public class BDCommonScanStep {
                     try {
                         target = builtOn.getChannel().call(new DetermineTargetPath(workingDirectory, target));
                     } catch (final IOException e) {
-                        logger.error("Problem getting the real path of the target : " + target
-                                + " on this node. Error : " + e.getMessage(), e);
+                        logger.error("Problem getting the real path of the target : " + target + " on this node. Error : " + e.getMessage(), e);
                     }
                     scanTargetPaths.add(target);
                 }
@@ -433,9 +419,7 @@ public class BDCommonScanStep {
     }
 
     /**
-     * Validates that the Plugin is configured correctly. Checks that the User
-     * has defined an iScan tool, a Hub server URL, a Credential, and that there
-     * are at least one scan Target/Job defined in the Build
+     * Validates that the Plugin is configured correctly. Checks that the User has defined an iScan tool, a Hub server URL, a Credential, and that there are at least one scan Target/Job defined in the Build
      *
      */
     public boolean validateGlobalConfiguration() throws HubConfigurationException {
