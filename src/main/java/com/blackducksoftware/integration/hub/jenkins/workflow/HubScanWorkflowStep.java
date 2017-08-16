@@ -26,6 +26,7 @@ import java.io.IOException;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.flow.FlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -76,7 +77,11 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
     private final boolean projectLevelAdjustments;
 
-    private final String bomUpdateMaxiumWaitTime;
+    private String bomUpdateMaximumWaitTime;
+
+    // Hub Jenkins 2.3.2, correcting the spelling to bomUpdateMaximumWaitTime
+    // need to keep this around for now for migration purposes
+    private String bomUpdateMaxiumWaitTime;
 
     private final boolean dryRun;
 
@@ -93,11 +98,9 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
     private final boolean deletePreviousCodeLocations;
 
     @DataBoundConstructor
-    public HubScanWorkflowStep(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
-            final String hubVersionPhase, final String hubVersionDist, final String scanMemory, final boolean shouldGenerateHubReport,
-            final boolean projectLevelAdjustments, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan,
-            final ScanExclusion[] excludePatterns, final String codeLocationName, final boolean unmapPreviousCodeLocations,
-            final boolean deletePreviousCodeLocations) {
+    public HubScanWorkflowStep(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion, final String hubVersionPhase, final String hubVersionDist, final String scanMemory, final boolean shouldGenerateHubReport,
+            final boolean projectLevelAdjustments, final String bomUpdateMaximumWaitTime, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan, final ScanExclusion[] excludePatterns,
+            final String codeLocationName, final boolean unmapPreviousCodeLocations, final boolean deletePreviousCodeLocations) {
         this.scans = scans;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
@@ -106,7 +109,10 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
         this.scanMemory = scanMemory;
         this.shouldGenerateHubReport = shouldGenerateHubReport;
         this.projectLevelAdjustments = projectLevelAdjustments;
-        this.bomUpdateMaxiumWaitTime = bomUpdateMaxiumWaitTime;
+        this.bomUpdateMaximumWaitTime = bomUpdateMaximumWaitTime;
+        if (StringUtils.isBlank(bomUpdateMaximumWaitTime)) {
+            this.bomUpdateMaximumWaitTime = bomUpdateMaxiumWaitTime;
+        }
         this.dryRun = dryRun;
         this.cleanupOnSuccessfulScan = cleanupOnSuccessfulScan;
         this.excludePatterns = excludePatterns;
@@ -175,6 +181,10 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
         return projectLevelAdjustments;
     }
 
+    public String getBomUpdateMaximumWaitTime() {
+        return bomUpdateMaximumWaitTime;
+    }
+
     public String getBomUpdateMaxiumWaitTime() {
         return bomUpdateMaxiumWaitTime;
     }
@@ -236,15 +246,12 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
             return HubServerInfoSingleton.getInstance().getServerInfo();
         }
 
-        public FormValidation doCheckScanMemory(@QueryParameter("scanMemory") final String scanMemory)
-                throws IOException, ServletException {
+        public FormValidation doCheckScanMemory(@QueryParameter("scanMemory") final String scanMemory) throws IOException, ServletException {
             return BDCommonDescriptorUtil.doCheckScanMemory(scanMemory);
         }
 
-        public FormValidation doCheckBomUpdateMaxiumWaitTime(
-                @QueryParameter("bomUpdateMaxiumWaitTime") final String bomUpdateMaxiumWaitTime)
-                throws IOException, ServletException {
-            return BDCommonDescriptorUtil.doCheckBomUpdateMaxiumWaitTime(bomUpdateMaxiumWaitTime);
+        public FormValidation doCheckBomUpdateMaximumWaitTime(@QueryParameter("bomUpdateMaximumWaitTime") final String bomUpdateMaximumWaitTime) throws IOException, ServletException {
+            return BDCommonDescriptorUtil.doCheckBomUpdateMaximumWaitTime(bomUpdateMaximumWaitTime);
         }
 
         /**
@@ -256,36 +263,26 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
             return BDCommonDescriptorUtil.doFillCredentialsIdItems();
         }
 
-        public AutoCompletionCandidates doAutoCompleteHubProjectName(
-                @QueryParameter("value") final String hubProjectName) throws IOException, ServletException {
+        public AutoCompletionCandidates doAutoCompleteHubProjectName(@QueryParameter("value") final String hubProjectName) throws IOException, ServletException {
             return BDCommonDescriptorUtil.doAutoCompleteHubProjectName(getHubServerInfo(), hubProjectName);
         }
 
         /**
-         * Performs on-the-fly validation of the form field 'hubProjectName'.
-         * Checks to see if there is already a project in the Hub with this
-         * name.
+         * Performs on-the-fly validation of the form field 'hubProjectName'. Checks to see if there is already a project in the Hub with this name.
          *
          */
-        public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String hubProjectName,
-                @QueryParameter("hubProjectVersion") final String hubProjectVersion,
-                @QueryParameter("dryRun") final boolean dryRun) throws IOException, ServletException {
-            return BDCommonDescriptorUtil.doCheckHubProjectName(getHubServerInfo(), hubProjectName, hubProjectVersion,
-                    dryRun);
+        public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String hubProjectName, @QueryParameter("hubProjectVersion") final String hubProjectVersion, @QueryParameter("dryRun") final boolean dryRun)
+                throws IOException, ServletException {
+            return BDCommonDescriptorUtil.doCheckHubProjectName(getHubServerInfo(), hubProjectName, hubProjectVersion, dryRun);
         }
 
         /**
-         * Performs on-the-fly validation of the form field 'hubProjectVersion'.
-         * Checks to see if there is already a project in the Hub with this
-         * name.
+         * Performs on-the-fly validation of the form field 'hubProjectVersion'. Checks to see if there is already a project in the Hub with this name.
          *
          */
-        public FormValidation doCheckHubProjectVersion(
-                @QueryParameter("hubProjectVersion") final String hubProjectVersion,
-                @QueryParameter("hubProjectName") final String hubProjectName,
-                @QueryParameter("dryRun") final boolean dryRun) throws IOException, ServletException {
-            return BDCommonDescriptorUtil.doCheckHubProjectVersion(getHubServerInfo(), hubProjectVersion,
-                    hubProjectName, dryRun);
+        public FormValidation doCheckHubProjectVersion(@QueryParameter("hubProjectVersion") final String hubProjectVersion, @QueryParameter("hubProjectName") final String hubProjectName, @QueryParameter("dryRun") final boolean dryRun)
+                throws IOException, ServletException {
+            return BDCommonDescriptorUtil.doCheckHubProjectVersion(getHubServerInfo(), hubProjectVersion, hubProjectName, dryRun);
         }
 
         public ListBoxModel doFillHubVersionPhaseItems() {
@@ -328,17 +325,12 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
             final HubJenkinsLogger logger = new HubJenkinsLogger(listener);
             try {
                 final Node node = computer.getNode();
-                final BDCommonScanStep scanStep = new BDCommonScanStep(hubScanStep.getScans(),
-                        hubScanStep.getHubProjectName(), hubScanStep.getHubProjectVersion(), hubScanStep.getHubVersionPhase(),
-                        hubScanStep.getHubVersionDist(), hubScanStep.getScanMemory(), hubScanStep.isProjectLevelAdjustments(),
-                        hubScanStep.getShouldGenerateHubReport(), hubScanStep.getBomUpdateMaxiumWaitTime(),
-                        hubScanStep.isDryRun(), hubScanStep.isCleanupOnSuccessfulScan(), hubScanStep.isVerbose(), hubScanStep.getExclusionPatterns(),
-                        hubScanStep.getCodeLocationName(), hubScanStep.isUnmapPreviousCodeLocations(), hubScanStep.isDeletePreviousCodeLocations(),
-                        hubScanStep.isFailureConditionsConfigured(run));
+                final BDCommonScanStep scanStep = new BDCommonScanStep(hubScanStep.getScans(), hubScanStep.getHubProjectName(), hubScanStep.getHubProjectVersion(), hubScanStep.getHubVersionPhase(), hubScanStep.getHubVersionDist(),
+                        hubScanStep.getScanMemory(), hubScanStep.isProjectLevelAdjustments(), hubScanStep.getShouldGenerateHubReport(), hubScanStep.getBomUpdateMaximumWaitTime(), hubScanStep.isDryRun(),
+                        hubScanStep.isCleanupOnSuccessfulScan(), hubScanStep.isVerbose(), hubScanStep.getExclusionPatterns(), hubScanStep.getCodeLocationName(), hubScanStep.isUnmapPreviousCodeLocations(),
+                        hubScanStep.isDeletePreviousCodeLocations(), hubScanStep.isFailureConditionsConfigured(run));
 
-                scanStep.runScan(run, node, envVars, workspace, logger, launcher, listener,
-                        run.getFullDisplayName(),
-                        String.valueOf(run.getNumber()));
+                scanStep.runScan(run, node, envVars, workspace, logger, launcher, listener, run.getFullDisplayName(), String.valueOf(run.getNumber()));
 
             } catch (final Exception e) {
                 logger.error(e);

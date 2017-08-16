@@ -91,14 +91,11 @@ public class BDCommonDescriptorUtil {
             }
             // Code copied from
             // https://github.com/jenkinsci/git-plugin/blob/f6d42c4e7edb102d3330af5ca66a7f5809d1a48e/src/main/java/hudson/plugins/git/UserRemoteConfig.java
-            final CredentialsMatcher credentialsMatcher = CredentialsMatchers
-                    .anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
+            final CredentialsMatcher credentialsMatcher = CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
             final AbstractProject<?, ?> project = null; // Dont want to limit
             // the search to a particular project for the drop
             // down menu
-            boxModel = new StandardListBoxModel().withEmptySelection().withMatching(credentialsMatcher,
-                    CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM,
-                            Collections.<DomainRequirement> emptyList()));
+            boxModel = new StandardListBoxModel().withEmptySelection().withMatching(credentialsMatcher, CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement> emptyList()));
         } finally {
             if (changed) {
                 Thread.currentThread().setContextClassLoader(originalClassLoader);
@@ -113,8 +110,7 @@ public class BDCommonDescriptorUtil {
      * @return
      */
     public static ListBoxModel doFillHubVersionPhaseItems() {
-        final ClassLoader originalClassLoader = Thread.currentThread()
-                .getContextClassLoader();
+        final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
         final boolean changed = false;
         final ListBoxModel items = new ListBoxModel();
         try {
@@ -128,8 +124,7 @@ public class BDCommonDescriptorUtil {
             System.err.println(e.getMessage());
         } finally {
             if (changed) {
-                Thread.currentThread().setContextClassLoader(
-                        originalClassLoader);
+                Thread.currentThread().setContextClassLoader(originalClassLoader);
             }
         }
         return items;
@@ -141,8 +136,7 @@ public class BDCommonDescriptorUtil {
      * @return
      */
     public static ListBoxModel doFillHubVersionDistItems() {
-        final ClassLoader originalClassLoader = Thread.currentThread()
-                .getContextClassLoader();
+        final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
         final boolean changed = false;
         final ListBoxModel items = new ListBoxModel();
         try {
@@ -155,18 +149,15 @@ public class BDCommonDescriptorUtil {
             System.err.println(e.getMessage());
         } finally {
             if (changed) {
-                Thread.currentThread().setContextClassLoader(
-                        originalClassLoader);
+                Thread.currentThread().setContextClassLoader(originalClassLoader);
             }
         }
         return items;
     }
 
-    public static AutoCompletionCandidates doAutoCompleteHubProjectName(final HubServerInfo serverInfo,
-            final String hubProjectName) throws IOException, ServletException {
+    public static AutoCompletionCandidates doAutoCompleteHubProjectName(final HubServerInfo serverInfo, final String hubProjectName) throws IOException, ServletException {
         final AutoCompletionCandidates potentialMatches = new AutoCompletionCandidates();
-        if (StringUtils.isNotBlank(serverInfo.getServerUrl())
-                && StringUtils.isNotBlank(serverInfo.getCredentialsId())) {
+        if (StringUtils.isNotBlank(serverInfo.getServerUrl()) && StringUtils.isNotBlank(serverInfo.getCredentialsId())) {
             final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
             final boolean changed = false;
             try {
@@ -174,8 +165,7 @@ public class BDCommonDescriptorUtil {
                     return potentialMatches;
                 }
 
-                final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(),
-                        serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
+                final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
                 final MetaService metaService = service.createMetaService(null);
                 final ProjectRequestService projectService = service.createProjectRequestService(new PrintStreamIntLogger(System.out, LogLevel.INFO));
 
@@ -202,8 +192,7 @@ public class BDCommonDescriptorUtil {
         return potentialMatches;
     }
 
-    public static FormValidation doCheckHubProjectName(final HubServerInfo serverInfo, final String hubProjectName,
-            final String hubProjectVersion, final boolean dryRun) throws IOException, ServletException {
+    public static FormValidation doCheckHubProjectName(final HubServerInfo serverInfo, final String hubProjectName, final String hubProjectVersion, final boolean dryRun) throws IOException, ServletException {
         // Query for the project version so hopefully the check methods run for
         // both fields
         // when the User changes the Name of the project
@@ -221,8 +210,7 @@ public class BDCommonDescriptorUtil {
                     return FormValidation.warning(Messages.HubBuildScan_getProjectNameContainsVariable());
                 }
 
-                final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(),
-                        serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
+                final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
                 final MetaService metaService = service.createMetaService(null);
                 final ProjectRequestService projectService = service.createProjectRequestService(new PrintStreamIntLogger(System.out, LogLevel.INFO));
                 final ProjectView project = projectService.getProjectByName(hubProjectName);
@@ -235,8 +223,7 @@ public class BDCommonDescriptorUtil {
                 }
                 return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(serverInfo.getServerUrl()));
             } catch (final DoesNotExistException e) {
-                return FormValidation
-                        .error(Messages.HubBuildScan_getProjectNonExistingIn_0_(serverInfo.getServerUrl()));
+                return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingIn_0_(serverInfo.getServerUrl()));
             } catch (final HubIntegrationException e) {
                 String message;
                 if (e.getCause() != null) {
@@ -271,9 +258,7 @@ public class BDCommonDescriptorUtil {
         }
     }
 
-    public static FormValidation doCheckHubProjectVersion(final HubServerInfo serverInfo,
-            final String hubProjectVersion, final String hubProjectName, final boolean dryRun)
-            throws IOException, ServletException {
+    public static FormValidation doCheckHubProjectVersion(final HubServerInfo serverInfo, final String hubProjectVersion, final String hubProjectName, final boolean dryRun) throws IOException, ServletException {
         if (StringUtils.isNotBlank(hubProjectVersion)) {
             final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
             final boolean changed = false;
@@ -296,8 +281,7 @@ public class BDCommonDescriptorUtil {
                     return FormValidation.ok();
                 }
 
-                final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(),
-                        serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
+                final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
                 final ProjectRequestService projectService = service.createProjectRequestService(new PrintStreamIntLogger(System.out, LogLevel.INFO));
                 ProjectView project = null;
                 try {
@@ -322,8 +306,7 @@ public class BDCommonDescriptorUtil {
                         }
                     }
                 }
-                return FormValidation.error(Messages.HubBuildScan_getVersionNonExistingIn_0_(project.name,
-                        projectVersions.toString()));
+                return FormValidation.error(Messages.HubBuildScan_getVersionNonExistingIn_0_(project.name, projectVersions.toString()));
             } catch (final HubIntegrationException e) {
                 String message;
                 if (e.getCause() != null) {
@@ -366,25 +349,22 @@ public class BDCommonDescriptorUtil {
 
         if (!results.isSuccess()) {
             if (results.hasWarnings()) {
-                return FormValidation
-                        .warning(results.getResultString(HubScanConfigFieldEnum.SCANMEMORY));
+                return FormValidation.warning(results.getResultString(HubScanConfigFieldEnum.SCANMEMORY));
             } else if (results.hasErrors()) {
-                return FormValidation
-                        .error(results.getResultString(HubScanConfigFieldEnum.SCANMEMORY));
+                return FormValidation.error(results.getResultString(HubScanConfigFieldEnum.SCANMEMORY));
             }
         }
         return FormValidation.ok();
     }
 
-    public static FormValidation doCheckBomUpdateMaxiumWaitTime(final String bomUpdateMaxiumWaitTime)
-            throws IOException, ServletException {
+    public static FormValidation doCheckBomUpdateMaximumWaitTime(final String bomUpdateMaximumWaitTime) throws IOException, ServletException {
         try {
-            final Integer waitTime = Integer.valueOf(bomUpdateMaxiumWaitTime);
+            final Integer waitTime = Integer.valueOf(bomUpdateMaximumWaitTime);
             if (waitTime <= 0) {
                 return FormValidation.error("Bom wait time must be greater than 0.");
             }
         } catch (final NumberFormatException e) {
-            return FormValidation.error("The String : " + bomUpdateMaxiumWaitTime + " , is not an Integer.");
+            return FormValidation.error("The String : " + bomUpdateMaximumWaitTime + " , is not an Integer.");
         }
         return FormValidation.ok();
     }
@@ -407,17 +387,14 @@ public class BDCommonDescriptorUtil {
 
             // Code copied from
             // https://github.com/jenkinsci/git-plugin/blob/f6d42c4e7edb102d3330af5ca66a7f5809d1a48e/src/main/java/hudson/plugins/git/UserRemoteConfig.java
-            final CredentialsMatcher credentialsMatcher = CredentialsMatchers
-                    .anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
+            final CredentialsMatcher credentialsMatcher = CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
             final AbstractProject<?, ?> project = null; // Dont want to
             // limit
             // the search to a
             // particular project
             // for the drop
             // down menu
-            boxModel = new StandardListBoxModel().withEmptySelection().withMatching(credentialsMatcher,
-                    CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM,
-                            Collections.<DomainRequirement> emptyList()));
+            boxModel = new StandardListBoxModel().withEmptySelection().withMatching(credentialsMatcher, CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement> emptyList()));
         } finally {
             if (changed) {
                 Thread.currentThread().setContextClassLoader(originalClassLoader);

@@ -101,8 +101,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     private HubServerInfo hubServerInfo;
 
     /**
-     * In order to load the persisted global configuration, you have to call
-     * load() in the constructor.
+     * In order to load the persisted global configuration, you have to call load() in the constructor.
      */
     public PostBuildScanDescriptor() {
         super(PostBuildHubScan.class);
@@ -138,13 +137,11 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     }
 
     public String getHubServerUrl() {
-        return (getHubServerInfo() == null ? ""
-                : (getHubServerInfo().getServerUrl() == null ? "" : getHubServerInfo().getServerUrl()));
+        return (getHubServerInfo() == null ? "" : (getHubServerInfo().getServerUrl() == null ? "" : getHubServerInfo().getServerUrl()));
     }
 
     /**
-     * We return a String here instead of an int or Integer because the UI needs
-     * a String to display correctly
+     * We return a String here instead of an int or Integer because the UI needs a String to display correctly
      *
      */
     public String getDefaultTimeout() {
@@ -152,8 +149,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     }
 
     /**
-     * We return a String here instead of an int or Integer because the UI needs
-     * a String to display correctly
+     * We return a String here instead of an int or Integer because the UI needs a String to display correctly
      *
      */
     public String getHubTimeout() {
@@ -161,24 +157,19 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     }
 
     public String getHubCredentialsId() {
-        return (getHubServerInfo() == null ? ""
-                : (getHubServerInfo().getCredentialsId() == null ? "" : getHubServerInfo().getCredentialsId()));
+        return (getHubServerInfo() == null ? "" : (getHubServerInfo().getCredentialsId() == null ? "" : getHubServerInfo().getCredentialsId()));
     }
 
     public boolean getImportSSLCerts() {
-        return (getHubServerInfo() == null ? true
-                : (getHubServerInfo().shouldImportSSLCerts()));
+        return (getHubServerInfo() == null ? true : (getHubServerInfo().shouldImportSSLCerts()));
     }
 
     public boolean getHubWorkspaceCheck() {
-        return (getHubServerInfo() == null ? true
-                : (getHubServerInfo().isPerformWorkspaceCheck()));
+        return (getHubServerInfo() == null ? true : (getHubServerInfo().isPerformWorkspaceCheck()));
     }
 
     /**
-     * Code from
-     * https://github.com/jenkinsci/jenkins/blob/master/core/src/main/java/
-     * hudson/model/AbstractItem.java#L602
+     * Code from https://github.com/jenkinsci/jenkins/blob/master/core/src/main/java/ hudson/model/AbstractItem.java#L602
      *
      */
     // This global configuration can now be accessed at
@@ -186,8 +177,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     // EX:
     // http://localhost:8080/descriptorByName/com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor/config.xml
     @WebMethod(name = "config.xml")
-    public void doConfigDotXml(final StaplerRequest req, final StaplerResponse rsp) throws IOException,
-            TransformerException, hudson.model.Descriptor.FormException, ParserConfigurationException, SAXException {
+    public void doConfigDotXml(final StaplerRequest req, final StaplerResponse rsp) throws IOException, TransformerException, hudson.model.Descriptor.FormException, ParserConfigurationException, SAXException {
         final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
         boolean changed = false;
         try {
@@ -215,8 +205,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         }
     }
 
-    public void updateByXml(final Source source)
-            throws IOException, TransformerException, ParserConfigurationException, SAXException {
+    public void updateByXml(final Source source) throws IOException, TransformerException, ParserConfigurationException, SAXException {
         final TransformerFactory tFactory = TransformerFactory.newInstance();
         final Transformer transformer = tFactory.newTransformer();
         transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
@@ -241,8 +230,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
                 final Node credentialsNode = hubServerInfoElement.getElementsByTagName("credentialsId").item(0);
                 String credentialId = "";
-                if (credentialsNode != null && credentialsNode.getChildNodes() != null
-                        && credentialsNode.getChildNodes().item(0) != null) {
+                if (credentialsNode != null && credentialsNode.getChildNodes() != null && credentialsNode.getChildNodes().item(0) != null) {
                     credentialId = credentialsNode.getChildNodes().item(0).getNodeValue();
                     if (credentialId != null) {
                         credentialId = credentialId.trim();
@@ -251,8 +239,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
                 final Node serverUrlNode = hubServerInfoElement.getElementsByTagName("serverUrl").item(0);
                 String serverUrl = "";
-                if (serverUrlNode != null && serverUrlNode.getChildNodes() != null
-                        && serverUrlNode.getChildNodes().item(0) != null) {
+                if (serverUrlNode != null && serverUrlNode.getChildNodes() != null && serverUrlNode.getChildNodes().item(0) != null) {
                     serverUrl = serverUrlNode.getChildNodes().item(0).getNodeValue();
                     if (serverUrl != null) {
                         serverUrl = serverUrl.trim();
@@ -261,8 +248,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 final Node timeoutNode = hubServerInfoElement.getElementsByTagName("hubTimeout").item(0);
                 String hubTimeout = String.valueOf(HubServerInfo.getDefaultTimeout()); // default
                 // timeout
-                if (timeoutNode != null && timeoutNode.getChildNodes() != null
-                        && timeoutNode.getChildNodes().item(0) != null) {
+                if (timeoutNode != null && timeoutNode.getChildNodes() != null && timeoutNode.getChildNodes().item(0) != null) {
                     hubTimeout = timeoutNode.getChildNodes().item(0).getNodeValue();
                     if (hubTimeout != null) {
                         hubTimeout = hubTimeout.trim();
@@ -272,8 +258,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 final Node importSSLCertsNode = hubServerInfoElement.getElementsByTagName("importSSLCerts").item(0);
                 String importSSLCerts = "";
                 // timeout
-                if (importSSLCertsNode != null && importSSLCertsNode.getChildNodes() != null
-                        && importSSLCertsNode.getChildNodes().item(0) != null) {
+                if (importSSLCertsNode != null && importSSLCertsNode.getChildNodes() != null && importSSLCertsNode.getChildNodes().item(0) != null) {
                     importSSLCerts = importSSLCertsNode.getChildNodes().item(0).getNodeValue();
                     if (importSSLCerts != null) {
                         importSSLCerts = importSSLCerts.trim();
@@ -283,8 +268,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 final Node workspaceCheckNode = hubServerInfoElement.getElementsByTagName("hubWorkspaceCheck").item(0);
                 String hubWorkspaceCheck = "";
                 // timeout
-                if (workspaceCheckNode != null && workspaceCheckNode.getChildNodes() != null
-                        && workspaceCheckNode.getChildNodes().item(0) != null) {
+                if (workspaceCheckNode != null && workspaceCheckNode.getChildNodes() != null && workspaceCheckNode.getChildNodes().item(0) != null) {
                     hubWorkspaceCheck = workspaceCheckNode.getChildNodes().item(0).getNodeValue();
                     if (hubWorkspaceCheck != null) {
                         hubWorkspaceCheck = hubWorkspaceCheck.trim();
@@ -331,23 +315,19 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         // set that to properties and call save().
         final Integer timeout = NumberUtils.toInt(formData.getString(FORM_TIMEOUT), 120);
 
-        hubServerInfo = new HubServerInfo(formData.getString(FORM_SERVER_URL), formData.getString(FORM_CREDENTIALSID),
-                timeout, formData.getBoolean(FORM_IMPORT_CERTS), formData.getBoolean(FORM_WORKSPACE_CHECK));
+        hubServerInfo = new HubServerInfo(formData.getString(FORM_SERVER_URL), formData.getString(FORM_CREDENTIALSID), timeout, formData.getBoolean(FORM_IMPORT_CERTS), formData.getBoolean(FORM_WORKSPACE_CHECK));
         save();
         HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
         return super.configure(req, formData);
     }
 
-    public FormValidation doCheckScanMemory(@QueryParameter("scanMemory") final String scanMemory)
-            throws IOException, ServletException {
+    public FormValidation doCheckScanMemory(@QueryParameter("scanMemory") final String scanMemory) throws IOException, ServletException {
         return BDCommonDescriptorUtil.doCheckScanMemory(scanMemory);
     }
 
-    public FormValidation doCheckBomUpdateMaxiumWaitTime(
-            @QueryParameter("bomUpdateMaxiumWaitTime") final String bomUpdateMaxiumWaitTime)
-            throws IOException, ServletException {
-        return BDCommonDescriptorUtil.doCheckBomUpdateMaxiumWaitTime(bomUpdateMaxiumWaitTime);
+    public FormValidation doCheckBomUpdateMaximumWaitTime(@QueryParameter("bomUpdateMaximumWaitTime") final String bomUpdateMaximumWaitTime) throws IOException, ServletException {
+        return BDCommonDescriptorUtil.doCheckBomUpdateMaximumWaitTime(bomUpdateMaximumWaitTime);
     }
 
     /**
@@ -360,8 +340,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return BDCommonDescriptorUtil.doFillCredentialsIdItems();
     }
 
-    public FormValidation doCheckHubTimeout(@QueryParameter("hubTimeout") final String hubTimeout)
-            throws IOException, ServletException {
+    public FormValidation doCheckHubTimeout(@QueryParameter("hubTimeout") final String hubTimeout) throws IOException, ServletException {
         if (StringUtils.isBlank(hubTimeout)) {
             return FormValidation.error(Messages.HubBuildScan_getPleaseSetTimeout());
         }
@@ -381,8 +360,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * Performs on-the-fly validation of the form field 'serverUrl'.
      *
      */
-    public FormValidation doCheckHubServerUrl(@QueryParameter("hubServerUrl") final String hubServerUrl)
-            throws IOException, ServletException {
+    public FormValidation doCheckHubServerUrl(@QueryParameter("hubServerUrl") final String hubServerUrl) throws IOException, ServletException {
         ProxyConfiguration proxyConfig = null;
         final Jenkins jenkins = Jenkins.getInstance();
         if (jenkins != null) {
@@ -406,44 +384,35 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return FormValidation.ok();
     }
 
-    public AutoCompletionCandidates doAutoCompleteHubProjectName(@QueryParameter("value") final String hubProjectName)
-            throws IOException, ServletException {
+    public AutoCompletionCandidates doAutoCompleteHubProjectName(@QueryParameter("value") final String hubProjectName) throws IOException, ServletException {
         return BDCommonDescriptorUtil.doAutoCompleteHubProjectName(getHubServerInfo(), hubProjectName);
     }
 
     /**
-     * Performs on-the-fly validation of the form field 'hubProjectName'. Checks
-     * to see if there is already a project in the Hub with this name.
+     * Performs on-the-fly validation of the form field 'hubProjectName'. Checks to see if there is already a project in the Hub with this name.
      *
      */
-    public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String hubProjectName,
-            @QueryParameter("hubProjectVersion") final String hubProjectVersion,
-            @QueryParameter("dryRun") final boolean dryRun) throws IOException, ServletException {
-        return BDCommonDescriptorUtil.doCheckHubProjectName(getHubServerInfo(), hubProjectName, hubProjectVersion,
-                dryRun);
+    public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String hubProjectName, @QueryParameter("hubProjectVersion") final String hubProjectVersion, @QueryParameter("dryRun") final boolean dryRun)
+            throws IOException, ServletException {
+        return BDCommonDescriptorUtil.doCheckHubProjectName(getHubServerInfo(), hubProjectName, hubProjectVersion, dryRun);
     }
 
     /**
-     * Performs on-the-fly validation of the form field 'hubProjectVersion'.
-     * Checks to see if there is already a project in the Hub with this name.
+     * Performs on-the-fly validation of the form field 'hubProjectVersion'. Checks to see if there is already a project in the Hub with this name.
      *
      */
-    public FormValidation doCheckHubProjectVersion(@QueryParameter("hubProjectVersion") final String hubProjectVersion,
-            @QueryParameter("hubProjectName") final String hubProjectName,
-            @QueryParameter("dryRun") final boolean dryRun) throws IOException, ServletException {
-        return BDCommonDescriptorUtil.doCheckHubProjectVersion(getHubServerInfo(), hubProjectVersion, hubProjectName,
-                dryRun);
+    public FormValidation doCheckHubProjectVersion(@QueryParameter("hubProjectVersion") final String hubProjectVersion, @QueryParameter("hubProjectName") final String hubProjectName, @QueryParameter("dryRun") final boolean dryRun)
+            throws IOException, ServletException {
+        return BDCommonDescriptorUtil.doCheckHubProjectVersion(getHubServerInfo(), hubProjectVersion, hubProjectName, dryRun);
     }
 
     /**
-     * Validates that the URL, Username, and Password are correct for connecting
-     * to the Hub Server.
+     * Validates that the URL, Username, and Password are correct for connecting to the Hub Server.
      *
      *
      */
-    public FormValidation doTestConnection(@QueryParameter("hubServerUrl") final String serverUrl,
-            @QueryParameter("hubCredentialsId") final String hubCredentialsId,
-            @QueryParameter("hubTimeout") final String hubTimeout, @QueryParameter("importSSLCerts") final boolean importSSLCerts) {
+    public FormValidation doTestConnection(@QueryParameter("hubServerUrl") final String serverUrl, @QueryParameter("hubCredentialsId") final String hubCredentialsId, @QueryParameter("hubTimeout") final String hubTimeout,
+            @QueryParameter("importSSLCerts") final boolean importSSLCerts) {
         final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
         boolean changed = false;
         try {
@@ -463,9 +432,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
             UsernamePasswordCredentialsImpl credential = null;
             final AbstractProject<?, ?> project = null;
-            final List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(
-                    StandardUsernamePasswordCredentials.class, project, ACL.SYSTEM,
-                    Collections.<DomainRequirement> emptyList());
+            final List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement> emptyList());
             final IdMatcher matcher = new IdMatcher(hubCredentialsId);
             for (final StandardCredentials c : credentials) {
                 if (matcher.matches(c) && c instanceof UsernamePasswordCredentialsImpl) {
@@ -478,8 +445,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
-            final RestConnection connection = BuildHelper.getRestConnection(null, serverUrl, credentialUserName,
-                    credentialPassword, hubTimeout, importSSLCerts);
+            final RestConnection connection = BuildHelper.getRestConnection(null, serverUrl, credentialUserName, credentialPassword, hubTimeout, importSSLCerts);
             connection.connect();
             return FormValidation.ok(Messages.HubBuildScan_getCredentialsValidFor_0_(serverUrl));
 

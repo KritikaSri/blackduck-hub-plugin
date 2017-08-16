@@ -59,6 +59,10 @@ public class PostBuildHubScan extends Recorder {
 
     private final boolean shouldGenerateHubReport;
 
+    private String bomUpdateMaximumWaitTime;
+
+    // Hub Jenkins 2.3.2, correcting the spelling to bomUpdateMaximumWaitTime
+    // need to keep this around for now for migration purposes
     private String bomUpdateMaxiumWaitTime;
 
     private final boolean projectLevelAdjustments;
@@ -73,10 +77,6 @@ public class PostBuildHubScan extends Recorder {
     // need to keep this around for now for migration purposes
     private String hubProjectRelease;
 
-    // Hub Jenkins 1.4.1, renaming this variable to bomUpdateMaxiumWaitTime
-    // need to keep this around for now for migration purposes
-    private String reportMaxiumWaitTime;
-
     private final ScanExclusion[] excludePatterns;
 
     private final String codeLocationName;
@@ -87,7 +87,7 @@ public class PostBuildHubScan extends Recorder {
 
     @DataBoundConstructor
     public PostBuildHubScan(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion, final String hubVersionPhase, final String hubVersionDist, final String scanMemory, final boolean shouldGenerateHubReport,
-            final boolean projectLevelAdjustments, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan, final ScanExclusion[] excludePatterns, final String codeLocationName,
+            final boolean projectLevelAdjustments, final String bomUpdateMaximumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan, final ScanExclusion[] excludePatterns, final String codeLocationName,
             final boolean unmapPreviousCodeLocations, final boolean deletePreviousCodeLocations) {
         this.scans = scans;
         this.hubProjectName = hubProjectName;
@@ -97,7 +97,7 @@ public class PostBuildHubScan extends Recorder {
         this.scanMemory = scanMemory;
         this.shouldGenerateHubReport = shouldGenerateHubReport;
         this.projectLevelAdjustments = projectLevelAdjustments;
-        this.bomUpdateMaxiumWaitTime = bomUpdateMaxiumWaitTime;
+        this.bomUpdateMaximumWaitTime = bomUpdateMaximumWaitTime;
         this.dryRun = dryRun;
         this.cleanupOnSuccessfulScan = cleanupOnSuccessfulScan;
         this.excludePatterns = excludePatterns;
@@ -137,11 +137,11 @@ public class PostBuildHubScan extends Recorder {
         return scanMemory;
     }
 
-    public String getBomUpdateMaxiumWaitTime() {
-        if (bomUpdateMaxiumWaitTime == null && reportMaxiumWaitTime != null) {
-            bomUpdateMaxiumWaitTime = reportMaxiumWaitTime;
+    public String getBomUpdateMaximumWaitTime() {
+        if (bomUpdateMaximumWaitTime == null && bomUpdateMaxiumWaitTime != null) {
+            bomUpdateMaximumWaitTime = bomUpdateMaxiumWaitTime;
         }
-        return bomUpdateMaxiumWaitTime;
+        return bomUpdateMaximumWaitTime;
     }
 
     public String getHubProjectVersion() {
@@ -208,7 +208,7 @@ public class PostBuildHubScan extends Recorder {
 
         try {
             final BDCommonScanStep scanStep = new BDCommonScanStep(getScans(), getHubProjectName(), getHubProjectVersion(), getHubVersionPhase(), getHubVersionDist(), getScanMemory(), isProjectLevelAdjustments(),
-                    getShouldGenerateHubReport(), getBomUpdateMaxiumWaitTime(), isDryRun(), isCleanupOnSuccessfulScan(), isVerbose(), getExclusionPatterns(), getCodeLocationName(), isUnmapPreviousCodeLocations(),
+                    getShouldGenerateHubReport(), getBomUpdateMaximumWaitTime(), isDryRun(), isCleanupOnSuccessfulScan(), isVerbose(), getExclusionPatterns(), getCodeLocationName(), isUnmapPreviousCodeLocations(),
                     isDeletePreviousCodeLocations(), isFailureConditionsConfigured(build));
             final EnvVars envVars = build.getEnvironment(listener);
 

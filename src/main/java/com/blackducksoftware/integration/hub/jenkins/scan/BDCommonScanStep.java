@@ -89,7 +89,7 @@ public class BDCommonScanStep {
 
     private final boolean shouldGenerateHubReport;
 
-    private final String bomUpdateMaxiumWaitTime;
+    private final String bomUpdateMaximumWaitTime;
 
     private final boolean dryRun;
 
@@ -110,7 +110,7 @@ public class BDCommonScanStep {
     private final boolean failureConditionsConfigured;
 
     public BDCommonScanStep(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion, final String phase, final String distribution, final String scanMemory, final boolean projectLevelAdjustments,
-            final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan, final Boolean verbose, final String[] excludePatterns, final String codeLocationName,
+            final boolean shouldGenerateHubReport, final String bomUpdateMaximumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan, final Boolean verbose, final String[] excludePatterns, final String codeLocationName,
             final boolean unmapPreviousCodeLocations, final boolean deletePreviousCodeLocations, final boolean failureConditionsConfigured) {
         this.scans = scans;
         this.hubProjectName = hubProjectName;
@@ -120,7 +120,7 @@ public class BDCommonScanStep {
         this.scanMemory = scanMemory;
         this.projectLevelAdjustments = projectLevelAdjustments;
         this.shouldGenerateHubReport = shouldGenerateHubReport;
-        this.bomUpdateMaxiumWaitTime = bomUpdateMaxiumWaitTime;
+        this.bomUpdateMaximumWaitTime = bomUpdateMaximumWaitTime;
         this.dryRun = dryRun;
         this.cleanupOnSuccessfulScan = cleanupOnSuccessfulScan;
         this.verbose = verbose;
@@ -179,8 +179,8 @@ public class BDCommonScanStep {
         return shouldGenerateHubReport;
     }
 
-    public String getBomUpdateMaxiumWaitTime() {
-        return bomUpdateMaxiumWaitTime;
+    public String getBomUpdateMaximumWaitTime() {
+        return bomUpdateMaximumWaitTime;
     }
 
     public boolean isDryRun() {
@@ -305,7 +305,7 @@ public class BDCommonScanStep {
 
                         try {
                             // User input is in minutes, need to changes to milliseconds
-                            bomWait = Long.valueOf(bomUpdateMaxiumWaitTime) * 60 * 1000;
+                            bomWait = Long.valueOf(bomUpdateMaximumWaitTime) * 60 * 1000;
                         } catch (final NumberFormatException e) {
                             bomWait = 300000l;
                         }

@@ -32,7 +32,7 @@
         <f:checkbox default="true" />
         <label>${%ProjectLevelAdjustmentsTitle}</label>
     </f:entry>
-	<f:entry field="bomUpdateMaxiumWaitTime" title="${%MaximumBOMUpdateTime}">
+	<f:entry field="bomUpdateMaximumWaitTime" title="${%MaximumBOMUpdateTime}">
 		<f:textbox default="5" />
 	</f:entry>
 	<f:entry field="scanMemory" title="${%MemoryAllocation}">
