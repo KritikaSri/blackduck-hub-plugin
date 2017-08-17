@@ -53,6 +53,8 @@ import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.jenkins.remote.DetermineTargetPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.RemoteScan;
+import com.blackducksoftware.integration.hub.model.enumeration.ProjectVersionDistributionEnum;
+import com.blackducksoftware.integration.hub.model.enumeration.ProjectVersionPhaseEnum;
 import com.blackducksoftware.integration.hub.model.view.ProjectVersionView;
 import com.blackducksoftware.integration.hub.model.view.ProjectView;
 import com.blackducksoftware.integration.hub.report.api.ReportData;
@@ -152,10 +154,16 @@ public class BDCommonScanStep {
     }
 
     public String getPhase() {
+        if (phase == null) {
+            return ProjectVersionPhaseEnum.DEVELOPMENT.toString();
+        }
         return phase;
     }
 
     public String getDistribution() {
+        if (distribution == null) {
+            return ProjectVersionDistributionEnum.EXTERNAL.toString();
+        }
         return distribution;
     }
 
