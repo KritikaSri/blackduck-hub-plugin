@@ -155,6 +155,7 @@ public class BDCommonScanStep {
 
     public String getPhase() {
         if (phase == null) {
+            // set to the default if they have not configured a phase, should help with migration from older versions that did not include the phase in the config
             return ProjectVersionPhaseEnum.DEVELOPMENT.toString();
         }
         return phase;
@@ -162,6 +163,7 @@ public class BDCommonScanStep {
 
     public String getDistribution() {
         if (distribution == null) {
+            // set to the default if they have not configured a distribution, should help with migration from older versions that did not include the distribution in the config
             return ProjectVersionDistributionEnum.EXTERNAL.toString();
         }
         return distribution;
