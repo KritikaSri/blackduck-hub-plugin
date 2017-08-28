@@ -28,7 +28,7 @@ import org.jenkinsci.remoting.Role;
 import org.jenkinsci.remoting.RoleChecker;
 
 import com.blackducksoftware.integration.hub.builder.HubScanConfigBuilder;
-import com.blackducksoftware.integration.hub.builder.HubServerConfigBuilder;
+import com.blackducksoftware.integration.hub.certificate.HubCertificateHandler;
 import com.blackducksoftware.integration.hub.dataservice.cli.CLIDataService;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.global.HubServerConfig;
@@ -75,7 +75,7 @@ public class RemoteScan implements Callable<String, HubIntegrationException> {
 
     private final String pluginVersion;
 
-    private final HubServerConfigBuilder hubServerConfigBuilder;
+    private final HubServerConfig hubServerConfig;
 
     private final boolean performWorkspaceCheck;
 
@@ -91,7 +91,7 @@ public class RemoteScan implements Callable<String, HubIntegrationException> {
 
     public RemoteScan(final IntLogger logger, final String codeLocationName, final String hubProjectName, final String hubProjectVersion, final String phase, final String distribution, final int scanMemory,
             final boolean projectLevelAdjustments, final String workingDirectoryPath, final List<String> scanTargetPaths, final boolean dryRun, final boolean cleanupOnSuccessfulScan, final String toolsDirectory,
-            final String thirdPartyVersion, final String pluginVersion, final HubServerConfigBuilder hubServerConfigBuilder, final boolean performWorkspaceCheck, final String[] excludePatterns, final EnvVars envVars,
+            final String thirdPartyVersion, final String pluginVersion, final HubServerConfig hubServerConfig, final boolean performWorkspaceCheck, final String[] excludePatterns, final EnvVars envVars,
             final boolean unmapPreviousCodeLocations, final boolean deletePreviousCodeLocations, final boolean shouldWaitForScansFinished) {
         this.logger = logger;
         this.codeLocationName = codeLocationName;
@@ -108,7 +108,7 @@ public class RemoteScan implements Callable<String, HubIntegrationException> {
         this.toolsDirectory = toolsDirectory;
         this.thirdPartyVersion = thirdPartyVersion;
         this.pluginVersion = pluginVersion;
-        this.hubServerConfigBuilder = hubServerConfigBuilder;
+        this.hubServerConfig = hubServerConfig;
         this.performWorkspaceCheck = performWorkspaceCheck;
         this.excludePatterns = excludePatterns;
         this.envVars = envVars;
@@ -120,7 +120,8 @@ public class RemoteScan implements Callable<String, HubIntegrationException> {
     @Override
     public String call() throws HubIntegrationException {
         try {
-            final HubServerConfig hubServerConfig = hubServerConfigBuilder.build();
+            final HubCertificateHandler certificateHandler = new HubCertificateHandler(logger);
+            certificateHandler.importHttpsCertificateForHubServer(hubServerConfig.getHubUrl(), hubServerConfig.getTimeout());
             final HubServicesFactory services = BuildHelper.getHubServicesFactory(logger, hubServerConfig);
 
             services.addEnvironmentVariables(envVars);
