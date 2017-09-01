@@ -120,10 +120,8 @@ public class RemoteScan implements Callable<String, HubIntegrationException> {
     @Override
     public String call() throws HubIntegrationException {
         try {
-            if (hubServerConfig.getHubUrl().getProtocol().startsWith("https")) {
-                final HubCertificateHandler certificateHandler = new HubCertificateHandler(logger);
-                certificateHandler.importHttpsCertificateForHubServer(hubServerConfig.getHubUrl(), hubServerConfig.getTimeout());
-            }
+            final HubCertificateHandler certificateHandler = new HubCertificateHandler(logger);
+            certificateHandler.importHttpsCertificateForHubServer(hubServerConfig.getHubUrl(), hubServerConfig.getTimeout());
             final HubServicesFactory services = BuildHelper.getHubServicesFactory(logger, hubServerConfig);
 
             services.addEnvironmentVariables(envVars);
