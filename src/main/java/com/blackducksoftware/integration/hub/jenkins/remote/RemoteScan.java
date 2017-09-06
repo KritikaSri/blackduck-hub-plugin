@@ -22,6 +22,7 @@
 package com.blackducksoftware.integration.hub.jenkins.remote;
 
 import java.io.File;
+import java.net.Proxy;
 import java.util.List;
 
 import org.jenkinsci.remoting.Role;
@@ -120,8 +121,16 @@ public class RemoteScan implements Callable<String, HubIntegrationException> {
     @Override
     public String call() throws HubIntegrationException {
         try {
-            final HubCertificateHandler certificateHandler = new HubCertificateHandler(logger);
-            certificateHandler.importHttpsCertificateForHubServer(hubServerConfig.getHubUrl(), hubServerConfig.getTimeout());
+            final HubCertificateHandler hubCertificateHandler = new HubCertificateHandler(logger);
+            hubCertificateHandler.setTimeout(hubServerConfig.getTimeout());
+            if (hubServerConfig.getProxyInfo().getProxy(hubServerConfig.getHubUrl()) != Proxy.NO_PROXY) {
+                hubCertificateHandler.setProxyHost(hubServerConfig.getProxyInfo().getHost());
+                hubCertificateHandler.setProxyPort(hubServerConfig.getProxyInfo().getPort());
+                hubCertificateHandler.setProxyUsername(hubServerConfig.getProxyInfo().getUsername());
+                hubCertificateHandler.setProxyPassword(hubServerConfig.getProxyInfo().getDecryptedPassword());
+            }
+            hubCertificateHandler.importHttpsCertificateForHubServer(hubServerConfig.getHubUrl());
+
             final HubServicesFactory services = BuildHelper.getHubServicesFactory(logger, hubServerConfig);
 
             services.addEnvironmentVariables(envVars);
