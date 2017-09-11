@@ -26,7 +26,7 @@
       <f:entry title="${%ConnectionTimeout}" field="hubTimeout" description="in seconds" >
           <f:textbox clazz="required number"  default="${descriptor.getDefaultTimeout()}" />
       </f:entry>
-      <f:entry title="${%ImportSSLCerts}" field="importSSLCerts" >
+      <f:entry title="${%TrustHubCerts}" field="trustHubCerts" >
           <f:checkbox default="false" />
       </f:entry>
       <f:entry title="${%PerformWorkspaceCheck}" field="hubWorkspaceCheck" >
@@ -35,7 +35,7 @@
     </f:advanced>
     
     <f:validateButton title="${%TestConnection}" progress="${%TestConnectionProgress}"
-         method="testConnection" with="hubServerUrl,hubCredentialsId,hubTimeout,importSSLCerts" />
+         method="testConnection" with="hubServerUrl,hubCredentialsId,hubTimeout,trustHubCerts" />
          
     
   </f:section>

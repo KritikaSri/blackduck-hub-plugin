@@ -264,7 +264,7 @@ public class BDCommonScanStep {
                     hubServerConfigBuilder.setUsername(getHubServerInfo().getUsername());
                     hubServerConfigBuilder.setPassword(getHubServerInfo().getPassword());
                     hubServerConfigBuilder.setTimeout(getHubServerInfo().getTimeout());
-                    hubServerConfigBuilder.setAutoImportHttpsCertificates(getHubServerInfo().shouldImportSSLCerts());
+                    hubServerConfigBuilder.setAlwaysTrustServerCertificate(getHubServerInfo().shouldTrustHubCerts());
 
                     final Jenkins jenkins = Jenkins.getInstance();
                     if (jenkins != null) {
@@ -304,13 +304,13 @@ public class BDCommonScanStep {
                         restConnection.connect();
 
                         final HubServicesFactory services = new HubServicesFactory(restConnection);
-                        final MetaService metaService = services.createMetaService(logger);
+                        final MetaService metaService = services.createMetaService();
 
                         ProjectVersionView version = null;
                         ProjectView project = null;
                         if (StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion) && StringUtils.isNotBlank(projectVersionViewJson)) {
                             version = services.createHubResponseService().getItemAs(projectVersionViewJson, ProjectVersionView.class);
-                            project = getProjectFromVersion(services.createProjectRequestService(logger), metaService, version);
+                            project = getProjectFromVersion(services.createProjectRequestService(), metaService, version);
                         }
 
                         try {
@@ -327,7 +327,7 @@ public class BDCommonScanStep {
                             if (project != null && version != null) {
                                 final HubReportV2Action reportAction = new HubReportV2Action(run);
 
-                                final RiskReportDataService reportService = services.createRiskReportDataService(logger, bomWait);
+                                final RiskReportDataService reportService = services.createRiskReportDataService(bomWait);
 
                                 logger.debug("Generating the Risk Report.");
                                 final ReportData reportData = reportService.getRiskReportData(project, version);

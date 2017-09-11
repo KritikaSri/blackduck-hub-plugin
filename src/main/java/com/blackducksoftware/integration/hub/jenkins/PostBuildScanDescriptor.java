@@ -92,7 +92,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     private static final String FORM_TIMEOUT = "hubTimeout";
 
-    private static final String FORM_IMPORT_CERTS = "importSSLCerts";
+    private static final String FORM_TRUST_CERTS = "trustHubCerts";
 
     private static final String FORM_WORKSPACE_CHECK = "hubWorkspaceCheck";
 
@@ -160,8 +160,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return (getHubServerInfo() == null ? "" : (getHubServerInfo().getCredentialsId() == null ? "" : getHubServerInfo().getCredentialsId()));
     }
 
-    public boolean getImportSSLCerts() {
-        return (getHubServerInfo() == null ? true : (getHubServerInfo().shouldImportSSLCerts()));
+    public boolean getTrustHubCerts() {
+        return (getHubServerInfo() == null ? true : (getHubServerInfo().shouldTrustHubCerts()));
     }
 
     public boolean getHubWorkspaceCheck() {
@@ -255,13 +255,13 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     }
                 }
 
-                final Node importSSLCertsNode = hubServerInfoElement.getElementsByTagName("importSSLCerts").item(0);
-                String importSSLCerts = "";
+                final Node trustHubCertsNode = hubServerInfoElement.getElementsByTagName("trustHubCerts").item(0);
+                String trustHubCerts = "";
                 // timeout
-                if (importSSLCertsNode != null && importSSLCertsNode.getChildNodes() != null && importSSLCertsNode.getChildNodes().item(0) != null) {
-                    importSSLCerts = importSSLCertsNode.getChildNodes().item(0).getNodeValue();
-                    if (importSSLCerts != null) {
-                        importSSLCerts = importSSLCerts.trim();
+                if (trustHubCertsNode != null && trustHubCertsNode.getChildNodes() != null && trustHubCertsNode.getChildNodes().item(0) != null) {
+                    trustHubCerts = trustHubCertsNode.getChildNodes().item(0).getNodeValue();
+                    if (trustHubCerts != null) {
+                        trustHubCerts = trustHubCerts.trim();
                     }
                 }
 
@@ -286,7 +286,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     e.printStackTrace(System.err);
                 }
                 serverInfo.setTimeout(serverTimeout);
-                serverInfo.setImportSSLCerts(Boolean.valueOf(importSSLCerts));
+                serverInfo.setTrustHubCerts(Boolean.valueOf(trustHubCerts));
                 serverInfo.setPerformWorkspaceCheck(Boolean.valueOf(hubWorkspaceCheck));
             }
         }
@@ -315,7 +315,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         // set that to properties and call save().
         final Integer timeout = NumberUtils.toInt(formData.getString(FORM_TIMEOUT), 120);
 
-        hubServerInfo = new HubServerInfo(formData.getString(FORM_SERVER_URL), formData.getString(FORM_CREDENTIALSID), timeout, formData.getBoolean(FORM_IMPORT_CERTS), formData.getBoolean(FORM_WORKSPACE_CHECK));
+        hubServerInfo = new HubServerInfo(formData.getString(FORM_SERVER_URL), formData.getString(FORM_CREDENTIALSID), timeout, formData.getBoolean(FORM_TRUST_CERTS), formData.getBoolean(FORM_WORKSPACE_CHECK));
         save();
         HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
@@ -412,7 +412,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      *
      */
     public FormValidation doTestConnection(@QueryParameter("hubServerUrl") final String serverUrl, @QueryParameter("hubCredentialsId") final String hubCredentialsId, @QueryParameter("hubTimeout") final String hubTimeout,
-            @QueryParameter("importSSLCerts") final boolean importSSLCerts) {
+            @QueryParameter("trustHubCerts") final boolean trustHubCerts) {
         final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
         boolean changed = false;
         try {
@@ -445,7 +445,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
-            final RestConnection connection = BuildHelper.getRestConnection(null, serverUrl, credentialUserName, credentialPassword, hubTimeout, importSSLCerts);
+            final RestConnection connection = BuildHelper.getRestConnection(null, serverUrl, credentialUserName, credentialPassword, hubTimeout, trustHubCerts);
             connection.connect();
             return FormValidation.ok(Messages.HubBuildScan_getCredentialsValidFor_0_(serverUrl));
 

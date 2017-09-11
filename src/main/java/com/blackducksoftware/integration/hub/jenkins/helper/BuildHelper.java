@@ -33,6 +33,8 @@ import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPlug
 import com.blackducksoftware.integration.hub.rest.RestConnection;
 import com.blackducksoftware.integration.hub.service.HubServicesFactory;
 import com.blackducksoftware.integration.log.IntLogger;
+import com.blackducksoftware.integration.log.LogLevel;
+import com.blackducksoftware.integration.log.PrintStreamIntLogger;
 
 import hudson.ProxyConfiguration;
 import hudson.Util;
@@ -49,48 +51,40 @@ public class BuildHelper {
         return build.getResult() == null;
     }
 
-    public static HubServicesFactory getHubServicesFactory(final String serverUrl, final String username, final String password,
-            final int hubTimeout) throws EncryptionException, MalformedURLException {
+    public static HubServicesFactory getHubServicesFactory(final String serverUrl, final String username, final String password, final int hubTimeout) throws EncryptionException, MalformedURLException {
 
-        return getHubServicesFactory(null, serverUrl, username, password, hubTimeout);
+        return getHubServicesFactory(new PrintStreamIntLogger(System.out, LogLevel.INFO), serverUrl, username, password, hubTimeout);
     }
 
-    public static HubServicesFactory getHubServicesFactory(final IntLogger logger, final String serverUrl,
-            final String username, final String password, final int hubTimeout) throws EncryptionException, MalformedURLException {
+    public static HubServicesFactory getHubServicesFactory(final IntLogger logger, final String serverUrl, final String username, final String password, final int hubTimeout) throws EncryptionException, MalformedURLException {
 
-        final HubServicesFactory service = new HubServicesFactory(
-                getRestConnection(logger, serverUrl, username, password, hubTimeout));
+        final HubServicesFactory service = new HubServicesFactory(getRestConnection(logger, serverUrl, username, password, hubTimeout));
 
         return service;
     }
 
-    public static HubServicesFactory getHubServicesFactory(final IntLogger logger, final HubServerConfig hubServerConfig)
-            throws EncryptionException, IllegalArgumentException {
-        final HubServicesFactory service = new HubServicesFactory(
-                getRestConnection(logger, hubServerConfig));
+    public static HubServicesFactory getHubServicesFactory(final IntLogger logger, final HubServerConfig hubServerConfig) throws EncryptionException, IllegalArgumentException {
+        final HubServicesFactory service = new HubServicesFactory(getRestConnection(logger, hubServerConfig));
         return service;
     }
 
-    public static RestConnection getRestConnection(final IntLogger logger, final HubServerConfig hubServerConfig)
-            throws EncryptionException, IllegalArgumentException {
+    public static RestConnection getRestConnection(final IntLogger logger, final HubServerConfig hubServerConfig) throws EncryptionException, IllegalArgumentException {
         return hubServerConfig.createCredentialsRestConnection(logger);
     }
 
-    public static RestConnection getRestConnection(final IntLogger logger, final String serverUrl,
-            final String username, final String password, final String hubTimeout, final boolean autoImportHttpsCertificates)
+    public static RestConnection getRestConnection(final IntLogger logger, final String serverUrl, final String username, final String password, final String hubTimeout, final boolean trustHubCerts)
             throws EncryptionException, MalformedURLException {
         final HubServerConfigBuilder hubServerConfigBuilder = new HubServerConfigBuilder();
         hubServerConfigBuilder.setHubUrl(serverUrl);
         hubServerConfigBuilder.setUsername(username);
         hubServerConfigBuilder.setPassword(password);
         hubServerConfigBuilder.setTimeout(hubTimeout);
-        hubServerConfigBuilder.setAutoImportHttpsCertificates(autoImportHttpsCertificates);
+        hubServerConfigBuilder.setAlwaysTrustServerCertificate(trustHubCerts);
 
         return getRestConnection(logger, hubServerConfigBuilder);
     }
 
-    public static RestConnection getRestConnection(final IntLogger logger, final String serverUrl,
-            final String username, final String password, final int hubTimeout) throws EncryptionException, MalformedURLException {
+    public static RestConnection getRestConnection(final IntLogger logger, final String serverUrl, final String username, final String password, final int hubTimeout) throws EncryptionException, MalformedURLException {
         final HubServerConfigBuilder hubServerConfigBuilder = new HubServerConfigBuilder();
         hubServerConfigBuilder.setHubUrl(serverUrl);
         hubServerConfigBuilder.setUsername(username);
@@ -100,8 +94,7 @@ public class BuildHelper {
         return getRestConnection(logger, hubServerConfigBuilder);
     }
 
-    private static RestConnection getRestConnection(final IntLogger logger, final HubServerConfigBuilder hubServerConfigBuilder)
-            throws EncryptionException, MalformedURLException {
+    private static RestConnection getRestConnection(final IntLogger logger, final HubServerConfigBuilder hubServerConfigBuilder) throws EncryptionException, MalformedURLException {
         final Jenkins jenkins = Jenkins.getInstance();
         String proxyHost = null;
         Integer proxyPort = null;
@@ -122,8 +115,7 @@ public class BuildHelper {
         return getRestConnection(logger, hubServerConfigBuilder, proxyHost, proxyPort, proxyNoHosts, proxyUser, proxyPassword);
     }
 
-    public static RestConnection getRestConnection(final IntLogger logger, final HubServerConfigBuilder hubServerConfigBuilder, final String proxyHost,
-            final Integer proxyPort, final String proxyNoHosts, final String proxyUser,
+    public static RestConnection getRestConnection(final IntLogger logger, final HubServerConfigBuilder hubServerConfigBuilder, final String proxyHost, final Integer proxyPort, final String proxyNoHosts, final String proxyUser,
             final String proxyPassword) throws EncryptionException {
         if (StringUtils.isNotBlank(proxyHost) && proxyPort != null) {
             hubServerConfigBuilder.setProxyHost(proxyHost);
@@ -140,15 +132,13 @@ public class BuildHelper {
         return hubServerConfig.createCredentialsRestConnection(logger);
     }
 
-    public static String handleVariableReplacement(final Map<String, String> variables, final String value)
-            throws BDJenkinsHubPluginException {
+    public static String handleVariableReplacement(final Map<String, String> variables, final String value) throws BDJenkinsHubPluginException {
         if (value != null) {
 
             final String newValue = Util.replaceMacro(value, variables);
 
             if (newValue.contains("$")) {
-                throw new BDJenkinsHubPluginException("Variable was not properly replaced. Value : " + value
-                        + ", Result : " + newValue + ". Make sure the variable has been properly defined.");
+                throw new BDJenkinsHubPluginException("Variable was not properly replaced. Value : " + value + ", Result : " + newValue + ". Make sure the variable has been properly defined.");
             }
             return newValue;
         } else {

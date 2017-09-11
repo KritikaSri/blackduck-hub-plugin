@@ -48,8 +48,6 @@ import com.blackducksoftware.integration.hub.model.view.ProjectView;
 import com.blackducksoftware.integration.hub.scan.HubScanConfigFieldEnum;
 import com.blackducksoftware.integration.hub.service.HubServicesFactory;
 import com.blackducksoftware.integration.hub.validator.HubScanConfigValidator;
-import com.blackducksoftware.integration.log.LogLevel;
-import com.blackducksoftware.integration.log.PrintStreamIntLogger;
 import com.blackducksoftware.integration.validator.ValidationResults;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
@@ -166,8 +164,8 @@ public class BDCommonDescriptorUtil {
                 }
 
                 final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
-                final MetaService metaService = service.createMetaService(null);
-                final ProjectRequestService projectService = service.createProjectRequestService(new PrintStreamIntLogger(System.out, LogLevel.INFO));
+                final MetaService metaService = service.createMetaService();
+                final ProjectRequestService projectService = service.createProjectRequestService();
 
                 final List<ProjectView> suggestions = projectService.getAllProjectMatches(hubProjectName);
 
@@ -211,8 +209,8 @@ public class BDCommonDescriptorUtil {
                 }
 
                 final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
-                final MetaService metaService = service.createMetaService(null);
-                final ProjectRequestService projectService = service.createProjectRequestService(new PrintStreamIntLogger(System.out, LogLevel.INFO));
+                final MetaService metaService = service.createMetaService();
+                final ProjectRequestService projectService = service.createProjectRequestService();
                 final ProjectView project = projectService.getProjectByName(hubProjectName);
                 final List<ProjectView> projectList = new ArrayList<>();
                 projectList.add(project);
@@ -282,7 +280,7 @@ public class BDCommonDescriptorUtil {
                 }
 
                 final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
-                final ProjectRequestService projectService = service.createProjectRequestService(new PrintStreamIntLogger(System.out, LogLevel.INFO));
+                final ProjectRequestService projectService = service.createProjectRequestService();
                 ProjectView project = null;
                 try {
                     project = projectService.getProjectByName(hubProjectName);
@@ -291,7 +289,7 @@ public class BDCommonDescriptorUtil {
                     // field
                     return FormValidation.ok();
                 }
-                final ProjectVersionRequestService projectVersionService = service.createProjectVersionRequestService(null);
+                final ProjectVersionRequestService projectVersionService = service.createProjectVersionRequestService();
                 final List<ProjectVersionView> releases = projectVersionService.getAllProjectVersions(project);
 
                 final StringBuilder projectVersions = new StringBuilder();

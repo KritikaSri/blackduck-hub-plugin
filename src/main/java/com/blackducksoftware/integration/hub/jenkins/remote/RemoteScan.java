@@ -22,14 +22,12 @@
 package com.blackducksoftware.integration.hub.jenkins.remote;
 
 import java.io.File;
-import java.net.Proxy;
 import java.util.List;
 
 import org.jenkinsci.remoting.Role;
 import org.jenkinsci.remoting.RoleChecker;
 
 import com.blackducksoftware.integration.hub.builder.HubScanConfigBuilder;
-import com.blackducksoftware.integration.hub.certificate.HubCertificateHandler;
 import com.blackducksoftware.integration.hub.dataservice.cli.CLIDataService;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.global.HubServerConfig;
@@ -121,20 +119,10 @@ public class RemoteScan implements Callable<String, HubIntegrationException> {
     @Override
     public String call() throws HubIntegrationException {
         try {
-            final HubCertificateHandler hubCertificateHandler = new HubCertificateHandler(logger);
-            hubCertificateHandler.setTimeout(hubServerConfig.getTimeout());
-            if (hubServerConfig.getProxyInfo().getProxy(hubServerConfig.getHubUrl()) != Proxy.NO_PROXY) {
-                hubCertificateHandler.setProxyHost(hubServerConfig.getProxyInfo().getHost());
-                hubCertificateHandler.setProxyPort(hubServerConfig.getProxyInfo().getPort());
-                hubCertificateHandler.setProxyUsername(hubServerConfig.getProxyInfo().getUsername());
-                hubCertificateHandler.setProxyPassword(hubServerConfig.getProxyInfo().getDecryptedPassword());
-            }
-            hubCertificateHandler.importHttpsCertificateForHubServer(hubServerConfig.getHubUrl());
-
             final HubServicesFactory services = BuildHelper.getHubServicesFactory(logger, hubServerConfig);
 
             services.addEnvironmentVariables(envVars);
-            final CLIDataService cliDataService = services.createCLIDataService(logger, hubServerConfig.getTimeout() * 60 * 1000);
+            final CLIDataService cliDataService = services.createCLIDataService(hubServerConfig.getTimeout() * 60 * 1000);
 
             final File workingDirectory = new File(workingDirectoryPath);
             final File toolsDir = new File(toolsDirectory);
