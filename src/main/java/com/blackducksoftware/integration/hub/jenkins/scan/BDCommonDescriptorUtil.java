@@ -48,8 +48,6 @@ import com.blackducksoftware.integration.hub.model.view.ProjectView;
 import com.blackducksoftware.integration.hub.scan.HubScanConfigFieldEnum;
 import com.blackducksoftware.integration.hub.service.HubServicesFactory;
 import com.blackducksoftware.integration.hub.validator.HubScanConfigValidator;
-import com.blackducksoftware.integration.log.LogLevel;
-import com.blackducksoftware.integration.log.PrintStreamIntLogger;
 import com.blackducksoftware.integration.validator.ValidationResults;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
@@ -89,12 +87,10 @@ public class BDCommonDescriptorUtil {
                 changed = true;
                 Thread.currentThread().setContextClassLoader(PostBuildScanDescriptor.class.getClassLoader());
             }
-            // Code copied from
-            // https://github.com/jenkinsci/git-plugin/blob/f6d42c4e7edb102d3330af5ca66a7f5809d1a48e/src/main/java/hudson/plugins/git/UserRemoteConfig.java
+            // Code copied from https://github.com/jenkinsci/git-plugin/blob/f6d42c4e7edb102d3330af5ca66a7f5809d1a48e/src/main/java/hudson/plugins/git/UserRemoteConfig.java
             final CredentialsMatcher credentialsMatcher = CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
-            final AbstractProject<?, ?> project = null; // Dont want to limit
-            // the search to a particular project for the drop
-            // down menu
+            // Dont want to limit the search to a particular project for the drop down menu
+            final AbstractProject<?, ?> project = null;
             boxModel = new StandardListBoxModel().withEmptySelection().withMatching(credentialsMatcher, CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement> emptyList()));
         } finally {
             if (changed) {
@@ -165,9 +161,9 @@ public class BDCommonDescriptorUtil {
                     return potentialMatches;
                 }
 
-                final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
-                final MetaService metaService = service.createMetaService(null);
-                final ProjectRequestService projectService = service.createProjectRequestService(new PrintStreamIntLogger(System.out, LogLevel.INFO));
+                final HubServicesFactory service = BuildHelper.getHubServicesFactory(null, serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout(), serverInfo.shouldTrustSSLCerts());
+                final MetaService metaService = service.createMetaService();
+                final ProjectRequestService projectService = service.createProjectRequestService();
 
                 final List<ProjectView> suggestions = projectService.getAllProjectMatches(hubProjectName);
 
@@ -180,8 +176,7 @@ public class BDCommonDescriptorUtil {
                     }
                 }
             } catch (final Exception e) {
-                // do nothing for exception, there is nowhere in the UI to
-                // display this error
+                // do nothing for exception, there is nowhere in the UI to display this error
             } finally {
                 if (changed) {
                     Thread.currentThread().setContextClassLoader(originalClassLoader);
@@ -193,9 +188,7 @@ public class BDCommonDescriptorUtil {
     }
 
     public static FormValidation doCheckHubProjectName(final HubServerInfo serverInfo, final String hubProjectName, final String hubProjectVersion, final boolean dryRun) throws IOException, ServletException {
-        // Query for the project version so hopefully the check methods run for
-        // both fields
-        // when the User changes the Name of the project
+        // Query for the project version so hopefully the check methods run for both fields when the User changes the Name of the project
         if (StringUtils.isNotBlank(hubProjectName)) {
             final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
             final boolean changed = false;
@@ -210,9 +203,9 @@ public class BDCommonDescriptorUtil {
                     return FormValidation.warning(Messages.HubBuildScan_getProjectNameContainsVariable());
                 }
 
-                final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
-                final MetaService metaService = service.createMetaService(null);
-                final ProjectRequestService projectService = service.createProjectRequestService(new PrintStreamIntLogger(System.out, LogLevel.INFO));
+                final HubServicesFactory service = BuildHelper.getHubServicesFactory(null, serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout(), serverInfo.shouldTrustSSLCerts());
+                final MetaService metaService = service.createMetaService();
+                final ProjectRequestService projectService = service.createProjectRequestService();
                 final ProjectView project = projectService.getProjectByName(hubProjectName);
                 final List<ProjectView> projectList = new ArrayList<>();
                 projectList.add(project);
@@ -281,17 +274,16 @@ public class BDCommonDescriptorUtil {
                     return FormValidation.ok();
                 }
 
-                final HubServicesFactory service = BuildHelper.getHubServicesFactory(serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
-                final ProjectRequestService projectService = service.createProjectRequestService(new PrintStreamIntLogger(System.out, LogLevel.INFO));
+                final HubServicesFactory service = BuildHelper.getHubServicesFactory(null, serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout(), serverInfo.shouldTrustSSLCerts());
+                final ProjectRequestService projectService = service.createProjectRequestService();
                 ProjectView project = null;
                 try {
                     project = projectService.getProjectByName(hubProjectName);
                 } catch (final Exception e) {
-                    // This error will already show up for the project name
-                    // field
+                    // This error will already show up for the project name field
                     return FormValidation.ok();
                 }
-                final ProjectVersionRequestService projectVersionService = service.createProjectVersionRequestService(null);
+                final ProjectVersionRequestService projectVersionService = service.createProjectVersionRequestService();
                 final List<ProjectVersionView> releases = projectVersionService.getAllProjectVersions(project);
 
                 final StringBuilder projectVersions = new StringBuilder();
@@ -385,15 +377,10 @@ public class BDCommonDescriptorUtil {
                 Thread.currentThread().setContextClassLoader(PostBuildScanDescriptor.class.getClassLoader());
             }
 
-            // Code copied from
-            // https://github.com/jenkinsci/git-plugin/blob/f6d42c4e7edb102d3330af5ca66a7f5809d1a48e/src/main/java/hudson/plugins/git/UserRemoteConfig.java
+            // Code copied from https://github.com/jenkinsci/git-plugin/blob/f6d42c4e7edb102d3330af5ca66a7f5809d1a48e/src/main/java/hudson/plugins/git/UserRemoteConfig.java
             final CredentialsMatcher credentialsMatcher = CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
-            final AbstractProject<?, ?> project = null; // Dont want to
-            // limit
-            // the search to a
-            // particular project
-            // for the drop
-            // down menu
+            // Dont want to limit the search to a particular project for the drop down menu
+            final AbstractProject<?, ?> project = null;
             boxModel = new StandardListBoxModel().withEmptySelection().withMatching(credentialsMatcher, CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement> emptyList()));
         } finally {
             if (changed) {

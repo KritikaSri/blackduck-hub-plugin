@@ -46,19 +46,18 @@ public class HubServerInfo {
 
     private int timeout;
 
-    private boolean importSSLCerts;
+    private boolean trustSSLCertificates;
 
     private boolean performWorkspaceCheck;
 
     public HubServerInfo() {
     }
 
-    public HubServerInfo(final String serverUrl, final String hubCredentialsId, final int timeout,
-            final boolean importSSLCerts, final boolean performWorkspaceCheck) {
+    public HubServerInfo(final String serverUrl, final String hubCredentialsId, final int timeout, final boolean trustSSLCertificates, final boolean performWorkspaceCheck) {
         this.serverUrl = serverUrl;
         this.hubCredentialsId = hubCredentialsId;
         this.timeout = timeout;
-        this.importSSLCerts = importSSLCerts;
+        this.trustSSLCertificates = trustSSLCertificates;
         this.performWorkspaceCheck = performWorkspaceCheck;
     }
 
@@ -121,9 +120,7 @@ public class HubServerInfo {
         // use has changed.
         if (credential == null || !credential.getId().equals(hubCredentialsId)) {
             final AbstractProject<?, ?> project = null;
-            final List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class,
-                    project, ACL.SYSTEM,
-                    Collections.<DomainRequirement> emptyList());
+            final List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement> emptyList());
             final IdMatcher matcher = new IdMatcher(hubCredentialsId);
             for (final StandardCredentials c : credentials) {
                 if (matcher.matches(c) && c instanceof UsernamePasswordCredentialsImpl) {
@@ -134,12 +131,12 @@ public class HubServerInfo {
         return credential;
     }
 
-    public boolean shouldImportSSLCerts() {
-        return importSSLCerts;
+    public boolean shouldTrustSSLCerts() {
+        return trustSSLCertificates;
     }
 
-    public void setImportSSLCerts(final boolean importSSLCerts) {
-        this.importSSLCerts = importSSLCerts;
+    public void setTrustSSLCertificates(final boolean trustSSLCertificates) {
+        this.trustSSLCertificates = trustSSLCertificates;
     }
 
     public boolean isPerformWorkspaceCheck() {
@@ -161,8 +158,8 @@ public class HubServerInfo {
         builder.append(credential);
         builder.append(", timeout=");
         builder.append(timeout);
-        builder.append(", importSSLCerts=");
-        builder.append(importSSLCerts);
+        builder.append(", trustSSLCertificates=");
+        builder.append(trustSSLCertificates);
         builder.append(", performWorkspaceCheck=");
         builder.append(performWorkspaceCheck);
         builder.append("]");
