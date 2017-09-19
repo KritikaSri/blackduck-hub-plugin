@@ -55,6 +55,7 @@ import org.xml.sax.SAXException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
+import com.blackducksoftware.integration.hub.jenkins.helper.JenkinsProxyHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.jenkins.scan.BDCommonDescriptorUtil;
 import com.blackducksoftware.integration.hub.rest.RestConnection;
@@ -368,11 +369,12 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         validator.setHubUrl(hubServerUrl);
         validator.setAlwaysTrustServerCertificate(getTrustSSLCertificates());
         if (proxyConfig != null) {
-            validator.setProxyHost(proxyConfig.name);
-            validator.setProxyPort(proxyConfig.port);
-            validator.setProxyUsername(proxyConfig.getUserName());
-            validator.setProxyPassword(proxyConfig.getPassword());
-            validator.setIgnoredProxyHosts(proxyConfig.noProxyHost);
+            if (JenkinsProxyHelper.shouldUseProxy(hubServerUrl, proxyConfig.noProxyHost)) {
+                validator.setProxyHost(proxyConfig.name);
+                validator.setProxyPort(proxyConfig.port);
+                validator.setProxyUsername(proxyConfig.getUserName());
+                validator.setProxyPassword(proxyConfig.getPassword());
+            }
         }
         final ValidationResults results = new ValidationResults();
         validator.validateHubUrl(results);

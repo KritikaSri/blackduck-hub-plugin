@@ -22,9 +22,6 @@
 package com.blackducksoftware.integration.hub.jenkins.scan;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,6 +47,7 @@ import com.blackducksoftware.integration.hub.jenkins.cli.DummyToolInstaller;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
+import com.blackducksoftware.integration.hub.jenkins.helper.JenkinsProxyHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.jenkins.remote.DetermineTargetPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.RemoteScan;
@@ -270,15 +268,11 @@ public class BDCommonScanStep {
                     if (jenkins != null) {
                         final ProxyConfiguration proxyConfig = jenkins.proxy;
                         if (proxyConfig != null) {
-                            final URL actualUrl = new URL(getHubServerInfo().getServerUrl());
-                            final Proxy proxy = ProxyConfiguration.createProxy(actualUrl.getHost(), proxyConfig.name, proxyConfig.port, proxyConfig.noProxyHost);
-
-                            if (proxy.address() != null) {
-                                final InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
-                                hubServerConfigBuilder.setProxyHost(proxyAddress.getHostName());
-                                hubServerConfigBuilder.setProxyPort(proxyAddress.getPort());
-                                hubServerConfigBuilder.setProxyUsername(jenkins.proxy.getUserName());
-                                hubServerConfigBuilder.setProxyPassword(jenkins.proxy.getPassword());
+                            if (JenkinsProxyHelper.shouldUseProxy(getHubServerInfo().getServerUrl(), proxyConfig.noProxyHost)) {
+                                hubServerConfigBuilder.setProxyHost(proxyConfig.name);
+                                hubServerConfigBuilder.setProxyPort(proxyConfig.port);
+                                hubServerConfigBuilder.setProxyUsername(proxyConfig.getUserName());
+                                hubServerConfigBuilder.setProxyPassword(proxyConfig.getPassword());
                             }
                         }
                     }

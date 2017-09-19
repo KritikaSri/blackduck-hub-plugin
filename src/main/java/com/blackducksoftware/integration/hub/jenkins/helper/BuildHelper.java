@@ -87,7 +87,7 @@ public class BuildHelper {
         hubServerConfigBuilder.setTimeout(hubTimeout);
         hubServerConfigBuilder.setAlwaysTrustServerCertificate(autoImportHttpsCertificates);
 
-        return getRestConnection(logger, hubServerConfigBuilder);
+        return getRestConnection(logger, serverUrl, hubServerConfigBuilder);
     }
 
     public static RestConnection getRestConnection(final IntLogger logger, final String serverUrl, final String username, final String password, final int hubTimeout) throws EncryptionException, MalformedURLException {
@@ -97,36 +97,35 @@ public class BuildHelper {
         hubServerConfigBuilder.setPassword(password);
         hubServerConfigBuilder.setTimeout(hubTimeout);
 
-        return getRestConnection(logger, hubServerConfigBuilder);
+        return getRestConnection(logger, serverUrl, hubServerConfigBuilder);
     }
 
-    private static RestConnection getRestConnection(final IntLogger logger, final HubServerConfigBuilder hubServerConfigBuilder) throws EncryptionException, MalformedURLException {
+    private static RestConnection getRestConnection(final IntLogger logger, final String serverUrl, final HubServerConfigBuilder hubServerConfigBuilder) throws EncryptionException, MalformedURLException {
         final Jenkins jenkins = Jenkins.getInstance();
         String proxyHost = null;
         Integer proxyPort = null;
-        String proxyNoHosts = null;
         String proxyUser = null;
         String proxyPassword = null;
         if (jenkins != null) {
             final ProxyConfiguration proxyConfig = jenkins.proxy;
             if (proxyConfig != null) {
-                proxyHost = proxyConfig.name;
-                proxyPort = proxyConfig.port;
-                proxyNoHosts = proxyConfig.noProxyHost;
-                proxyUser = jenkins.proxy.getUserName();
-                proxyPassword = jenkins.proxy.getPassword();
+                if (JenkinsProxyHelper.shouldUseProxy(serverUrl, proxyConfig.noProxyHost)) {
+                    proxyHost = proxyConfig.name;
+                    proxyPort = proxyConfig.port;
+                    proxyUser = jenkins.proxy.getUserName();
+                    proxyPassword = jenkins.proxy.getPassword();
+                }
             }
         }
 
-        return getRestConnection(logger, hubServerConfigBuilder, proxyHost, proxyPort, proxyNoHosts, proxyUser, proxyPassword);
+        return getRestConnection(logger, hubServerConfigBuilder, proxyHost, proxyPort, proxyUser, proxyPassword);
     }
 
-    public static RestConnection getRestConnection(final IntLogger logger, final HubServerConfigBuilder hubServerConfigBuilder, final String proxyHost, final Integer proxyPort, final String proxyNoHosts, final String proxyUser,
-            final String proxyPassword) throws EncryptionException {
+    public static RestConnection getRestConnection(final IntLogger logger, final HubServerConfigBuilder hubServerConfigBuilder, final String proxyHost, final Integer proxyPort, final String proxyUser, final String proxyPassword)
+            throws EncryptionException {
         if (StringUtils.isNotBlank(proxyHost) && proxyPort != null) {
             hubServerConfigBuilder.setProxyHost(proxyHost);
             hubServerConfigBuilder.setProxyPort(proxyPort);
-            hubServerConfigBuilder.setIgnoredProxyHosts(proxyNoHosts);
 
             if (StringUtils.isNotBlank(proxyUser) && StringUtils.isNotBlank(proxyPassword)) {
                 hubServerConfigBuilder.setProxyUsername(proxyUser);
