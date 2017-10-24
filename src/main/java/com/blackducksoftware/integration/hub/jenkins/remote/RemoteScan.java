@@ -28,7 +28,6 @@ import org.jenkinsci.remoting.Role;
 import org.jenkinsci.remoting.RoleChecker;
 
 import com.blackducksoftware.integration.hub.builder.HubScanConfigBuilder;
-import com.blackducksoftware.integration.hub.certificate.HubCertificateHandler;
 import com.blackducksoftware.integration.hub.dataservice.cli.CLIDataService;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.global.HubServerConfig;
@@ -120,9 +119,6 @@ public class RemoteScan implements Callable<String, HubIntegrationException> {
     @Override
     public String call() throws HubIntegrationException {
         try {
-            final HubCertificateHandler hubCertificateHandler = new HubCertificateHandler(logger);
-            hubCertificateHandler.importHttpsCertificateForHubServer(hubServerConfig);
-
             final HubServicesFactory services = BuildHelper.getHubServicesFactory(logger, hubServerConfig);
 
             services.addEnvironmentVariables(envVars);

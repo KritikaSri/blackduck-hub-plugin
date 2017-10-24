@@ -49,7 +49,7 @@ public class PostBuildHubScan extends Recorder {
 
     private final String hubProjectName;
 
-    private String hubProjectVersion;
+    private final String hubProjectVersion;
 
     private final String hubVersionPhase;
 
@@ -59,11 +59,7 @@ public class PostBuildHubScan extends Recorder {
 
     private final boolean shouldGenerateHubReport;
 
-    private String bomUpdateMaximumWaitTime;
-
-    // Hub Jenkins 2.3.2, correcting the spelling to bomUpdateMaximumWaitTime
-    // need to keep this around for now for migration purposes
-    private String bomUpdateMaxiumWaitTime;
+    private final String bomUpdateMaximumWaitTime;
 
     private final boolean projectLevelAdjustments;
 
@@ -72,10 +68,6 @@ public class PostBuildHubScan extends Recorder {
     private final boolean cleanupOnSuccessfulScan;
 
     private Boolean verbose;
-
-    // Old variable, renaming to hubProjectVersion
-    // need to keep this around for now for migration purposes
-    private String hubProjectRelease;
 
     private final ScanExclusion[] excludePatterns;
 
@@ -138,16 +130,10 @@ public class PostBuildHubScan extends Recorder {
     }
 
     public String getBomUpdateMaximumWaitTime() {
-        if (bomUpdateMaximumWaitTime == null && bomUpdateMaxiumWaitTime != null) {
-            bomUpdateMaximumWaitTime = bomUpdateMaxiumWaitTime;
-        }
         return bomUpdateMaximumWaitTime;
     }
 
     public String getHubProjectVersion() {
-        if (hubProjectVersion == null && hubProjectRelease != null) {
-            hubProjectVersion = hubProjectRelease;
-        }
         return hubProjectVersion;
     }
 

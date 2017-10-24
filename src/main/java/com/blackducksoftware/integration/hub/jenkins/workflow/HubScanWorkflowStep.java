@@ -26,7 +26,6 @@ import java.io.IOException;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.flow.FlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -77,11 +76,7 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
     private final boolean projectLevelAdjustments;
 
-    private String bomUpdateMaximumWaitTime;
-
-    // Hub Jenkins 2.3.2, correcting the spelling to bomUpdateMaximumWaitTime
-    // need to keep this around for now for migration purposes
-    private String bomUpdateMaxiumWaitTime;
+    private final String bomUpdateMaximumWaitTime;
 
     private final boolean dryRun;
 
@@ -99,8 +94,8 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
     @DataBoundConstructor
     public HubScanWorkflowStep(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion, final String hubVersionPhase, final String hubVersionDist, final String scanMemory, final boolean shouldGenerateHubReport,
-            final boolean projectLevelAdjustments, final String bomUpdateMaximumWaitTime, final String bomUpdateMaxiumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan, final ScanExclusion[] excludePatterns,
-            final String codeLocationName, final boolean unmapPreviousCodeLocations, final boolean deletePreviousCodeLocations) {
+            final boolean projectLevelAdjustments, final String bomUpdateMaximumWaitTime, final boolean dryRun, final boolean cleanupOnSuccessfulScan, final ScanExclusion[] excludePatterns, final String codeLocationName,
+            final boolean unmapPreviousCodeLocations, final boolean deletePreviousCodeLocations) {
         this.scans = scans;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
@@ -110,9 +105,6 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
         this.shouldGenerateHubReport = shouldGenerateHubReport;
         this.projectLevelAdjustments = projectLevelAdjustments;
         this.bomUpdateMaximumWaitTime = bomUpdateMaximumWaitTime;
-        if (StringUtils.isBlank(bomUpdateMaximumWaitTime)) {
-            this.bomUpdateMaximumWaitTime = bomUpdateMaxiumWaitTime;
-        }
         this.dryRun = dryRun;
         this.cleanupOnSuccessfulScan = cleanupOnSuccessfulScan;
         this.excludePatterns = excludePatterns;
@@ -183,10 +175,6 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
     public String getBomUpdateMaximumWaitTime() {
         return bomUpdateMaximumWaitTime;
-    }
-
-    public String getBomUpdateMaxiumWaitTime() {
-        return bomUpdateMaxiumWaitTime;
     }
 
     public boolean isDryRun() {
