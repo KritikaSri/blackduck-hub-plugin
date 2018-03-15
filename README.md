@@ -1,5 +1,5 @@
 # Warning
-We have moved to a new scanner solution that uses additional discovery techniques to augment your open source matches Please see (https://github.com/jenkinsci/blackduck-detect-plugin) for details.
+This product is now deprecated.  Please use Detect for all scanning and discovery solutions going forward.  https://github.com/jenkinsci/blackduck-detect-plugin
 
 ## Overview
 
