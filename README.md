@@ -1,5 +1,5 @@
 # Warning
-This product is now deprecated.  Please use Detect for all scanning and discovery solutions going forward.  https://github.com/jenkinsci/blackduck-detect-plugin
+This product is now deprecated. Please use Detect for all scanning and discovery solutions going forward.  https://github.com/jenkinsci/blackduck-detect-plugin
 
 ## Overview
 
