@@ -1,3 +1,6 @@
+# Warning
+We have moved to a new scanner solution that uses additional discovery techniques to augment your open source matches Please see (https://github.com/jenkinsci/blackduck-detect-plugin) for details.
+
 ## Overview
 
 Hub plugin for Jenkins. This plugin provides ability to run a scan using the BD Hub CLI on build input and/or output. You can scan multiple targets, fail builds based on Hub policies, and display Hub reports for a particular Build.
