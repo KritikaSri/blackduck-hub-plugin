@@ -156,7 +156,7 @@ public class HubCommonFailureStep {
 
     public HubServicesFactory getHubServicesFactory(final HubJenkinsLogger logger, final HubServerInfo serverInfo)
             throws IOException, URISyntaxException, BDJenkinsHubPluginException, HubIntegrationException, IllegalArgumentException, EncryptionException {
-        return BuildHelper.getHubServicesFactory(logger, serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
+        return BuildHelper.getHubServicesFactory(logger, serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout(), serverInfo.shouldTrustSSLCerts());
     }
 
 }
