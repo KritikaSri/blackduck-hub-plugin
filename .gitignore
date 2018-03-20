@@ -3,6 +3,8 @@ target/
 .classpath
 .project
 .DS_Store
+.idea/
+*.iml
 test.log
 pom.xml.bak
 /bin/
