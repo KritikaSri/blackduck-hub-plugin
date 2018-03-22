@@ -21,15 +21,6 @@
  *******************************************************************************/
 package com.blackducksoftware.integration.hub.jenkins.scan;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import javax.servlet.ServletException;
-
-import org.apache.commons.lang.StringUtils;
-
 import com.blackducksoftware.integration.hub.api.item.HubViewFilter;
 import com.blackducksoftware.integration.hub.api.item.MetaService;
 import com.blackducksoftware.integration.hub.api.project.ProjectRequestService;
@@ -56,12 +47,18 @@ import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
-
 import hudson.model.AbstractProject;
 import hudson.model.AutoCompletionCandidates;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import org.apache.commons.lang.StringUtils;
+
+import javax.servlet.ServletException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class BDCommonDescriptorUtil {
 
@@ -75,7 +72,6 @@ public class BDCommonDescriptorUtil {
 
     /**
      * Fills the Credential drop down list in the global config
-     *
      */
     public static ListBoxModel doFillCredentialsIdItems() {
 
@@ -91,7 +87,7 @@ public class BDCommonDescriptorUtil {
             final CredentialsMatcher credentialsMatcher = CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
             // Dont want to limit the search to a particular project for the drop down menu
             final AbstractProject<?, ?> project = null;
-            boxModel = new StandardListBoxModel().withEmptySelection().withMatching(credentialsMatcher, CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement> emptyList()));
+            boxModel = new StandardListBoxModel().withEmptySelection().withMatching(credentialsMatcher, CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement>emptyList()));
         } finally {
             if (changed) {
                 Thread.currentThread().setContextClassLoader(originalClassLoader);
@@ -102,7 +98,6 @@ public class BDCommonDescriptorUtil {
 
     /**
      * Fills the drop down list of possible Version phases
-     *
      * @return
      */
     public static ListBoxModel doFillHubVersionPhaseItems() {
@@ -128,7 +123,6 @@ public class BDCommonDescriptorUtil {
 
     /**
      * Fills the drop down list of possible Version distribution types
-     *
      * @return
      */
     public static ListBoxModel doFillHubVersionDistItems() {
@@ -218,7 +212,7 @@ public class BDCommonDescriptorUtil {
             } catch (final DoesNotExistException e) {
                 return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingIn_0_(serverInfo.getServerUrl()));
             } catch (final HubIntegrationException e) {
-                String message;
+                final String message;
                 if (e.getCause() != null) {
                     message = e.getCause().toString();
                     if (message.contains("(407)")) {
@@ -300,7 +294,7 @@ public class BDCommonDescriptorUtil {
                 }
                 return FormValidation.error(Messages.HubBuildScan_getVersionNonExistingIn_0_(project.name, projectVersions.toString()));
             } catch (final HubIntegrationException e) {
-                String message;
+                final String message;
                 if (e.getCause() != null) {
                     message = e.getCause().toString();
                     if (message.contains("(407)")) {
@@ -359,34 +353,5 @@ public class BDCommonDescriptorUtil {
             return FormValidation.error("The String : " + bomUpdateMaximumWaitTime + " , is not an Integer.");
         }
         return FormValidation.ok();
-    }
-
-    /**
-     * Fills the Credential drop down list in the global config
-     *
-     * @return
-     */
-    public static ListBoxModel doFillHubCredentialsIdItems() {
-
-        ListBoxModel boxModel = null;
-        final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
-        boolean changed = false;
-        try {
-            if (PostBuildScanDescriptor.class.getClassLoader() != originalClassLoader) {
-                changed = true;
-                Thread.currentThread().setContextClassLoader(PostBuildScanDescriptor.class.getClassLoader());
-            }
-
-            // Code copied from https://github.com/jenkinsci/git-plugin/blob/f6d42c4e7edb102d3330af5ca66a7f5809d1a48e/src/main/java/hudson/plugins/git/UserRemoteConfig.java
-            final CredentialsMatcher credentialsMatcher = CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
-            // Dont want to limit the search to a particular project for the drop down menu
-            final AbstractProject<?, ?> project = null;
-            boxModel = new StandardListBoxModel().withEmptySelection().withMatching(credentialsMatcher, CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement> emptyList()));
-        } finally {
-            if (changed) {
-                Thread.currentThread().setContextClassLoader(originalClassLoader);
-            }
-        }
-        return boxModel;
     }
 }
