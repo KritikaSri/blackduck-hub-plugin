@@ -5,6 +5,7 @@ target/
 .DS_Store
 .idea/
 *.iml
+out/
 test.log
 pom.xml.bak
 /bin/
