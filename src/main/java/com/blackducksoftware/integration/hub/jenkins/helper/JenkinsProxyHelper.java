@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class JenkinsProxyHelper {
-
     public static boolean shouldUseProxy(final String urlString, final String noProxyHosts) {
         if (StringUtils.isBlank(urlString)) {
             return false;
@@ -55,7 +54,7 @@ public class JenkinsProxyHelper {
             return true;
         }
         final List<Pattern> noProxyHostPatterns = getNoProxyHostPatterns(noProxyHosts);
-        return ProxyUtil.shouldIgnoreHost(url.getHost(), noProxyHostPatterns);
+        return !ProxyUtil.shouldIgnoreHost(url.getHost(), noProxyHostPatterns);
     }
 
     private static List<Pattern> getNoProxyHostPatterns(final String noProxyHosts) {

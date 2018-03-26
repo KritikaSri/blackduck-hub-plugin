@@ -21,24 +21,13 @@
  *******************************************************************************/
 package com.blackducksoftware.integration.hub.jenkins.scan;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
-
 import com.blackducksoftware.integration.exception.IntegrationException;
 import com.blackducksoftware.integration.hub.api.item.MetaService;
 import com.blackducksoftware.integration.hub.api.project.ProjectRequestService;
 import com.blackducksoftware.integration.hub.builder.HubServerConfigBuilder;
 import com.blackducksoftware.integration.hub.dataservice.report.RiskReportDataService;
 import com.blackducksoftware.integration.hub.global.HubServerConfig;
-import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
-import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
-import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
-import com.blackducksoftware.integration.hub.jenkins.Messages;
-import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
+import com.blackducksoftware.integration.hub.jenkins.*;
 import com.blackducksoftware.integration.hub.jenkins.action.BomUpToDateAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubReportV2Action;
 import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
@@ -60,7 +49,6 @@ import com.blackducksoftware.integration.hub.rest.RestConnection;
 import com.blackducksoftware.integration.hub.service.HubServicesFactory;
 import com.blackducksoftware.integration.log.IntLogger;
 import com.blackducksoftware.integration.util.CIEnvironmentVariables;
-
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -70,6 +58,12 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BDCommonScanStep {
 
@@ -132,47 +126,47 @@ public class BDCommonScanStep {
     }
 
     public String getCodeLocationName() {
-        return codeLocationName;
+        return this.codeLocationName;
     }
 
     public ScanJobs[] getScans() {
-        return scans;
+        return this.scans;
     }
 
     public String[] getExcludePatterns() {
-        return excludePatterns;
+        return this.excludePatterns;
     }
 
     public String getHubProjectName() {
-        return hubProjectName;
+        return this.hubProjectName;
     }
 
     public String getHubProjectVersion() {
-        return hubProjectVersion;
+        return this.hubProjectVersion;
     }
 
     public String getPhase() {
-        if (phase == null) {
+        if (this.phase == null) {
             // set to the default if they have not configured a phase, should help with migration from older versions that did not include the phase in the config
             return ProjectVersionPhaseEnum.DEVELOPMENT.toString();
         }
-        return phase;
+        return this.phase;
     }
 
     public String getDistribution() {
-        if (distribution == null) {
+        if (this.distribution == null) {
             // set to the default if they have not configured a distribution, should help with migration from older versions that did not include the distribution in the config
             return ProjectVersionDistributionEnum.EXTERNAL.toString();
         }
-        return distribution;
+        return this.distribution;
     }
 
     public String getScanMemory() {
-        return scanMemory;
+        return this.scanMemory;
     }
 
     public int getScanMemoryInteger() {
-        int memory = NumberUtils.toInt(scanMemory);
+        int memory = NumberUtils.toInt(this.scanMemory);
         if (memory <= 0) {
             memory = 4096;
         }
@@ -180,43 +174,43 @@ public class BDCommonScanStep {
     }
 
     public boolean isProjectLevelAdjustments() {
-        return projectLevelAdjustments;
+        return this.projectLevelAdjustments;
     }
 
     public boolean isShouldGenerateHubReport() {
-        return shouldGenerateHubReport;
+        return this.shouldGenerateHubReport;
     }
 
     public String getBomUpdateMaximumWaitTime() {
-        return bomUpdateMaximumWaitTime;
+        return this.bomUpdateMaximumWaitTime;
     }
 
     public boolean isDryRun() {
-        return dryRun;
+        return this.dryRun;
     }
 
     public Boolean isVerbose() {
-        return verbose;
+        return this.verbose;
     }
 
     public boolean isCleanupOnSuccessfulScan() {
-        return cleanupOnSuccessfulScan;
+        return this.cleanupOnSuccessfulScan;
     }
 
     public BomUpToDateAction getBomUpToDateAction() {
-        return bomUpToDateAction;
+        return this.bomUpToDateAction;
     }
 
     public boolean isUnmapPreviousCodeLocations() {
-        return unmapPreviousCodeLocations;
+        return this.unmapPreviousCodeLocations;
     }
 
     public boolean isDeletePreviousCodeLocations() {
-        return deletePreviousCodeLocations;
+        return this.deletePreviousCodeLocations;
     }
 
     public boolean isFailureConditionsConfigured() {
-        return failureConditionsConfigured;
+        return this.failureConditionsConfigured;
     }
 
     public HubServerInfo getHubServerInfo() {
@@ -284,12 +278,12 @@ public class BDCommonScanStep {
                     final String pluginVersion = PluginHelper.getPluginVersion();
 
                     final RemoteScan scan = new RemoteScan(logger, codeLocationName, projectName, projectVersion, getPhase(), getDistribution(), getScanMemoryInteger(), isProjectLevelAdjustments(), workingDirectory, scanTargetPaths,
-                            isDryRun(), isCleanupOnSuccessfulScan(), toolsDirectory, thirdPartyVersion, pluginVersion, hubServerConfig, getHubServerInfo().isPerformWorkspaceCheck(), getExcludePatterns(), envVars, unmapPreviousCodeLocations,
-                            deletePreviousCodeLocations, isShouldWaitForScansFinished());
+                            isDryRun(), isCleanupOnSuccessfulScan(), toolsDirectory, thirdPartyVersion, pluginVersion, hubServerConfig, getHubServerInfo().isPerformWorkspaceCheck(), getExcludePatterns(), envVars,
+                            isUnmapPreviousCodeLocations(), isDeletePreviousCodeLocations(), isShouldWaitForScansFinished());
 
                     final String projectVersionViewJson = builtOn.getChannel().call(scan);
 
-                    bomUpToDateAction.setDryRun(isDryRun());
+                    this.bomUpToDateAction.setDryRun(isDryRun());
 
                     Long bomWait = 300000l;
                     if (!isDryRun()) {
@@ -309,7 +303,7 @@ public class BDCommonScanStep {
 
                         try {
                             // User input is in minutes, need to changes to milliseconds
-                            bomWait = Long.valueOf(bomUpdateMaximumWaitTime) * 60 * 1000;
+                            bomWait = Long.valueOf(getBomUpdateMaximumWaitTime()) * 60 * 1000;
                         } catch (final NumberFormatException e) {
                             bomWait = 300000l;
                         }
@@ -328,15 +322,15 @@ public class BDCommonScanStep {
                                 reportAction.setReportData(reportData);
 
                                 run.addAction(reportAction);
-                                bomUpToDateAction.setHasBomBeenUdpated(true);
+                                this.bomUpToDateAction.setHasBomBeenUdpated(true);
                             } else {
                                 logger.error("Could not find the Hub Project or Version for this scan. Check that the status directory exists.");
                                 run.setResult(Result.UNSTABLE);
                                 return;
                             }
                         } else {
-                            bomUpToDateAction.setHasBomBeenUdpated(false);
-                            bomUpToDateAction.setMaxWaitTime(bomWait);
+                            this.bomUpToDateAction.setHasBomBeenUdpated(false);
+                            this.bomUpToDateAction.setMaxWaitTime(bomWait);
                         }
                         if (version != null) {
                             String policyStatusLink = null;
@@ -347,7 +341,7 @@ public class BDCommonScanStep {
                             } catch (final Exception e) {
                                 logger.debug("Could not get the policy status link, the Hub policy module is not enabled");
                             }
-                            bomUpToDateAction.setPolicyStatusUrl(policyStatusLink);
+                            this.bomUpToDateAction.setPolicyStatusUrl(policyStatusLink);
                         }
 
                     }
@@ -383,7 +377,7 @@ public class BDCommonScanStep {
             }
         }
         logger.alwaysLog("Finished running Black Duck Scans.");
-        run.addAction(bomUpToDateAction);
+        run.addAction(this.bomUpToDateAction);
         run.addAction(new HubScanFinishedAction());
     }
 
@@ -424,7 +418,6 @@ public class BDCommonScanStep {
 
     /**
      * Validates that the Plugin is configured correctly. Checks that the User has defined an iScan tool, a Hub server URL, a Credential, and that there are at least one scan Target/Job defined in the Build
-     *
      */
     public boolean validateGlobalConfiguration() throws HubConfigurationException {
 
