@@ -32,9 +32,7 @@ import hudson.model.Run;
 public class HubReportV2Action implements Action {
 
     private final Run<?, ?> build;
-
-    private ReportData reportData;
-
+    private final transient Gson gson = new GsonBuilder().create();
     private String jsonReportData;
 
     public HubReportV2Action(final Run<?, ?> build) {
@@ -45,14 +43,12 @@ public class HubReportV2Action implements Action {
         return build;
     }
 
-    public void setReportData(final ReportData reportData) {
-        this.reportData = reportData;
-        final Gson gson = new GsonBuilder().create();
-        jsonReportData = gson.toJson(reportData);
+    public ReportData getReportData() {
+        return gson.fromJson(jsonReportData, ReportData.class);
     }
 
-    public ReportData getReportData() {
-        return reportData;
+    public void setReportData(final ReportData reportData) {
+        jsonReportData = gson.toJson(reportData);
     }
 
     public String getJsonReportData() {

@@ -21,13 +21,24 @@
  *******************************************************************************/
 package com.blackducksoftware.integration.hub.jenkins.scan;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
+
 import com.blackducksoftware.integration.exception.IntegrationException;
 import com.blackducksoftware.integration.hub.api.item.MetaService;
 import com.blackducksoftware.integration.hub.api.project.ProjectRequestService;
 import com.blackducksoftware.integration.hub.builder.HubServerConfigBuilder;
 import com.blackducksoftware.integration.hub.dataservice.report.RiskReportDataService;
 import com.blackducksoftware.integration.hub.global.HubServerConfig;
-import com.blackducksoftware.integration.hub.jenkins.*;
+import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
+import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
+import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
+import com.blackducksoftware.integration.hub.jenkins.Messages;
+import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.action.BomUpToDateAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubReportV2Action;
 import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
@@ -40,6 +51,7 @@ import com.blackducksoftware.integration.hub.jenkins.helper.JenkinsProxyHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.jenkins.remote.DetermineTargetPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.RemoteScan;
+import com.blackducksoftware.integration.hub.jenkins.remote.ScanResponse;
 import com.blackducksoftware.integration.hub.model.enumeration.ProjectVersionDistributionEnum;
 import com.blackducksoftware.integration.hub.model.enumeration.ProjectVersionPhaseEnum;
 import com.blackducksoftware.integration.hub.model.view.ProjectVersionView;
@@ -49,6 +61,7 @@ import com.blackducksoftware.integration.hub.rest.RestConnection;
 import com.blackducksoftware.integration.hub.service.HubServicesFactory;
 import com.blackducksoftware.integration.log.IntLogger;
 import com.blackducksoftware.integration.util.CIEnvironmentVariables;
+
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -58,12 +71,6 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class BDCommonScanStep {
 
@@ -281,7 +288,19 @@ public class BDCommonScanStep {
                             isDryRun(), isCleanupOnSuccessfulScan(), toolsDirectory, thirdPartyVersion, pluginVersion, hubServerConfig, getHubServerInfo().isPerformWorkspaceCheck(), getExcludePatterns(), envVars,
                             isUnmapPreviousCodeLocations(), isDeletePreviousCodeLocations(), isShouldWaitForScansFinished());
 
-                    final String projectVersionViewJson = builtOn.getChannel().call(scan);
+                    final ScanResponse scanResponse = builtOn.getChannel().call(scan);
+                    if (null != scanResponse.getException()) {
+                        final Exception exception = scanResponse.getException();
+                        if (exception instanceof InterruptedException) {
+                            run.setResult(Result.ABORTED);
+                            Thread.currentThread().interrupt();
+                        } else {
+                            logger.error(exception.getMessage(), exception);
+                            run.setResult(Result.UNSTABLE);
+                        }
+                        return;
+                    }
+                    final String projectVersionViewJson = scanResponse.getVersionJson();
 
                     this.bomUpToDateAction.setDryRun(isDryRun());
 
@@ -353,6 +372,10 @@ public class BDCommonScanStep {
             } catch (final IntegrationException e) {
                 logger.error(e.getMessage(), e);
                 run.setResult(Result.UNSTABLE);
+            } catch (final InterruptedException e) {
+                logger.error("BD scan caller thread was interrupted.", e);
+                run.setResult(Result.ABORTED);
+                Thread.currentThread().interrupt();
             } catch (final Exception e) {
                 String message;
                 if (e.getMessage() != null && e.getMessage().contains("Project could not be found")) {

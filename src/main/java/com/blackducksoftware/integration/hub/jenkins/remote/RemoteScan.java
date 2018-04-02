@@ -22,6 +22,7 @@
 package com.blackducksoftware.integration.hub.jenkins.remote;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import org.jenkinsci.remoting.Role;
@@ -29,7 +30,6 @@ import org.jenkinsci.remoting.RoleChecker;
 
 import com.blackducksoftware.integration.hub.builder.HubScanConfigBuilder;
 import com.blackducksoftware.integration.hub.dataservice.cli.CLIDataService;
-import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.global.HubServerConfig;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.model.request.ProjectRequest;
@@ -43,7 +43,7 @@ import com.blackducksoftware.integration.phonehome.enums.ThirdPartyName;
 import hudson.EnvVars;
 import hudson.remoting.Callable;
 
-public class RemoteScan implements Callable<String, HubIntegrationException> {
+public class RemoteScan implements Callable<ScanResponse, IOException> {
     private final IntLogger logger;
 
     private final String codeLocationName;
@@ -117,7 +117,7 @@ public class RemoteScan implements Callable<String, HubIntegrationException> {
     }
 
     @Override
-    public String call() throws HubIntegrationException {
+    public ScanResponse call() throws IOException {
         try {
             final HubServicesFactory services = BuildHelper.getHubServicesFactory(logger, hubServerConfig);
 
@@ -151,11 +151,14 @@ public class RemoteScan implements Callable<String, HubIntegrationException> {
 
             final HubScanConfig hubScanConfig = hubScanConfigBuilder.build();
             final ProjectRequest projectRequest = projectRequestBuilder.build();
-            final ProjectVersionView projectVersionView = cliDataService.installAndRunControlledScan(hubServerConfig, hubScanConfig, projectRequest, shouldWaitForScansFinished, ThirdPartyName.JENKINS.getName(), thirdPartyVersion,
-                    pluginVersion);
-            return dryRun ? null : projectVersionView.json;
+            final ProjectVersionView projectVersionView = cliDataService
+                                                                  .installAndRunControlledScan(hubServerConfig, hubScanConfig, projectRequest, shouldWaitForScansFinished, ThirdPartyName.JENKINS.getName(), thirdPartyVersion, pluginVersion);
+            return new ScanResponse(dryRun ? null : projectVersionView.json);
+        } catch (final InterruptedException e) {
+            logger.error("BD remote scan thread was interrupted.");
+            return new ScanResponse(e);
         } catch (final Exception e) {
-            throw new HubIntegrationException(e.getMessage(), e);
+            return new ScanResponse(e);
         }
     }
 
