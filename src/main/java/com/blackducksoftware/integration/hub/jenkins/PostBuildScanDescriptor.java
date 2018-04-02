@@ -21,10 +21,10 @@
  *******************************************************************************/
 package com.blackducksoftware.integration.hub.jenkins;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.Collections;
 import java.util.List;
 
@@ -32,11 +32,8 @@ import javax.servlet.ServletException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
@@ -174,9 +171,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      *
      */
     // This global configuration can now be accessed at {jenkinsUrl}/descriptorByName/{package}.{ClassName}/config.xml
-    // EX: http://localhost:8080/descriptorByName/com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor/config.xml
+    // EX: http://localhost:8080/descriptorByName/com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan/config.xml
     @WebMethod(name = "config.xml")
-    public void doConfigDotXml(final StaplerRequest req, final StaplerResponse rsp) throws IOException, TransformerException, hudson.model.Descriptor.FormException, ParserConfigurationException, SAXException {
+    public void doConfigDotXml(final StaplerRequest req, final StaplerResponse rsp) throws IOException, ParserConfigurationException {
         final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
         boolean changed = false;
         try {
@@ -204,21 +201,22 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         }
     }
 
-    public void updateByXml(final Source source) throws IOException, TransformerException, ParserConfigurationException, SAXException {
-        final TransformerFactory tFactory = TransformerFactory.newInstance();
-        final Transformer transformer = tFactory.newTransformer();
-        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+    public void updateByXml(final Source source) throws IOException, ParserConfigurationException {
+        final Document doc;
+        try (final StringWriter out = new StringWriter()) {
+            // this allows us to use UTF-8 for storing data,
+            // plus it checks any well-formedness issue in the submitted
+            // data
+            jenkins.util.xml.XMLUtils.safeTransform(source, new StreamResult(out));
 
-        final ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
+            final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            final DocumentBuilder builder = factory.newDocumentBuilder();
+            final InputSource is = new InputSource(new StringReader(out.toString()));
 
-        final StreamResult result = new StreamResult(byteOutput);
-        transformer.transform(source, result);
-
-        final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        final DocumentBuilder builder = factory.newDocumentBuilder();
-        final InputSource is = new InputSource(new StringReader(byteOutput.toString("UTF-8")));
-        final Document doc = builder.parse(is);
+            doc = builder.parse(is);
+        } catch (TransformerException | SAXException e) {
+            throw new IOException("Failed to persist configuration.xml", e);
+        }
 
         final HubServerInfo serverInfo = new HubServerInfo();
 
@@ -453,7 +451,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         } catch (final IllegalStateException e) {
             return FormValidation.error(e.getMessage());
         } catch (final HubIntegrationException e) {
-            String message;
+            final String message;
             if (e.getCause() != null) {
                 message = e.getCause().toString();
                 if (message.contains("(407)")) {

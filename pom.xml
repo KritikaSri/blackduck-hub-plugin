@@ -45,7 +45,7 @@
     <findbugs.failOnError>false</findbugs.failOnError>
     <hpi-plugin.version>1.117</hpi-plugin.version>
     <hub.common.version>15.0.3</hub.common.version>
-    <jenkins.version>1.580.3</jenkins.version>
+    <jenkins.version>1.596.1</jenkins.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <project.resources.sourceEncoding>UTF-8</project.resources.sourceEncoding>
