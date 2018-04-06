@@ -183,14 +183,14 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 changed = true;
                 Thread.currentThread().setContextClassLoader(PostBuildScanDescriptor.class.getClassLoader());
             }
-            Functions.checkPermission(Permission.READ);
+            Functions.checkPermission(Jenkins.ADMINISTER);
             if (req.getMethod().equals("GET")) {
                 // read
                 rsp.setContentType("application/xml");
                 IOUtils.copy(getConfigFile().getFile(), rsp.getOutputStream());
                 return;
             }
-            Functions.checkPermission(Permission.CONFIGURE);
+            Functions.checkPermission(Jenkins.ADMINISTER);
             if (req.getMethod().equals("POST")) {
                 // submission
                 updateByXml(new StreamSource(req.getReader()));
