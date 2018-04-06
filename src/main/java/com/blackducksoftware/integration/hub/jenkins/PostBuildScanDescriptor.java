@@ -66,11 +66,13 @@ import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.cloudbees.plugins.credentials.matchers.IdMatcher;
 
 import hudson.Extension;
+import hudson.Functions;
 import hudson.ProxyConfiguration;
 import hudson.model.AbstractProject;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.Descriptor;
 import hudson.security.ACL;
+import hudson.security.Permission;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
@@ -173,7 +175,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     // This global configuration can now be accessed at {jenkinsUrl}/descriptorByName/{package}.{ClassName}/config.xml
     // EX: http://localhost:8080/descriptorByName/com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan/config.xml
     @WebMethod(name = "config.xml")
-    public void doConfigDotXml(final StaplerRequest req, final StaplerResponse rsp) throws IOException, ParserConfigurationException {
+    public void doConfigDotXml(final StaplerRequest req, final StaplerResponse rsp) throws IOException, ServletException, ParserConfigurationException {
         final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
         boolean changed = false;
         try {
@@ -181,12 +183,14 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 changed = true;
                 Thread.currentThread().setContextClassLoader(PostBuildScanDescriptor.class.getClassLoader());
             }
+            Functions.checkPermission(Permission.READ);
             if (req.getMethod().equals("GET")) {
                 // read
                 rsp.setContentType("application/xml");
                 IOUtils.copy(getConfigFile().getFile(), rsp.getOutputStream());
                 return;
             }
+            Functions.checkPermission(Permission.CONFIGURE);
             if (req.getMethod().equals("POST")) {
                 // submission
                 updateByXml(new StreamSource(req.getReader()));
