@@ -21,10 +21,21 @@
  *******************************************************************************/
 package com.blackducksoftware.integration.hub.jenkins.scan;
 
-import com.blackducksoftware.integration.hub.api.item.HubViewFilter;
-import com.blackducksoftware.integration.hub.api.item.MetaService;
-import com.blackducksoftware.integration.hub.api.project.ProjectRequestService;
-import com.blackducksoftware.integration.hub.api.project.version.ProjectVersionRequestService;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import javax.servlet.ServletException;
+
+import org.apache.commons.lang.StringUtils;
+
+import com.blackducksoftware.integration.hub.api.generated.enumeration.ProjectVersionDistributionType;
+import com.blackducksoftware.integration.hub.api.generated.enumeration.ProjectVersionPhaseType;
+import com.blackducksoftware.integration.hub.api.generated.view.ProjectView;
+import com.blackducksoftware.integration.hub.api.view.HubViewFilter;
+import com.blackducksoftware.integration.hub.configuration.HubScanConfigFieldEnum;
+import com.blackducksoftware.integration.hub.configuration.HubScanConfigValidator;
 import com.blackducksoftware.integration.hub.exception.DoesNotExistException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
@@ -32,13 +43,7 @@ import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.failure.FailureConditionBuildStateEnum;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
-import com.blackducksoftware.integration.hub.model.enumeration.ProjectVersionDistributionEnum;
-import com.blackducksoftware.integration.hub.model.enumeration.ProjectVersionPhaseEnum;
-import com.blackducksoftware.integration.hub.model.view.ProjectVersionView;
-import com.blackducksoftware.integration.hub.model.view.ProjectView;
-import com.blackducksoftware.integration.hub.scan.HubScanConfigFieldEnum;
 import com.blackducksoftware.integration.hub.service.HubServicesFactory;
-import com.blackducksoftware.integration.hub.validator.HubScanConfigValidator;
 import com.blackducksoftware.integration.validator.ValidationResults;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
@@ -47,18 +52,12 @@ import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+
 import hudson.model.AbstractProject;
 import hudson.model.AutoCompletionCandidates;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import org.apache.commons.lang.StringUtils;
-
-import javax.servlet.ServletException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 public class BDCommonDescriptorUtil {
 
@@ -105,11 +104,11 @@ public class BDCommonDescriptorUtil {
         final boolean changed = false;
         final ListBoxModel items = new ListBoxModel();
         try {
-            items.add("In Planning", ProjectVersionPhaseEnum.PLANNING.toString());
-            items.add("In Development", ProjectVersionPhaseEnum.DEVELOPMENT.toString());
-            items.add("Released", ProjectVersionPhaseEnum.RELEASED.toString());
-            items.add("Deprecated", ProjectVersionPhaseEnum.DEPRECATED.toString());
-            items.add("Archived", ProjectVersionPhaseEnum.ARCHIVED.toString());
+            items.add("In Planning", ProjectVersionPhaseType.PLANNING.toString());
+            items.add("In Development", ProjectVersionPhaseType.DEVELOPMENT.toString());
+            items.add("Released", ProjectVersionPhaseType.RELEASED.toString());
+            items.add("Deprecated", ProjectVersionPhaseType.DEPRECATED.toString());
+            items.add("Archived", ProjectVersionPhaseType.ARCHIVED.toString());
         } catch (final Exception e) {
             e.printStackTrace();
             System.err.println(e.getMessage());
@@ -130,10 +129,10 @@ public class BDCommonDescriptorUtil {
         final boolean changed = false;
         final ListBoxModel items = new ListBoxModel();
         try {
-            items.add("External", ProjectVersionDistributionEnum.EXTERNAL.toString());
-            items.add("SaaS", ProjectVersionDistributionEnum.SAAS.toString());
-            items.add("Internal", ProjectVersionDistributionEnum.INTERNAL.toString());
-            items.add("Open Source", ProjectVersionDistributionEnum.OPENSOURCE.toString());
+            items.add("External", ProjectVersionDistributionType.EXTERNAL.toString());
+            items.add("SaaS", ProjectVersionDistributionType.SAAS.toString());
+            items.add("Internal", ProjectVersionDistributionType.INTERNAL.toString());
+            items.add("Open Source", ProjectVersionDistributionType.OPENSOURCE.toString());
         } catch (final Exception e) {
             e.printStackTrace();
             System.err.println(e.getMessage());

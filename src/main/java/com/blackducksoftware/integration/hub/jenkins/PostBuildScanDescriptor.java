@@ -49,6 +49,7 @@ import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import com.blackducksoftware.integration.hub.configuration.HubServerConfigValidator;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
@@ -56,7 +57,6 @@ import com.blackducksoftware.integration.hub.jenkins.helper.JenkinsProxyHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.jenkins.scan.BDCommonDescriptorUtil;
 import com.blackducksoftware.integration.hub.rest.RestConnection;
-import com.blackducksoftware.integration.hub.validator.HubServerConfigValidator;
 import com.blackducksoftware.integration.validator.ValidationResults;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -72,7 +72,6 @@ import hudson.model.AbstractProject;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.Descriptor;
 import hudson.security.ACL;
-import hudson.security.Permission;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
@@ -142,7 +141,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     /**
      * We return a String here instead of an int or Integer because the UI needs a String to display correctly
-     *
      */
     public String getDefaultTimeout() {
         return String.valueOf(HubServerInfo.getDefaultTimeout());
@@ -150,7 +148,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     /**
      * We return a String here instead of an int or Integer because the UI needs a String to display correctly
-     *
      */
     public String getHubTimeout() {
         return getHubServerInfo() == null ? getDefaultTimeout() : String.valueOf(getHubServerInfo().getTimeout());
@@ -170,7 +167,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     /**
      * Code from https://github.com/jenkinsci/jenkins/blob/master/core/src/main/java/ hudson/model/AbstractItem.java#L602
-     *
      */
     // This global configuration can now be accessed at {jenkinsUrl}/descriptorByName/{package}.{ClassName}/config.xml
     // EX: http://localhost:8080/descriptorByName/com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan/config.xml
@@ -333,7 +329,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     /**
      * Fills the Credential drop down list in the global config
-     *
      * @return
      */
     public ListBoxModel doFillHubCredentialsIdItems() {
@@ -359,7 +354,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     /**
      * Performs on-the-fly validation of the form field 'serverUrl'.
-     *
      */
     public FormValidation doCheckHubServerUrl(@QueryParameter("hubServerUrl") final String hubServerUrl) throws IOException, ServletException {
         ProxyConfiguration proxyConfig = null;
@@ -393,7 +387,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     /**
      * Performs on-the-fly validation of the form field 'hubProjectName'. Checks to see if there is already a project in the Hub with this name.
-     *
      */
     public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String hubProjectName, @QueryParameter("hubProjectVersion") final String hubProjectVersion, @QueryParameter("dryRun") final boolean dryRun)
             throws IOException, ServletException {
@@ -402,7 +395,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     /**
      * Performs on-the-fly validation of the form field 'hubProjectVersion'. Checks to see if there is already a project in the Hub with this name.
-     *
      */
     public FormValidation doCheckHubProjectVersion(@QueryParameter("hubProjectVersion") final String hubProjectVersion, @QueryParameter("hubProjectName") final String hubProjectName, @QueryParameter("dryRun") final boolean dryRun)
             throws IOException, ServletException {
@@ -411,8 +403,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     /**
      * Validates that the URL, Username, and Password are correct for connecting to the Hub Server.
-     *
-     *
      */
     public FormValidation doTestConnection(@QueryParameter("hubServerUrl") final String serverUrl, @QueryParameter("hubCredentialsId") final String hubCredentialsId, @QueryParameter("hubTimeout") final String hubTimeout,
             @QueryParameter("trustSSLCertificates") final boolean trustSSLCertificates) {
@@ -435,7 +425,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
             UsernamePasswordCredentialsImpl credential = null;
             final AbstractProject<?, ?> project = null;
-            final List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement> emptyList());
+            final List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement>emptyList());
             final IdMatcher matcher = new IdMatcher(hubCredentialsId);
             for (final StandardCredentials c : credentials) {
                 if (matcher.matches(c) && c instanceof UsernamePasswordCredentialsImpl) {

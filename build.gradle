@@ -1,0 +1,65 @@
+buildscript {
+    repositories {
+        jcenter()
+        mavenCentral()
+        maven { url 'https://plugins.gradle.org/m2/' }
+    }
+    dependencies { classpath 'com.blackducksoftware.integration:common-gradle-plugin:0.0.+' }
+}
+
+plugins {
+    id 'org.jenkins-ci.jpi' version '0.25.0'
+}
+group = 'com.blackducksoftware.integration'
+version = '4.0.0-SNAPSHOT'
+description = 'Black Duck Hub Plugin for Jenkins'
+
+apply plugin: 'com.blackducksoftware.integration.solution'
+
+task listrepos {
+    doLast {
+        println "Repositories:"
+        project.repositories.each { println "Name: " + it.name + "; url: " + it.url }
+    }
+}
+
+def jcenterRepo = project.repositories.findByName('BintrayJCenter')
+project.repositories.remove(jcenterRepo)
+def mavenRepo = project.repositories.findByName('maven')
+project.repositories.remove(mavenRepo)
+
+project.afterEvaluate {
+    // MavenLocal is added by the gradle-jpi-plugin so we have to remove it after the plugins are evaluated
+    def mavenLocalRepo = project.repositories.findByName('MavenLocal')
+    project.repositories.remove(mavenLocalRepo)
+}
+
+jenkinsPlugin {
+    coreVersion = '2.60.1'
+    displayName = 'Black Duck Hub Plugin'
+    url = 'https://wiki.jenkins-ci.org/display/JENKINS/BlackDuck+Hub+Plugin'
+    gitHubUrl = 'https://www.github.com/jenkinsci/blackduck-hub-plugin'
+}
+
+dependencies {
+    compile 'com.blackducksoftware.integration:hub-common:30.0.2'
+    compile 'org.jvnet.localizer:localizer:1.24'
+
+    jenkinsPlugins 'org.jenkins-ci.plugins:credentials:1.9.4'
+
+    optionalJenkinsPlugins 'org.jenkins-ci.plugins:job-dsl:1.67'
+    optionalJenkinsPlugins 'org.jenkins-ci.plugins.workflow:workflow-job:2.9'
+    optionalJenkinsPlugins 'org.jenkins-ci.plugins.workflow:workflow-cps:2.23'
+    optionalJenkinsPlugins 'org.jenkins-ci.plugins.workflow:workflow-step-api:2.5'
+}
+
+task renameFile << {
+    if (project.getVersion().toString().contains("SNAPSHOT")) {
+        File libsDirectory = new File(project.getBuildDir(), "libs")
+        File originalFile = new File(libsDirectory, "${project.getName()}.hpi")
+        File newFile = new File(libsDirectory, "${project.getName()}-${project.getVersion()}.hpi")
+        originalFile.renameTo newFile
+    }
+}
+
+jpi.finalizedBy renameFile

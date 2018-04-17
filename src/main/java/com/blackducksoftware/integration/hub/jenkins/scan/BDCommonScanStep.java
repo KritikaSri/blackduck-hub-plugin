@@ -29,11 +29,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 
 import com.blackducksoftware.integration.exception.IntegrationException;
-import com.blackducksoftware.integration.hub.api.item.MetaService;
-import com.blackducksoftware.integration.hub.api.project.ProjectRequestService;
-import com.blackducksoftware.integration.hub.builder.HubServerConfigBuilder;
-import com.blackducksoftware.integration.hub.dataservice.report.RiskReportDataService;
-import com.blackducksoftware.integration.hub.global.HubServerConfig;
+import com.blackducksoftware.integration.hub.api.generated.enumeration.ProjectVersionDistributionType;
+import com.blackducksoftware.integration.hub.api.generated.enumeration.ProjectVersionPhaseType;
+import com.blackducksoftware.integration.hub.api.generated.view.ProjectVersionView;
+import com.blackducksoftware.integration.hub.api.generated.view.ProjectView;
+import com.blackducksoftware.integration.hub.api.view.MetaHandler;
+import com.blackducksoftware.integration.hub.configuration.HubServerConfig;
+import com.blackducksoftware.integration.hub.configuration.HubServerConfigBuilder;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
@@ -52,14 +54,14 @@ import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.jenkins.remote.DetermineTargetPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.RemoteScan;
 import com.blackducksoftware.integration.hub.jenkins.remote.ScanResponse;
-import com.blackducksoftware.integration.hub.model.enumeration.ProjectVersionDistributionEnum;
-import com.blackducksoftware.integration.hub.model.enumeration.ProjectVersionPhaseEnum;
-import com.blackducksoftware.integration.hub.model.view.ProjectVersionView;
-import com.blackducksoftware.integration.hub.model.view.ProjectView;
 import com.blackducksoftware.integration.hub.report.api.ReportData;
 import com.blackducksoftware.integration.hub.rest.RestConnection;
+import com.blackducksoftware.integration.hub.service.HubService;
 import com.blackducksoftware.integration.hub.service.HubServicesFactory;
+import com.blackducksoftware.integration.hub.service.PhoneHomeService;
+import com.blackducksoftware.integration.hub.service.ReportService;
 import com.blackducksoftware.integration.log.IntLogger;
+import com.blackducksoftware.integration.phonehome.PhoneHomeRequestBody;
 import com.blackducksoftware.integration.util.CIEnvironmentVariables;
 
 import hudson.EnvVars;
@@ -155,7 +157,7 @@ public class BDCommonScanStep {
     public String getPhase() {
         if (this.phase == null) {
             // set to the default if they have not configured a phase, should help with migration from older versions that did not include the phase in the config
-            return ProjectVersionPhaseEnum.DEVELOPMENT.toString();
+            return ProjectVersionPhaseType.DEVELOPMENT.toString();
         }
         return this.phase;
     }
@@ -163,7 +165,7 @@ public class BDCommonScanStep {
     public String getDistribution() {
         if (this.distribution == null) {
             // set to the default if they have not configured a distribution, should help with migration from older versions that did not include the distribution in the config
-            return ProjectVersionDistributionEnum.EXTERNAL.toString();
+            return ProjectVersionDistributionType.EXTERNAL.toString();
         }
         return this.distribution;
     }
@@ -284,8 +286,23 @@ public class BDCommonScanStep {
                     final String thirdPartyVersion = Jenkins.getVersion().toString();
                     final String pluginVersion = PluginHelper.getPluginVersion();
 
+                    HubServicesFactory services = null;
+                    if (!isDryRun()) {
+                        final RestConnection restConnection = BuildHelper.getRestConnection(logger, hubServerConfig);
+                        restConnection.connect();
+
+                        services = new HubServicesFactory(restConnection);
+
+                        PhoneHomeService phoneHomeService = services.createPhoneHomeService();
+                        PhoneHomeRequestBody.Builder builder = phoneHomeService.createInitialPhoneHomeRequestBodyBuilder();
+                        builder.setArtifactId("blackduck-hub");
+                        builder.setArtifactVersion(pluginVersion);
+                        builder.addToMetaData("jenkins.version", thirdPartyVersion);
+                        phoneHomeService.phoneHome(builder);
+                    }
+
                     final RemoteScan scan = new RemoteScan(logger, codeLocationName, projectName, projectVersion, getPhase(), getDistribution(), getScanMemoryInteger(), isProjectLevelAdjustments(), workingDirectory, scanTargetPaths,
-                            isDryRun(), isCleanupOnSuccessfulScan(), toolsDirectory, thirdPartyVersion, pluginVersion, hubServerConfig, getHubServerInfo().isPerformWorkspaceCheck(), getExcludePatterns(), envVars,
+                            isDryRun(), isCleanupOnSuccessfulScan(), toolsDirectory, hubServerConfig, getHubServerInfo().isPerformWorkspaceCheck(), getExcludePatterns(), envVars,
                             isUnmapPreviousCodeLocations(), isDeletePreviousCodeLocations(), isShouldWaitForScansFinished());
 
                     final ScanResponse scanResponse = builtOn.getChannel().call(scan);
@@ -306,18 +323,14 @@ public class BDCommonScanStep {
 
                     Long bomWait = 300000l;
                     if (!isDryRun()) {
-
-                        final RestConnection restConnection = BuildHelper.getRestConnection(logger, hubServerConfig);
-                        restConnection.connect();
-
-                        final HubServicesFactory services = new HubServicesFactory(restConnection);
-                        final MetaService metaService = services.createMetaService();
+                        final MetaHandler metaHandler = new MetaHandler(logger);
 
                         ProjectVersionView version = null;
                         ProjectView project = null;
                         if (StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion) && StringUtils.isNotBlank(projectVersionViewJson)) {
-                            version = services.createHubResponseService().getItemAs(projectVersionViewJson, ProjectVersionView.class);
-                            project = getProjectFromVersion(services.createProjectRequestService(), metaService, version);
+                            HubService hubService = services.createHubService();
+                            version = hubService.getGson().fromJson(projectVersionViewJson, ProjectVersionView.class);
+                            project = getProjectFromVersion(hubService, version);
                         }
 
                         try {
@@ -334,7 +347,7 @@ public class BDCommonScanStep {
                             if (project != null && version != null) {
                                 final HubReportV2Action reportAction = new HubReportV2Action(run);
 
-                                final RiskReportDataService reportService = services.createRiskReportDataService(bomWait);
+                                final ReportService reportService = services.createReportService(bomWait);
 
                                 logger.debug("Generating the Risk Report.");
                                 final ReportData reportData = reportService.getRiskReportData(project, version);
@@ -356,7 +369,7 @@ public class BDCommonScanStep {
                             try {
                                 // not all HUB users have the policy module enabled
                                 // so there will be no policy status link
-                                policyStatusLink = metaService.getFirstLink(version, MetaService.POLICY_STATUS_LINK);
+                                policyStatusLink = metaHandler.getFirstLink(version, ProjectVersionView.POLICY_STATUS_LINK);
                             } catch (final Exception e) {
                                 logger.debug("Could not get the policy status link, the Hub policy module is not enabled");
                             }
@@ -404,10 +417,8 @@ public class BDCommonScanStep {
         run.addAction(new HubScanFinishedAction());
     }
 
-    private ProjectView getProjectFromVersion(final ProjectRequestService projectRequestService, final MetaService metaService, final ProjectVersionView version) throws IntegrationException {
-        final String projectURL = metaService.getFirstLink(version, MetaService.PROJECT_LINK);
-        final ProjectView projectVersion = projectRequestService.getItem(projectURL, ProjectView.class);
-        return projectVersion;
+    private ProjectView getProjectFromVersion(final HubService hubService, final ProjectVersionView projectVersionView) throws IntegrationException {
+        return hubService.getResponse(projectVersionView, ProjectVersionView.PROJECT_LINK_RESPONSE);
     }
 
     private boolean isShouldWaitForScansFinished() {
