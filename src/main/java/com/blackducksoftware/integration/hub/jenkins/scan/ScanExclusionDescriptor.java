@@ -1,5 +1,7 @@
-/*******************************************************************************
- * Copyright (C) 2016 Black Duck Software, Inc.
+/**
+ * blackduck-hub
+ *
+ * Copyright (C) 2018 Black Duck Software, Inc.
  * http://www.blackducksoftware.com/
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -18,18 +20,14 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations
  * under the License.
- *******************************************************************************/
+ */
 package com.blackducksoftware.integration.hub.jenkins.scan;
-
-import java.io.IOException;
-
-import javax.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.blackducksoftware.integration.hub.scan.HubScanConfigFieldEnum;
-import com.blackducksoftware.integration.hub.validator.HubScanConfigValidator;
+import com.blackducksoftware.integration.hub.configuration.HubScanConfigFieldEnum;
+import com.blackducksoftware.integration.hub.configuration.HubScanConfigValidator;
 import com.blackducksoftware.integration.validator.ValidationResults;
 
 import hudson.Extension;
@@ -51,10 +49,8 @@ public class ScanExclusionDescriptor extends Descriptor<ScanExclusion> {
 
     /**
      * Performs on-the-fly validation of the form field 'scanTarget'.
-     *
      */
-    public FormValidation doCheckExclusionPattern(@QueryParameter("exclusionPattern") final String exclusionPattern)
-            throws IOException, ServletException {
+    public FormValidation doCheckExclusionPattern(@QueryParameter("exclusionPattern") final String exclusionPattern) {
         final HubScanConfigValidator validator = new HubScanConfigValidator();
         final String[] array = { exclusionPattern };
         validator.setExcludePatterns(array);

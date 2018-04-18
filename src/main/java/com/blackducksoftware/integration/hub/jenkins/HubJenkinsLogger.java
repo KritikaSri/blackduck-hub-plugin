@@ -1,5 +1,7 @@
-/*******************************************************************************
- * Copyright (C) 2016 Black Duck Software, Inc.
+/**
+ * blackduck-hub
+ *
+ * Copyright (C) 2018 Black Duck Software, Inc.
  * http://www.blackducksoftware.com/
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -18,7 +20,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations
  * under the License.
- *******************************************************************************/
+ */
 package com.blackducksoftware.integration.hub.jenkins;
 
 import java.io.PrintWriter;
@@ -46,13 +48,13 @@ public class HubJenkinsLogger extends IntLogger implements Serializable {
     }
 
     @Override
-    public void setLogLevel(final LogLevel level) {
-        this.level = level;
+    public LogLevel getLogLevel() {
+        return level;
     }
 
     @Override
-    public LogLevel getLogLevel() {
-        return level;
+    public void setLogLevel(final LogLevel level) {
+        this.level = level;
     }
 
     /**
@@ -65,63 +67,63 @@ public class HubJenkinsLogger extends IntLogger implements Serializable {
 
     @Override
     public void debug(final String txt) {
-        if (LogLevel.isLoggable(level, LogLevel.DEBUG)) {
+        if (level.isLoggable(LogLevel.DEBUG)) {
             printLog(txt, null);
         }
     }
 
     @Override
     public void debug(final String txt, final Throwable e) {
-        if (LogLevel.isLoggable(level, LogLevel.DEBUG)) {
+        if (level.isLoggable(LogLevel.DEBUG)) {
             printLog(txt, e);
         }
     }
 
     @Override
     public void error(final Throwable e) {
-        if (LogLevel.isLoggable(level, LogLevel.ERROR)) {
+        if (level.isLoggable(LogLevel.ERROR)) {
             printLog(null, e);
         }
     }
 
     @Override
     public void error(final String txt) {
-        if (LogLevel.isLoggable(level, LogLevel.ERROR)) {
+        if (level.isLoggable(LogLevel.ERROR)) {
             printLog(txt, null);
         }
     }
 
     @Override
     public void error(final String txt, final Throwable e) {
-        if (LogLevel.isLoggable(level, LogLevel.ERROR)) {
+        if (level.isLoggable(LogLevel.ERROR)) {
             printLog(txt, e);
         }
     }
 
     @Override
     public void info(final String txt) {
-        if (LogLevel.isLoggable(level, LogLevel.INFO)) {
+        if (level.isLoggable(LogLevel.INFO)) {
             printLog(txt, null);
         }
     }
 
     @Override
     public void trace(final String txt) {
-        if (LogLevel.isLoggable(level, LogLevel.TRACE)) {
+        if (level.isLoggable(LogLevel.TRACE)) {
             printLog(txt, null);
         }
     }
 
     @Override
     public void trace(final String txt, final Throwable e) {
-        if (LogLevel.isLoggable(level, LogLevel.TRACE)) {
+        if (level.isLoggable(LogLevel.TRACE)) {
             printLog(txt, e);
         }
     }
 
     @Override
     public void warn(final String txt) {
-        if (LogLevel.isLoggable(level, LogLevel.WARN)) {
+        if (level.isLoggable(LogLevel.WARN)) {
             printLog(txt, null);
         }
     }
