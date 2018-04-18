@@ -1,5 +1,7 @@
-/*******************************************************************************
- * Copyright (C) 2016 Black Duck Software, Inc.
+/**
+ * blackduck-hub
+ *
+ * Copyright (C) 2018 Black Duck Software, Inc.
  * http://www.blackducksoftware.com/
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -18,7 +20,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations
  * under the License.
- *******************************************************************************/
+ */
 package com.blackducksoftware.integration.hub.jenkins;
 
 import java.io.File;
@@ -66,16 +68,11 @@ public class PostBuildHubScan extends Recorder {
     private final boolean dryRun;
 
     private final boolean cleanupOnSuccessfulScan;
-
-    private Boolean verbose;
-
     private final ScanExclusion[] excludePatterns;
-
     private final String codeLocationName;
-
     private final boolean unmapPreviousCodeLocations;
-
     private final boolean deletePreviousCodeLocations;
+    private Boolean verbose;
 
     @DataBoundConstructor
     public PostBuildHubScan(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion, final String hubVersionPhase, final String hubVersionDist, final String scanMemory, final boolean shouldGenerateHubReport,
@@ -186,10 +183,9 @@ public class PostBuildHubScan extends Recorder {
 
     /**
      * Overrides the Recorder perform method. This is the method that gets called by Jenkins to run as a Post Build Action
-     *
      */
     @Override
-    public boolean perform(final AbstractBuild<?, ?> build, final Launcher launcher, final BuildListener listener) throws InterruptedException, IOException {
+    public boolean perform(final AbstractBuild<?, ?> build, final Launcher launcher, final BuildListener listener) {
         final HubJenkinsLogger logger = new HubJenkinsLogger(listener);
 
         try {

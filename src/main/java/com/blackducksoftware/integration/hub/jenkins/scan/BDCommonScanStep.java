@@ -1,5 +1,7 @@
-/*******************************************************************************
- * Copyright (C) 2016 Black Duck Software, Inc.
+/**
+ * blackduck-hub
+ *
+ * Copyright (C) 2018 Black Duck Software, Inc.
  * http://www.blackducksoftware.com/
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -18,7 +20,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations
  * under the License.
- *******************************************************************************/
+ */
 package com.blackducksoftware.integration.hub.jenkins.scan;
 
 import java.io.IOException;
@@ -227,7 +229,7 @@ public class BDCommonScanStep {
     }
 
     public void runScan(final Run run, final Node builtOn, final EnvVars envVars, final FilePath workspace, final HubJenkinsLogger logger, final Launcher launcher, final TaskListener listener, final String buildDisplayName,
-            final String buildIdentifier) throws InterruptedException, IOException {
+            final String buildIdentifier) {
 
         final CIEnvironmentVariables variables = new CIEnvironmentVariables();
         variables.putAll(envVars);

@@ -1,5 +1,7 @@
-/*******************************************************************************
- * Copyright (C) 2016 Black Duck Software, Inc.
+/**
+ * blackduck-hub
+ *
+ * Copyright (C) 2018 Black Duck Software, Inc.
  * http://www.blackducksoftware.com/
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -18,7 +20,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations
  * under the License.
- *******************************************************************************/
+ */
 package com.blackducksoftware.integration.hub.jenkins.scan;
 
 import java.io.IOException;
@@ -32,8 +34,10 @@ import org.apache.commons.lang.StringUtils;
 
 import com.blackducksoftware.integration.hub.api.generated.enumeration.ProjectVersionDistributionType;
 import com.blackducksoftware.integration.hub.api.generated.enumeration.ProjectVersionPhaseType;
+import com.blackducksoftware.integration.hub.api.generated.view.ProjectVersionView;
 import com.blackducksoftware.integration.hub.api.generated.view.ProjectView;
 import com.blackducksoftware.integration.hub.api.view.HubViewFilter;
+import com.blackducksoftware.integration.hub.api.view.MetaHandler;
 import com.blackducksoftware.integration.hub.configuration.HubScanConfigFieldEnum;
 import com.blackducksoftware.integration.hub.configuration.HubScanConfigValidator;
 import com.blackducksoftware.integration.hub.exception.DoesNotExistException;
@@ -43,7 +47,12 @@ import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.failure.FailureConditionBuildStateEnum;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
+import com.blackducksoftware.integration.hub.service.HubService;
 import com.blackducksoftware.integration.hub.service.HubServicesFactory;
+import com.blackducksoftware.integration.hub.service.ProjectService;
+import com.blackducksoftware.integration.log.IntLogger;
+import com.blackducksoftware.integration.log.LogLevel;
+import com.blackducksoftware.integration.log.PrintStreamIntLogger;
 import com.blackducksoftware.integration.validator.ValidationResults;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
@@ -154,14 +163,16 @@ public class BDCommonDescriptorUtil {
                     return potentialMatches;
                 }
 
-                final HubServicesFactory service = BuildHelper.getHubServicesFactory(null, serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout(), serverInfo.shouldTrustSSLCerts());
-                final MetaService metaService = service.createMetaService();
-                final ProjectRequestService projectService = service.createProjectRequestService();
+                IntLogger logger = new PrintStreamIntLogger(System.out, LogLevel.INFO);
 
+                final HubServicesFactory service = BuildHelper.getHubServicesFactory(logger, serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout(), serverInfo.shouldTrustSSLCerts());
+
+                ProjectService projectService = service.createProjectService();
+                projectService.getAllProjectMatches(hubProjectName);
                 final List<ProjectView> suggestions = projectService.getAllProjectMatches(hubProjectName);
 
                 final HubViewFilter<ProjectView> filter = new HubViewFilter<>();
-                final List<ProjectView> accessibleSuggestions = filter.getAccessibleItems(metaService, suggestions);
+                final List<ProjectView> accessibleSuggestions = filter.getAccessibleItems(new MetaHandler(logger), suggestions);
 
                 if (!accessibleSuggestions.isEmpty()) {
                     for (final ProjectView projectSuggestion : accessibleSuggestions) {
@@ -195,15 +206,14 @@ public class BDCommonDescriptorUtil {
                 if (hubProjectName.contains("$")) {
                     return FormValidation.warning(Messages.HubBuildScan_getProjectNameContainsVariable());
                 }
-
-                final HubServicesFactory service = BuildHelper.getHubServicesFactory(null, serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout(), serverInfo.shouldTrustSSLCerts());
-                final MetaService metaService = service.createMetaService();
-                final ProjectRequestService projectService = service.createProjectRequestService();
+                IntLogger logger = new PrintStreamIntLogger(System.out, LogLevel.INFO);
+                final HubServicesFactory service = BuildHelper.getHubServicesFactory(logger, serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout(), serverInfo.shouldTrustSSLCerts());
+                ProjectService projectService = service.createProjectService();
                 final ProjectView project = projectService.getProjectByName(hubProjectName);
                 final List<ProjectView> projectList = new ArrayList<>();
                 projectList.add(project);
                 final HubViewFilter<ProjectView> filter = new HubViewFilter<>();
-                final List<ProjectView> filteredList = filter.getAccessibleItems(metaService, projectList);
+                final List<ProjectView> filteredList = filter.getAccessibleItems(new MetaHandler(logger), projectList);
                 if (filteredList.isEmpty()) {
                     return FormValidation.error(Messages.HubBuildScan_getProjectNotAccessible());
                 }
@@ -266,9 +276,11 @@ public class BDCommonDescriptorUtil {
                     // Warning will be displayed for the project name field
                     return FormValidation.ok();
                 }
+                IntLogger logger = new PrintStreamIntLogger(System.out, LogLevel.INFO);
 
-                final HubServicesFactory service = BuildHelper.getHubServicesFactory(null, serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout(), serverInfo.shouldTrustSSLCerts());
-                final ProjectRequestService projectService = service.createProjectRequestService();
+                final HubServicesFactory service = BuildHelper.getHubServicesFactory(logger, serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout(), serverInfo.shouldTrustSSLCerts());
+                HubService hubService = service.createHubService();
+                ProjectService projectService = service.createProjectService();
                 ProjectView project = null;
                 try {
                     project = projectService.getProjectByName(hubProjectName);
@@ -276,8 +288,7 @@ public class BDCommonDescriptorUtil {
                     // This error will already show up for the project name field
                     return FormValidation.ok();
                 }
-                final ProjectVersionRequestService projectVersionService = service.createProjectVersionRequestService();
-                final List<ProjectVersionView> releases = projectVersionService.getAllProjectVersions(project);
+                final List<ProjectVersionView> releases = hubService.getAllResponses(project, ProjectView.VERSIONS_LINK_RESPONSE);
 
                 final StringBuilder projectVersions = new StringBuilder();
                 for (final ProjectVersionView release : releases) {
