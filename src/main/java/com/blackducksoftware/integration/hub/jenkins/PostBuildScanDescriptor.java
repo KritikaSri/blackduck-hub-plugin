@@ -59,6 +59,9 @@ import com.blackducksoftware.integration.hub.jenkins.helper.JenkinsProxyHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.jenkins.scan.BDCommonDescriptorUtil;
 import com.blackducksoftware.integration.hub.rest.RestConnection;
+import com.blackducksoftware.integration.log.IntLogger;
+import com.blackducksoftware.integration.log.LogLevel;
+import com.blackducksoftware.integration.log.PrintStreamIntLogger;
 import com.blackducksoftware.integration.validator.ValidationResults;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -440,7 +443,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
-            final RestConnection connection = BuildHelper.getRestConnection(null, serverUrl, credentialUserName, credentialPassword, hubTimeout, trustSSLCertificates);
+            IntLogger logger = new PrintStreamIntLogger(System.out, LogLevel.INFO);
+            final RestConnection connection = BuildHelper.getRestConnection(logger, serverUrl, credentialUserName, credentialPassword, hubTimeout, trustSSLCertificates);
             connection.connect();
             return FormValidation.ok(Messages.HubBuildScan_getCredentialsValidFor_0_(serverUrl));
 
