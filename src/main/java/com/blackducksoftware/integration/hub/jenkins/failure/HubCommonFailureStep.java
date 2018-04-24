@@ -123,7 +123,7 @@ public class HubCommonFailureStep {
                     logger.error("Could not find the policy status counts");
                 } else {
                     for (final NameValuePairView count : policyStatus.componentVersionStatusCounts) {
-                        Integer countInt = (Integer) count.value;
+                        Integer countInt = ((Double) count.value).intValue();
                         if (PolicyStatusApprovalStatusType.IN_VIOLATION.toString().equals(count.name)) {
                             logger.info("Found " + countInt + " bom entries to be In Violation of a defined Policy.");
                             variableContributor.setBomEntriesInViolation(countInt);
