@@ -288,20 +288,17 @@ public class BDCommonScanStep {
                     final String thirdPartyVersion = Jenkins.getVersion().toString();
                     final String pluginVersion = PluginHelper.getPluginVersion();
 
-                    HubServicesFactory services = null;
-                    if (!isDryRun()) {
-                        final RestConnection restConnection = BuildHelper.getRestConnection(logger, hubServerConfig);
-                        restConnection.connect();
+                    final RestConnection restConnection = BuildHelper.getRestConnection(logger, hubServerConfig);
+                    restConnection.connect();
 
-                        services = new HubServicesFactory(restConnection);
+                    HubServicesFactory services = new HubServicesFactory(restConnection);
 
-                        PhoneHomeService phoneHomeService = services.createPhoneHomeService();
-                        PhoneHomeRequestBody.Builder builder = phoneHomeService.createInitialPhoneHomeRequestBodyBuilder();
-                        builder.setArtifactId("blackduck-hub");
-                        builder.setArtifactVersion(pluginVersion);
-                        builder.addToMetaData("jenkins.version", thirdPartyVersion);
-                        phoneHomeService.phoneHome(builder);
-                    }
+                    PhoneHomeService phoneHomeService = services.createPhoneHomeService();
+                    PhoneHomeRequestBody.Builder builder = phoneHomeService.createInitialPhoneHomeRequestBodyBuilder();
+                    builder.setArtifactId("blackduck-hub");
+                    builder.setArtifactVersion(pluginVersion);
+                    builder.addToMetaData("jenkins.version", thirdPartyVersion);
+                    phoneHomeService.phoneHome(builder);
 
                     final RemoteScan scan = new RemoteScan(logger, codeLocationName, projectName, projectVersion, getPhase(), getDistribution(), getScanMemoryInteger(), isProjectLevelAdjustments(), workingDirectory, scanTargetPaths,
                             isDryRun(), isCleanupOnSuccessfulScan(), toolsDirectory, hubServerConfig, getHubServerInfo().isPerformWorkspaceCheck(), getExcludePatterns(), envVars,
