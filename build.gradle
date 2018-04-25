@@ -11,7 +11,7 @@ plugins {
     id 'org.jenkins-ci.jpi' version '0.25.0'
 }
 group = 'com.blackducksoftware.integration'
-version = '4.0.0-SNAPSHOT'
+version = '4.0.0'
 description = 'Black Duck Hub Plugin for Jenkins'
 
 apply plugin: 'com.blackducksoftware.integration.solution'
@@ -45,7 +45,7 @@ dependencies {
     compile 'com.blackducksoftware.integration:hub-common:30.0.2'
     // hub-common 30.0.2 contains hub-common-rest 8.2.1, and we need 8.2.2
     compile 'com.blackducksoftware.integration:hub-common-rest:8.2.2'
-    
+
     compile 'org.jvnet.localizer:localizer:1.24'
 
     testCompile group: 'org.mockito', name: 'mockito-all', version: '1.10.19'
