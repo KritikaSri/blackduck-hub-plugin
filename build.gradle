@@ -11,7 +11,7 @@ plugins {
     id 'org.jenkins-ci.jpi' version '0.25.0'
 }
 group = 'com.blackducksoftware.integration'
-version = '4.0.1-SNAPSHOT'
+version = '4.0.1'
 description = 'Black Duck Hub Plugin for Jenkins'
 
 apply plugin: 'com.blackducksoftware.integration.solution'
