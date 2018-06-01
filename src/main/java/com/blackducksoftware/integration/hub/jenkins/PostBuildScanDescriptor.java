@@ -45,6 +45,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.WebMethod;
+import org.kohsuke.stapler.verb.POST;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -63,8 +64,11 @@ import com.blackducksoftware.integration.log.IntLogger;
 import com.blackducksoftware.integration.log.LogLevel;
 import com.blackducksoftware.integration.log.PrintStreamIntLogger;
 import com.blackducksoftware.integration.validator.ValidationResults;
+import com.cloudbees.plugins.credentials.CredentialsMatcher;
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
@@ -332,16 +336,57 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return BDCommonDescriptorUtil.doCheckBomUpdateMaximumWaitTime(bomUpdateMaximumWaitTime);
     }
 
+    public AutoCompletionCandidates doAutoCompleteHubProjectName(@QueryParameter("value") final String hubProjectName) throws IOException, ServletException {
+        return BDCommonDescriptorUtil.doAutoCompleteHubProjectName(getHubServerInfo(), hubProjectName);
+    }
+
+    /**
+     * Performs on-the-fly validation of the form field 'hubProjectName'. Checks to see if there is already a project in the Hub with this name.
+     */
+    public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String hubProjectName, @QueryParameter("hubProjectVersion") final String hubProjectVersion, @QueryParameter("dryRun") final boolean dryRun)
+            throws IOException, ServletException {
+        return BDCommonDescriptorUtil.doCheckHubProjectName(getHubServerInfo(), hubProjectName, hubProjectVersion, dryRun);
+    }
+
+    /**
+     * Performs on-the-fly validation of the form field 'hubProjectVersion'. Checks to see if there is already a project in the Hub with this name.
+     */
+    public FormValidation doCheckHubProjectVersion(@QueryParameter("hubProjectVersion") final String hubProjectVersion, @QueryParameter("hubProjectName") final String hubProjectName, @QueryParameter("dryRun") final boolean dryRun)
+            throws IOException, ServletException {
+        return BDCommonDescriptorUtil.doCheckHubProjectVersion(getHubServerInfo(), hubProjectVersion, hubProjectName, dryRun);
+    }
+
+    ///////////////// Global configuration methods /////////////////
+
     /**
      * Fills the Credential drop down list in the global config
      * @return
      */
     public ListBoxModel doFillHubCredentialsIdItems() {
-
-        return BDCommonDescriptorUtil.doFillCredentialsIdItems();
+        Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
+        ListBoxModel boxModel = null;
+        final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
+        boolean changed = false;
+        try {
+            if (PostBuildScanDescriptor.class.getClassLoader() != originalClassLoader) {
+                changed = true;
+                Thread.currentThread().setContextClassLoader(PostBuildScanDescriptor.class.getClassLoader());
+            }
+            // Code copied from https://github.com/jenkinsci/git-plugin/blob/f6d42c4e7edb102d3330af5ca66a7f5809d1a48e/src/main/java/hudson/plugins/git/UserRemoteConfig.java
+            final CredentialsMatcher credentialsMatcher = CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
+            boxModel = new StandardListBoxModel().withEmptySelection()
+                    .withMatching(credentialsMatcher, CredentialsProvider.lookupCredentials(StandardCredentials.class, Jenkins.getInstance(), ACL.SYSTEM, Collections.<DomainRequirement>emptyList()));
+        } finally {
+            if (changed) {
+                Thread.currentThread().setContextClassLoader(originalClassLoader);
+            }
+        }
+        return boxModel;
     }
 
+    @POST
     public FormValidation doCheckHubTimeout(@QueryParameter("hubTimeout") final String hubTimeout) throws IOException, ServletException {
+        Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
         if (StringUtils.isBlank(hubTimeout)) {
             return FormValidation.error(Messages.HubBuildScan_getPleaseSetTimeout());
         }
@@ -360,7 +405,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     /**
      * Performs on-the-fly validation of the form field 'serverUrl'.
      */
+    @POST
     public FormValidation doCheckHubServerUrl(@QueryParameter("hubServerUrl") final String hubServerUrl) throws IOException, ServletException {
+        Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
         ProxyConfiguration proxyConfig = null;
         final Jenkins jenkins = Jenkins.getInstance();
         if (jenkins != null) {
@@ -386,31 +433,13 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return FormValidation.ok();
     }
 
-    public AutoCompletionCandidates doAutoCompleteHubProjectName(@QueryParameter("value") final String hubProjectName) throws IOException, ServletException {
-        return BDCommonDescriptorUtil.doAutoCompleteHubProjectName(getHubServerInfo(), hubProjectName);
-    }
-
-    /**
-     * Performs on-the-fly validation of the form field 'hubProjectName'. Checks to see if there is already a project in the Hub with this name.
-     */
-    public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String hubProjectName, @QueryParameter("hubProjectVersion") final String hubProjectVersion, @QueryParameter("dryRun") final boolean dryRun)
-            throws IOException, ServletException {
-        return BDCommonDescriptorUtil.doCheckHubProjectName(getHubServerInfo(), hubProjectName, hubProjectVersion, dryRun);
-    }
-
-    /**
-     * Performs on-the-fly validation of the form field 'hubProjectVersion'. Checks to see if there is already a project in the Hub with this name.
-     */
-    public FormValidation doCheckHubProjectVersion(@QueryParameter("hubProjectVersion") final String hubProjectVersion, @QueryParameter("hubProjectName") final String hubProjectName, @QueryParameter("dryRun") final boolean dryRun)
-            throws IOException, ServletException {
-        return BDCommonDescriptorUtil.doCheckHubProjectVersion(getHubServerInfo(), hubProjectVersion, hubProjectName, dryRun);
-    }
-
     /**
      * Validates that the URL, Username, and Password are correct for connecting to the Hub Server.
      */
+    @POST
     public FormValidation doTestConnection(@QueryParameter("hubServerUrl") final String serverUrl, @QueryParameter("hubCredentialsId") final String hubCredentialsId, @QueryParameter("hubTimeout") final String hubTimeout,
             @QueryParameter("trustSSLCertificates") final boolean trustSSLCertificates) {
+        Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
         final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
         boolean changed = false;
         try {
@@ -429,8 +458,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             String credentialPassword = null;
 
             UsernamePasswordCredentialsImpl credential = null;
-            final AbstractProject<?, ?> project = null;
-            final List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement>emptyList());
+            final List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class, Jenkins.getInstance(), ACL.SYSTEM, Collections.<DomainRequirement>emptyList());
             final IdMatcher matcher = new IdMatcher(hubCredentialsId);
             for (final StandardCredentials c : credentials) {
                 if (matcher.matches(c) && c instanceof UsernamePasswordCredentialsImpl) {
@@ -482,5 +510,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             }
         }
     }
+
+    ///////////////// End of global configuration methods /////////////////
 
 }

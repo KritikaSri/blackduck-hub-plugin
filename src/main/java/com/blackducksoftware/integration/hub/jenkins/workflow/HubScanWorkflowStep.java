@@ -244,22 +244,12 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
             return BDCommonDescriptorUtil.doCheckBomUpdateMaximumWaitTime(bomUpdateMaximumWaitTime);
         }
 
-        /**
-         * Fills the Credential drop down list in the global config
-         *
-         * @return
-         */
-        public ListBoxModel doFillHubCredentialsIdItems() {
-            return BDCommonDescriptorUtil.doFillCredentialsIdItems();
-        }
-
         public AutoCompletionCandidates doAutoCompleteHubProjectName(@QueryParameter("value") final String hubProjectName) throws IOException, ServletException {
             return BDCommonDescriptorUtil.doAutoCompleteHubProjectName(getHubServerInfo(), hubProjectName);
         }
 
         /**
          * Performs on-the-fly validation of the form field 'hubProjectName'. Checks to see if there is already a project in the Hub with this name.
-         *
          */
         public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String hubProjectName, @QueryParameter("hubProjectVersion") final String hubProjectVersion, @QueryParameter("dryRun") final boolean dryRun)
                 throws IOException, ServletException {
@@ -268,7 +258,6 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
         /**
          * Performs on-the-fly validation of the form field 'hubProjectVersion'. Checks to see if there is already a project in the Hub with this name.
-         *
          */
         public FormValidation doCheckHubProjectVersion(@QueryParameter("hubProjectVersion") final String hubProjectVersion, @QueryParameter("hubProjectName") final String hubProjectName, @QueryParameter("dryRun") final boolean dryRun)
                 throws IOException, ServletException {

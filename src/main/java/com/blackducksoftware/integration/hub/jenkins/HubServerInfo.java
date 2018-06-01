@@ -35,8 +35,8 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.cloudbees.plugins.credentials.matchers.IdMatcher;
 
-import hudson.model.AbstractProject;
 import hudson.security.ACL;
+import jenkins.model.Jenkins;
 
 public class HubServerInfo {
 
@@ -121,8 +121,7 @@ public class HubServerInfo {
         // Only need to look up the credential when you first run a build or if the credential that the user wants to
         // use has changed.
         if (credential == null || !credential.getId().equals(hubCredentialsId)) {
-            final AbstractProject<?, ?> project = null;
-            final List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement> emptyList());
+            final List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class, Jenkins.getInstance(), ACL.SYSTEM, Collections.<DomainRequirement>emptyList());
             final IdMatcher matcher = new IdMatcher(hubCredentialsId);
             for (final StandardCredentials c : credentials) {
                 if (matcher.matches(c) && c instanceof UsernamePasswordCredentialsImpl) {

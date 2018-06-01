@@ -25,7 +25,6 @@ package com.blackducksoftware.integration.hub.jenkins.scan;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -44,7 +43,6 @@ import com.blackducksoftware.integration.hub.exception.DoesNotExistException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
-import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.failure.FailureConditionBuildStateEnum;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.service.HubService;
@@ -54,17 +52,8 @@ import com.blackducksoftware.integration.log.IntLogger;
 import com.blackducksoftware.integration.log.LogLevel;
 import com.blackducksoftware.integration.log.PrintStreamIntLogger;
 import com.blackducksoftware.integration.validator.ValidationResults;
-import com.cloudbees.plugins.credentials.CredentialsMatcher;
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
-import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.common.StandardCredentials;
-import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 
-import hudson.model.AbstractProject;
 import hudson.model.AutoCompletionCandidates;
-import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 
@@ -76,32 +65,6 @@ public class BDCommonDescriptorUtil {
             items.add(buildState.getDisplayValue(), buildState.name());
         }
         return items;
-    }
-
-    /**
-     * Fills the Credential drop down list in the global config
-     */
-    public static ListBoxModel doFillCredentialsIdItems() {
-
-        ListBoxModel boxModel = null;
-        final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
-        boolean changed = false;
-        try {
-            if (PostBuildScanDescriptor.class.getClassLoader() != originalClassLoader) {
-                changed = true;
-                Thread.currentThread().setContextClassLoader(PostBuildScanDescriptor.class.getClassLoader());
-            }
-            // Code copied from https://github.com/jenkinsci/git-plugin/blob/f6d42c4e7edb102d3330af5ca66a7f5809d1a48e/src/main/java/hudson/plugins/git/UserRemoteConfig.java
-            final CredentialsMatcher credentialsMatcher = CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
-            // Dont want to limit the search to a particular project for the drop down menu
-            final AbstractProject<?, ?> project = null;
-            boxModel = new StandardListBoxModel().withEmptySelection().withMatching(credentialsMatcher, CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement>emptyList()));
-        } finally {
-            if (changed) {
-                Thread.currentThread().setContextClassLoader(originalClassLoader);
-            }
-        }
-        return boxModel;
     }
 
     /**

@@ -16,7 +16,7 @@
   <f:section title="${%GlobalSectionTitle}">
 	<f:entry title="${%ServerURL}" field="hubServerUrl"
       description="Provide the Url for your Black Duck Hub Server">
-        <f:textbox field="hubServerUrl" value="${instance.getHubServerUrl()}"/>
+        <f:textbox field="hubServerUrl" value="${instance.getHubServerUrl()}" checkMethod="post" />
     </f:entry>
     <f:entry title="${%Credentials}" field="hubCredentialsId" >
     	<c:select/>
@@ -24,7 +24,7 @@
     
      <f:advanced>
       <f:entry title="${%ConnectionTimeout}" field="hubTimeout" description="in seconds" >
-          <f:textbox clazz="required number"  default="${descriptor.getDefaultTimeout()}" />
+          <f:textbox clazz="required number"  default="${descriptor.getDefaultTimeout()}" checkMethod="post" />
       </f:entry>
       <f:entry title="${%TrustSSLCertificates}" field="trustSSLCertificates" >
           <f:checkbox default="false" />
