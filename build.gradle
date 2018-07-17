@@ -46,6 +46,8 @@ jenkinsPlugin {
     displayName = 'Black Duck Hub Plugin'
     url = 'https://wiki.jenkins-ci.org/display/JENKINS/BlackDuck+Hub+Plugin'
     gitHubUrl = 'https://www.github.com/jenkinsci/blackduck-hub-plugin'
+
+    pluginFirstClassLoader = true
 }
 
 dependencies {
