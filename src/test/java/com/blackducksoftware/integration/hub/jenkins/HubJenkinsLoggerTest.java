@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -119,6 +120,7 @@ public class HubJenkinsLoggerTest {
         logger.trace("TRACE Test 2", new Exception("TRACE EXCEPTION Test 1"));
     }
 
+    @Ignore
     @Test
     public void testInfo() {
         expectedMessages.add("ERROR Test 1");
