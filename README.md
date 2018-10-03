@@ -12,9 +12,7 @@ Hub plugin for Jenkins. This plugin provides ability to run a scan using the BD 
 
 
 ## Where can I get the latest release? ##
-You can download the latest source from GitHub: https://github.com/jenkinsci/blackduck-hub-plugin
-
-You can download the latest artifact from releases: https://github.com/jenkinsci/blackduck-hub-plugin/releases
+You can download the latest artifact from releases: https://updates.jenkins-ci.org/download/plugins/blackduck-hub/
 
 ## Documentation ##
 All documentation can be found on the wiki:  https://wiki.jenkins-ci.org/display/JENKINS/BlackDuck+Hub+Plugin
